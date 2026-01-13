@@ -155,13 +155,13 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2 p-2"
                                 aria-labelledby="quickAccessMenu">
-                                <li><a class="dropdown-item rounded-2 py-2" href="/reception/dashboard">Visitor
+                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/reception/dashboard}">Visitor
                                         Registration</a></li>
-                                <li><a class="dropdown-item rounded-2 py-2" href="/employee/login">Employee Login</a>
+                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/employee/login}">Employee Login</a>
                                 </li>
-                                <li><a class="dropdown-item rounded-2 py-2" href="/login">Admin Login</a></li>
-                                <li><a class="dropdown-item rounded-2 py-2" href="/hr/login">HR Login</a></li>
-                                <li><a class="dropdown-item rounded-2 py-2" href="/manager/login">Manager Login</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/login}">Admin Login</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/hr/login}">HR Login</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/manager/login}">Manager Login</a></li>
                             </ul>
                         </div>
                     </li>
@@ -197,7 +197,7 @@
                         <a href="#features"
                             class="btn btn-primary btn-lg px-4 py-3 rounded-pill fw-semibold shadow-sm">Explore
                             Features</a>
-                        <a href="/login"
+                        <a th:href="@{/login}"
                             class="btn btn-outline-secondary btn-lg px-4 py-3 rounded-pill fw-semibold">Login Now</a>
                     </div>
                 </div>
@@ -365,7 +365,7 @@
             <h2 class="display-5 fw-bold mb-4">Ready to Get Started?</h2>
             <p class="lead mb-5 opacity-90">Join thousands of businesses using LogSphere to manage their workforce
                 efficiently.</p>
-            <a href="/login" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm text-primary">Login
+            <a th:href="@{/login}" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm text-primary">Login
                 Now</a>
         </div>
     </section>

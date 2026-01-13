@@ -58,7 +58,7 @@
     <nav class="navbar navbar-light bg-white p-3 border-bottom">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">QR Code Attendance Scanner</span>
-            <a href="/" class="btn btn-outline-secondary btn-sm">Home</a>
+            <a th:href="@{/}" href="/" class="btn btn-outline-secondary btn-sm">Home</a>
         </div>
     </nav>
 
@@ -113,7 +113,10 @@
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const contextPath = /*[[@{/}]]*/ '';
+        /*]]>*/
         let scannedQRData = null;
         let html5QrcodeScanner = null;
 
@@ -167,7 +170,7 @@
             const employeeId = parts[1];
             const token = parts[2];
 
-            fetch('/attendance/qr/clockin', {
+            fetch(contextPath + '/attendance/qr/clockin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -207,7 +210,7 @@
             const employeeId = parts[1];
             const token = parts[2];
 
-            fetch('/attendance/qr/clockout', {
+            fetch(contextPath + '/attendance/qr/clockout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

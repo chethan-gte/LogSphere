@@ -2,7 +2,9 @@ package com.example.demo.service;
 
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.util.ContextPathUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -19,6 +21,12 @@ public class EmailService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private ContextPathUtil contextPathUtil;
+    
+    @Value("${server.port:8080}")
+    private int serverPort;
 
     public void sendVisitorArrivalNotification(String employeeEmail, String visitorName, String visitorCompany, 
                                                String visitorPurpose, String personToMeet, java.time.LocalDateTime checkInTime) {
@@ -137,7 +145,9 @@ public class EmailService {
             String registeredTimeStr = registeredTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             
             // Base URL for approval links (use localhost for development, change to your domain for production)
-            String baseUrl = "http://localhost:8080";
+            // Get context path dynamically (works for both embedded and external Tomcat deployment)
+            String contextPath = contextPathUtil.getContextPath();
+            String baseUrl = "http://localhost:" + serverPort + (contextPath != null && !contextPath.isEmpty() ? contextPath : "");
             
             // Encode employee email for URL
             String encodedEmployeeEmail = java.net.URLEncoder.encode(employeeEmail, java.nio.charset.StandardCharsets.UTF_8);
