@@ -88,13 +88,13 @@
         <div class="container-fluid px-4">
             <span class="navbar-brand mb-0 h1 fw-bold text-primary"><i class="fas fa-tasks me-2"></i>My Tasks</span>
             <div>
-                <a href="/employee/dashboard" class="btn btn-outline-secondary btn-sm">
+                <a th:href="@{/employee/dashboard}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> Dashboard
                 </a>
-                <a href="/employee/qrcode" class="btn btn-outline-primary btn-sm ms-2">
+                <a th:href="@{/employee/qrcode}" class="btn btn-outline-primary btn-sm ms-2">
                     <i class="fas fa-qrcode me-1"></i> My QR
                 </a>
-                <a href="/employee/logout" class="btn btn-outline-danger btn-sm ms-2">Logout</a>
+                <a th:href="@{/employee/logout}" class="btn btn-outline-danger btn-sm ms-2">Logout</a>
             </div>
         </div>
     </nav>
@@ -312,3 +312,4 @@
 </body>
 
 </html>
+

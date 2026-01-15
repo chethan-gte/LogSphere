@@ -34,7 +34,7 @@ public class MeetingController {
     @Autowired
     private EmailService emailService;
 
-    @GetMapping("/create")
+    @RequestMapping(value = "/create", method = RequestMethod.GET)
     public String showCreateForm(Model model, HttpSession session) {
         // Allow both admin and employee access
         if (session.getAttribute("user") == null && session.getAttribute("employee") == null) {
@@ -70,7 +70,7 @@ public class MeetingController {
         return "meeting-create";
     }
 
-    @PostMapping("/create")
+    @RequestMapping(value = "/create", method = RequestMethod.POST)
     public String createMeeting(@ModelAttribute Meeting meeting,
                                @RequestParam(required = false) Long organizerId,
                                @RequestParam(required = false) Long visitorId,
@@ -134,7 +134,7 @@ public class MeetingController {
         return "redirect:/admin/dashboard";
     }
 
-    @PostMapping("/end/{id}")
+    @RequestMapping(value = "/end/{id}", method = RequestMethod.POST)
     public String endMeeting(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -152,7 +152,7 @@ public class MeetingController {
         return "redirect:/admin/dashboard";
     }
 
-    @GetMapping("/list")
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
     public String listMeetings(Model model, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -163,4 +163,5 @@ public class MeetingController {
         return "meeting-list";
     }
 }
+
 

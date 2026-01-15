@@ -29,7 +29,7 @@ public class ReceptionController {
     @Autowired
     private EmailService emailService;
 
-    @GetMapping("/dashboard")
+    @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
     public String receptionDashboard(Model model, HttpSession session) {
         // Allow access to admin, employee, or public (reception can be accessed without login)
         // But for better security, we can check if it's admin or employee
@@ -44,7 +44,7 @@ public class ReceptionController {
         return "reception-dashboard";
     }
 
-    @PostMapping("/register")
+    @RequestMapping(value = "/register", method = RequestMethod.POST)
     public String registerVisitor(@ModelAttribute Visitor visitor, RedirectAttributes redirectAttributes) {
         // Set registered time
         visitor.setRegisteredTime(LocalDateTime.now());
@@ -84,7 +84,7 @@ public class ReceptionController {
         return "redirect:/reception/dashboard";
     }
 
-    @PostMapping("/checkin")
+    @RequestMapping(value = "/checkin", method = RequestMethod.POST)
     public String checkInVisitor(@RequestParam(required = false) String aadharNumber,
                                  @RequestParam(required = false) String panCardNumber,
                                  @RequestParam(required = false) String idProof, // For backward compatibility
@@ -200,7 +200,7 @@ public class ReceptionController {
         return "redirect:/reception/dashboard";
     }
 
-    @PostMapping("/checkout/{id}")
+    @RequestMapping(value = "/checkout/{id}", method = RequestMethod.POST)
     public String checkOutVisitor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         Visitor visitor = visitorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Visitor not found"));
@@ -211,7 +211,7 @@ public class ReceptionController {
         return "redirect:/reception/dashboard";
     }
 
-    @GetMapping("/search")
+    @RequestMapping(value = "/search", method = RequestMethod.GET)
     public String searchVisitors(@RequestParam(required = false) String name,
                                 @RequestParam(required = false) String date,
                                 @RequestParam(required = false) String employeeName,
@@ -245,4 +245,5 @@ public class ReceptionController {
         return "reception-visitor-search";
     }
 }
+
 

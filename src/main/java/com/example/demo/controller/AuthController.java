@@ -18,7 +18,7 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showLoginForm(Model model, HttpSession session) {
         // If already logged in, redirect to dashboard
         if (session.getAttribute("user") != null) {
@@ -27,7 +27,7 @@ public class AuthController {
         return "login";
     }
 
-    @PostMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
     public String login(@RequestParam String email, 
                        @RequestParam String password,
                        HttpSession session,
@@ -63,10 +63,11 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/logout")
+    @RequestMapping(value = "/logout", method = RequestMethod.GET)
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";
     }
 }
+
 

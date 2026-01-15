@@ -17,7 +17,7 @@ public class EmployeeAuthController {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @GetMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showEmployeeLoginForm(@RequestParam(required = false) String returnUrl, 
                                        HttpSession session, 
                                        org.springframework.ui.Model model) {
@@ -41,7 +41,7 @@ public class EmployeeAuthController {
         return "employee-login";
     }
 
-    @PostMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
     public String employeeLogin(@RequestParam String email,
                                @RequestParam String employeeId,
                                @RequestParam(required = false) String returnUrl,
@@ -79,10 +79,11 @@ public class EmployeeAuthController {
         }
     }
 
-    @GetMapping("/logout")
+    @RequestMapping(value = "/logout", method = RequestMethod.GET)
     public String employeeLogout(HttpSession session) {
         session.invalidate();
         return "redirect:/employee/login";
     }
 }
+
 

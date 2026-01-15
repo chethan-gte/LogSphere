@@ -95,10 +95,10 @@
             <span class="navbar-brand mb-0 h1 fw-bold text-primary"><i class="fas fa-calendar-plus me-2"></i>Apply
                 Leave</span>
             <div>
-                <a href="/employee/dashboard" class="btn btn-outline-secondary btn-sm">
+                <a th:href="@{/employee/dashboard}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> Dashboard
                 </a>
-                <a href="/employee/logout" class="btn btn-outline-danger btn-sm ms-2">Logout</a>
+                <a th:href="@{/employee/logout}" class="btn btn-outline-danger btn-sm ms-2">Logout</a>
             </div>
         </div>
     </nav>
@@ -184,7 +184,7 @@
                                 <button type="submit" class="btn btn-primary btn-lg shadow-sm">
                                     <i class="fas fa-paper-plane me-2"></i> Submit Leave Request
                                 </button>
-                                <a href="/employee/dashboard" class="btn btn-light text-secondary">Cancel</a>
+                                <a th:href="@{/employee/dashboard}" class="btn btn-light text-secondary">Cancel</a>
                             </div>
                         </form>
                     </div>
@@ -248,3 +248,4 @@
 </body>
 
 </html>
+

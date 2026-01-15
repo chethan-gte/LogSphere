@@ -82,10 +82,10 @@
             <span class="navbar-brand mb-0 h1 fw-bold text-primary"><i class="fas fa-history me-2"></i>Leave
                 History</span>
             <div>
-                <a href="/employee/dashboard" class="btn btn-outline-secondary btn-sm">
+                <a th:href="@{/employee/dashboard}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> Dashboard
                 </a>
-                <a href="/employee/leave/apply" class="btn btn-primary btn-sm ms-2">
+                <a th:href="@{/employee/leave/apply}" class="btn btn-primary btn-sm ms-2">
                     <i class="fas fa-plus me-1"></i> Apply Leave
                 </a>
             </div>
@@ -153,7 +153,7 @@
                                 <td colspan="7" class="text-center text-muted py-5">
                                     <i class="far fa-folder-open fs-4 d-block mb-2 text-secondary"></i>
                                     No leave history found.
-                                    <a href="/employee/leave/apply" class="fw-bold text-decoration-none ms-1">Apply
+                                    <a th:href="@{/employee/leave/apply}" class="fw-bold text-decoration-none ms-1">Apply
                                         now</a>
                                 </td>
                             </tr>
@@ -185,3 +185,4 @@
 </body>
 
 </html>
+

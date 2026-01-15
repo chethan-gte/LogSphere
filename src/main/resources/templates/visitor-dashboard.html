@@ -121,11 +121,11 @@
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1"><i class="fas fa-id-card me-2"></i>LogSphere</span>
             <div class="d-flex gap-2">
-                <a href="/admin/dashboard" class="btn btn-outline-primary btn-sm">
+                <a th:href="@{/admin/dashboard}" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> Admin Dashboard
                 </a>
-                <a href="/" class="btn btn-light btn-sm text-secondary">Home</a>
-                <a href="/login" class="btn btn-primary btn-sm">Login</a>
+                <a th:href="@{/}" class="btn btn-light btn-sm text-secondary">Home</a>
+                <a th:href="@{/login}" class="btn btn-primary btn-sm">Login</a>
             </div>
         </div>
     </nav>
@@ -140,10 +140,10 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold mb-0 text-dark">Reception Dashboard</h2>
             <div class="d-flex gap-2">
-                <a href="/visitors/search" class="btn btn-outline-primary">
+                <a th:href="@{/visitors/search}" class="btn btn-outline-primary">
                     <i class="fas fa-search me-1"></i> Search Visitors
                 </a>
-                <a href="/visitors/history" class="btn btn-outline-secondary">
+                <a th:href="@{/visitors/history}" class="btn btn-outline-secondary">
                     <i class="fas fa-history me-1"></i> View Full History
                 </a>
             </div>
@@ -314,7 +314,7 @@
         <div class="card shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0 text-dark">All Visitors History</h4>
-                <a href="/visitors/history" class="btn btn-link text-decoration-none btn-sm">View Full History <i
+                <a th:href="@{/visitors/history}" class="btn btn-link text-decoration-none btn-sm">View Full History <i
                         class="fas fa-arrow-right ms-1"></i></a>
             </div>
             <div class="card-body p-0">
@@ -406,3 +406,4 @@
 </body>
 
 </html>
+

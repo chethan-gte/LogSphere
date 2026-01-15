@@ -100,7 +100,7 @@ public class EmployeeManagementController {
         "Office Administrator"
     );
 
-    @GetMapping
+    @RequestMapping(method = RequestMethod.GET)
     public String listEmployees(Model model, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -114,7 +114,7 @@ public class EmployeeManagementController {
         return "admin-employee-management";
     }
 
-    @PostMapping("/add")
+    @RequestMapping(value = "/add", method = RequestMethod.POST)
     public String addEmployee(@ModelAttribute Employee employee, RedirectAttributes redirectAttributes, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -157,7 +157,7 @@ public class EmployeeManagementController {
         return "redirect:/admin/employees";
     }
 
-    @GetMapping("/edit/{id}")
+    @RequestMapping(value = "/edit/{id}", method = RequestMethod.GET)
     public String showEditForm(@PathVariable Long id, Model model, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -174,7 +174,7 @@ public class EmployeeManagementController {
         return "admin-employee-edit";
     }
 
-    @PostMapping("/update/{id}")
+    @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
     public String updateEmployee(@PathVariable Long id, @ModelAttribute Employee employee, RedirectAttributes redirectAttributes, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -221,7 +221,7 @@ public class EmployeeManagementController {
         return "redirect:/admin/employees";
     }
 
-    @GetMapping("/delete/{id}")
+    @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     public String deleteEmployee(@PathVariable Long id, RedirectAttributes redirectAttributes, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -263,4 +263,5 @@ public class EmployeeManagementController {
         return "redirect:/admin/employees";
     }
 }
+
 

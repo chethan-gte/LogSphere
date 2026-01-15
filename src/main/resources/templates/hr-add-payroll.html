@@ -128,10 +128,10 @@
             <span class="navbar-brand mb-0 h1 fw-bold text-primary"><i
                     class="fas fa-money-check-alt me-2"></i>LogSphere</span>
             <div>
-                <a href="/hr/dashboard" class="btn btn-outline-secondary btn-sm">
+                <a th:href="@{/hr/dashboard}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> HR Dashboard
                 </a>
-                <a href="/logout" class="btn btn-outline-danger btn-sm ms-2">Logout</a>
+                <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm ms-2">Logout</a>
             </div>
         </div>
     </nav>
@@ -298,7 +298,7 @@
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                                <a href="/hr/dashboard" class="btn btn-light me-md-2">Cancel</a>
+                                <a th:href="@{/hr/dashboard}" class="btn btn-light me-md-2">Cancel</a>
                                 <button type="submit" class="btn btn-primary px-4">Save Payroll</button>
                             </div>
                         </form>
@@ -331,3 +331,4 @@
 </body>
 
 </html>
+

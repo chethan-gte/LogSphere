@@ -26,7 +26,7 @@ public class TaskController {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @GetMapping
+    @RequestMapping(method = RequestMethod.GET)
     public String myTasks(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -45,7 +45,7 @@ public class TaskController {
         return "employee-tasks";
     }
 
-    @PostMapping("/add")
+    @RequestMapping(value = "/add", method = RequestMethod.POST)
     public String addTask(@ModelAttribute Task task,
                          @RequestParam(required = false) String dueDate,
                          HttpSession session, 
@@ -77,7 +77,7 @@ public class TaskController {
         return "redirect:/employee/tasks";
     }
 
-    @PostMapping("/update/{id}")
+    @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
     public String updateTask(@PathVariable Long id,
                             @RequestParam(required = false) String status,
                             @RequestParam(required = false) Integer progress,
@@ -112,7 +112,7 @@ public class TaskController {
         return "redirect:/employee/tasks";
     }
 
-    @GetMapping("/delete/{id}")
+    @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     public String deleteTask(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -130,4 +130,5 @@ public class TaskController {
         return "redirect:/employee/tasks";
     }
 }
+
 

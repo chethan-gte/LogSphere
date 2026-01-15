@@ -60,7 +60,7 @@ public class ManagerController {
     @Autowired
     private EmployeeActivityRepository employeeActivityRepository;
 
-    @GetMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showManagerLoginForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user != null && "MANAGER".equals(user.getRole())) {
@@ -69,7 +69,7 @@ public class ManagerController {
         return "manager-login";
     }
 
-    @PostMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
     public String managerLogin(@RequestParam String email, 
                               @RequestParam String password,
                               HttpSession session,
@@ -98,7 +98,7 @@ public class ManagerController {
         }
     }
 
-    @GetMapping("/dashboard")
+    @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
     public String managerDashboard(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"MANAGER".equals(user.getRole())) {
@@ -372,7 +372,7 @@ public class ManagerController {
         return "redirect:/manager/dashboard";
     }
     
-    @GetMapping("/feedback/add")
+    @RequestMapping(value = "/feedback/add", method = RequestMethod.GET)
     public String showAddFeedbackForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"MANAGER".equals(user.getRole())) {
@@ -385,7 +385,7 @@ public class ManagerController {
         return "manager-add-feedback";
     }
     
-    @PostMapping("/feedback/add")
+    @RequestMapping(value = "/feedback/add", method = RequestMethod.POST)
     public String addFeedback(@RequestParam Long employeeId,
                              @RequestParam String notes,
                              @RequestParam(required = false) String improvementSuggestions,
@@ -425,7 +425,7 @@ public class ManagerController {
         }
     }
     
-    @GetMapping("/badge/award")
+    @RequestMapping(value = "/badge/award", method = RequestMethod.GET)
     public String showAwardBadgeForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"MANAGER".equals(user.getRole())) {
@@ -438,7 +438,7 @@ public class ManagerController {
         return "manager-award-badge";
     }
     
-    @PostMapping("/badge/award")
+    @RequestMapping(value = "/badge/award", method = RequestMethod.POST)
     public String awardBadge(@RequestParam Long employeeId,
                             @RequestParam String badgeName,
                             @RequestParam(required = false) String description,
@@ -475,7 +475,7 @@ public class ManagerController {
         }
     }
     
-    @GetMapping("/feedback/view/{id}")
+    @RequestMapping(value = "/feedback/view/{id}", method = RequestMethod.GET)
     public String viewFeedback(@PathVariable Long id, Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"MANAGER".equals(user.getRole())) {
@@ -491,7 +491,7 @@ public class ManagerController {
         return "manager-view-feedback";
     }
     
-    @GetMapping("/rule/create")
+    @RequestMapping(value = "/rule/create", method = RequestMethod.GET)
     public String showCreateRuleForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"MANAGER".equals(user.getRole())) {
@@ -501,7 +501,7 @@ public class ManagerController {
         return "manager-create-rule";
     }
     
-    @PostMapping("/rule/create")
+    @RequestMapping(value = "/rule/create", method = RequestMethod.POST)
     public String createRule(@RequestParam String ruleName,
                            @RequestParam String description,
                            @RequestParam String ruleType,
@@ -534,7 +534,7 @@ public class ManagerController {
         }
     }
     
-    @GetMapping("/rule/edit/{id}")
+    @RequestMapping(value = "/rule/edit/{id}", method = RequestMethod.GET)
     public String showEditRuleForm(@PathVariable Long id, Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"MANAGER".equals(user.getRole())) {
@@ -550,7 +550,7 @@ public class ManagerController {
         return "manager-edit-rule";
     }
     
-    @PostMapping("/rule/update/{id}")
+    @RequestMapping(value = "/rule/update/{id}", method = RequestMethod.POST)
     public String updateRule(@PathVariable Long id,
                            @RequestParam String ruleName,
                            @RequestParam String description,
@@ -589,7 +589,7 @@ public class ManagerController {
         }
     }
     
-    @PostMapping("/rule/delete/{id}")
+    @RequestMapping(value = "/rule/delete/{id}", method = RequestMethod.POST)
     public String deleteRule(@PathVariable Long id,
                             HttpSession session,
                             RedirectAttributes redirectAttributes) {
@@ -615,7 +615,7 @@ public class ManagerController {
         }
     }
     
-    @PostMapping("/suggestion/respond/{id}")
+    @RequestMapping(value = "/suggestion/respond/{id}", method = RequestMethod.POST)
     public String respondToSuggestion(@PathVariable Long id,
                                     @RequestParam String response,
                                     @RequestParam String status,
@@ -649,3 +649,4 @@ public class ManagerController {
         }
     }
 }
+

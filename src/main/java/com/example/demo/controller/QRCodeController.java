@@ -22,7 +22,7 @@ public class QRCodeController {
     @Autowired
     private QRCodeService qrCodeService;
 
-    @GetMapping
+    @RequestMapping(method = RequestMethod.GET)
     public String showQRCode(HttpSession session, Model model) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -48,7 +48,7 @@ public class QRCodeController {
         return "employee-qrcode";
     }
 
-    @PostMapping("/scan")
+    @RequestMapping(value = "/scan", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<?> scanQRCode(@RequestParam String qrData, @RequestParam String workMode) {
         try {
@@ -80,3 +80,4 @@ public class QRCodeController {
         }
     }
 }
+

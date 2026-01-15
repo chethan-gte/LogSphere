@@ -7,7 +7,7 @@
     <title>LogSphere - Edit Candidate</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/theme.css}" href="/css/theme.css">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
 
     <style>
         body {
@@ -85,8 +85,8 @@
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">LogSphere</span>
             <div>
-                <a href="/hr/dashboard" class="btn btn-outline-secondary btn-sm me-2">HR Dashboard</a>
-                <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+                <a th:href="@{/hr/dashboard}" class="btn btn-outline-secondary btn-sm me-2">HR Dashboard</a>
+                <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm">Logout</a>
             </div>
         </div>
     </nav>
@@ -173,7 +173,7 @@
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                                <a href="/hr/dashboard" class="btn btn-light me-md-2">Back to Dashboard</a>
+                                <a th:href="@{/hr/dashboard}" class="btn btn-light me-md-2">Back to Dashboard</a>
                                 <a th:href="@{/hr/recruitment/candidate/view/{id}(id=${candidate.id})}"
                                     class="btn btn-info text-white me-md-2">View Details</a>
                                 <button type="submit" class="btn btn-primary px-4 fw-medium">✅ Update Candidate</button>
@@ -189,3 +189,4 @@
 </body>
 
 </html>
+

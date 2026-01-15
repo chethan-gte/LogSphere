@@ -60,7 +60,7 @@ public class HRController {
     @Autowired
     private com.example.demo.repository.EmployeeActivityRepository employeeActivityRepository;
 
-    @GetMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showHRLoginForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user != null && "HR".equals(user.getRole())) {
@@ -69,7 +69,7 @@ public class HRController {
         return "hr-login";
     }
 
-    @PostMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
     public String hrLogin(@RequestParam String email, 
                          @RequestParam String password,
                          HttpSession session,
@@ -98,7 +98,7 @@ public class HRController {
         }
     }
 
-    @GetMapping("/dashboard")
+    @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
     public String hrDashboard(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -329,7 +329,7 @@ public class HRController {
         return "hr-dashboard";
     }
     
-    @PostMapping("/leave/approve/{id}")
+    @RequestMapping(value = "/leave/approve/{id}", method = RequestMethod.POST)
     public String approveLeave(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -380,7 +380,7 @@ public class HRController {
         return "redirect:/hr/dashboard";
     }
     
-    @PostMapping("/leave/reject/{id}")
+    @RequestMapping(value = "/leave/reject/{id}", method = RequestMethod.POST)
     public String rejectLeave(@PathVariable Long id, 
                              @RequestParam(required = false) String rejectionReason,
                              HttpSession session, 
@@ -428,7 +428,7 @@ public class HRController {
         return "redirect:/hr/dashboard";
     }
     
-    @GetMapping("/recruitment/candidate/add")
+    @RequestMapping(value = "/recruitment/candidate/add", method = RequestMethod.GET)
     public String showAddCandidateForm(@RequestParam(required = false) Long jobId, Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -442,7 +442,7 @@ public class HRController {
         return "hr-add-candidate";
     }
     
-    @PostMapping("/recruitment/candidate/add")
+    @RequestMapping(value = "/recruitment/candidate/add", method = RequestMethod.POST)
     public String addCandidate(@RequestParam String name,
                               @RequestParam String email,
                               @RequestParam(required = false) String phone,
@@ -510,7 +510,7 @@ public class HRController {
         }
     }
     
-    @GetMapping("/recruitment/candidate/view/{id}")
+    @RequestMapping(value = "/recruitment/candidate/view/{id}", method = RequestMethod.GET)
     public String viewCandidate(@PathVariable Long id, Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -526,7 +526,7 @@ public class HRController {
         return "hr-view-candidate";
     }
     
-    @GetMapping("/recruitment/candidate/edit/{id}")
+    @RequestMapping(value = "/recruitment/candidate/edit/{id}", method = RequestMethod.GET)
     public String editCandidate(@PathVariable Long id, Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -545,7 +545,7 @@ public class HRController {
         return "hr-edit-candidate";
     }
     
-    @PostMapping("/recruitment/candidate/update/{id}")
+    @RequestMapping(value = "/recruitment/candidate/update/{id}", method = RequestMethod.POST)
     public String updateCandidate(@PathVariable Long id,
                                  @RequestParam(required = false) String status,
                                  @RequestParam(required = false) String interviewDate,
@@ -592,7 +592,7 @@ public class HRController {
         return "redirect:/hr/dashboard";
     }
     
-    @GetMapping("/recruitment/job/create")
+    @RequestMapping(value = "/recruitment/job/create", method = RequestMethod.GET)
     public String showCreateJobForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -601,7 +601,7 @@ public class HRController {
         return "hr-create-job";
     }
     
-    @PostMapping("/recruitment/job/create")
+    @RequestMapping(value = "/recruitment/job/create", method = RequestMethod.POST)
     public String createJobOpening(@RequestParam String title,
                                   @RequestParam String department,
                                   @RequestParam(required = false) String description,
@@ -640,7 +640,7 @@ public class HRController {
         }
     }
     
-    @GetMapping("/payroll/add")
+    @RequestMapping(value = "/payroll/add", method = RequestMethod.GET)
     public String showAddPayrollForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -653,7 +653,7 @@ public class HRController {
         return "hr-add-payroll";
     }
     
-    @PostMapping("/payroll/add")
+    @RequestMapping(value = "/payroll/add", method = RequestMethod.POST)
     public String addPayroll(@RequestParam Long employeeId,
                            @RequestParam String payPeriodStart,
                            @RequestParam String payPeriodEnd,
@@ -716,7 +716,7 @@ public class HRController {
         }
     }
     
-    @GetMapping("/payroll/view/{id}")
+    @RequestMapping(value = "/payroll/view/{id}", method = RequestMethod.GET)
     public String viewPayroll(@PathVariable Long id, Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -732,7 +732,7 @@ public class HRController {
         return "hr-view-payroll";
     }
     
-    @GetMapping("/payroll/payslip/{id}")
+    @RequestMapping(value = "/payroll/payslip/{id}", method = RequestMethod.GET)
     public String generatePayslip(@PathVariable Long id, Model model, HttpSession session, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -767,7 +767,7 @@ public class HRController {
         }
     }
     
-    @GetMapping("/payroll/generate-all")
+    @RequestMapping(value = "/payroll/generate-all", method = RequestMethod.GET)
     public String generateAllPayslips(HttpSession session, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -785,7 +785,7 @@ public class HRController {
         return "redirect:/hr/dashboard";
     }
     
-    @PostMapping("/suggestion/respond/{id}")
+    @RequestMapping(value = "/suggestion/respond/{id}", method = RequestMethod.POST)
     public String respondToSuggestion(@PathVariable Long id,
                                     @RequestParam String response,
                                     @RequestParam String status,
@@ -819,3 +819,4 @@ public class HRController {
         }
     }
 }
+

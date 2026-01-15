@@ -33,7 +33,7 @@ public class VisitorApprovalController {
     @Autowired
     private com.example.demo.repository.EmployeeRepository employeeRepository;
 
-    @GetMapping
+    @RequestMapping(method = RequestMethod.GET)
     public String pendingApprovals(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -76,7 +76,7 @@ public class VisitorApprovalController {
         return "employee-approvals";
     }
 
-    @GetMapping("/approve/{id}")
+    @RequestMapping(value = "/approve/{id}", method = RequestMethod.GET)
     public String approveVisitorGet(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -87,7 +87,7 @@ public class VisitorApprovalController {
         return approveVisitor(id, session, redirectAttributes);
     }
 
-    @PostMapping("/approve/{id}")
+    @RequestMapping(value = "/approve/{id}", method = RequestMethod.POST)
     public String approveVisitor(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -197,7 +197,7 @@ public class VisitorApprovalController {
         return "redirect:/employee/approvals";
     }
 
-    @GetMapping("/deny/{id}")
+    @RequestMapping(value = "/deny/{id}", method = RequestMethod.GET)
     public String denyVisitorGet(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -207,7 +207,7 @@ public class VisitorApprovalController {
         return denyVisitor(id, session, redirectAttributes);
     }
 
-    @PostMapping("/deny/{id}")
+    @RequestMapping(value = "/deny/{id}", method = RequestMethod.POST)
     public String denyVisitor(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -243,7 +243,7 @@ public class VisitorApprovalController {
         return "redirect:/employee/approvals";
     }
 
-    @GetMapping("/reject/{id}")
+    @RequestMapping(value = "/reject/{id}", method = RequestMethod.GET)
     public String rejectVisitorGet(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -253,7 +253,7 @@ public class VisitorApprovalController {
         return rejectVisitor(id, session, redirectAttributes);
     }
 
-    @PostMapping("/reject/{id}")
+    @RequestMapping(value = "/reject/{id}", method = RequestMethod.POST)
     public String rejectVisitor(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -289,7 +289,7 @@ public class VisitorApprovalController {
         return "redirect:/employee/approvals";
     }
 
-    @GetMapping("/busy/{id}")
+    @RequestMapping(value = "/busy/{id}", method = RequestMethod.GET)
     public String busyVisitorGet(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -299,7 +299,7 @@ public class VisitorApprovalController {
         return busyVisitor(id, session, redirectAttributes);
     }
 
-    @PostMapping("/busy/{id}")
+    @RequestMapping(value = "/busy/{id}", method = RequestMethod.POST)
     public String busyVisitor(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -336,28 +336,28 @@ public class VisitorApprovalController {
     }
     
     // Email-based approval endpoints (work without login, verify via employee email)
-    @GetMapping("/email/approve/{id}")
+    @RequestMapping(value = "/email/approve/{id}", method = RequestMethod.GET)
     public String emailApproveVisitor(@PathVariable Long id, 
                                      @RequestParam String email,
                                      RedirectAttributes redirectAttributes) {
         return processEmailApproval(id, email, "APPROVED", redirectAttributes);
     }
     
-    @GetMapping("/email/deny/{id}")
+    @RequestMapping(value = "/email/deny/{id}", method = RequestMethod.GET)
     public String emailDenyVisitor(@PathVariable Long id, 
                                   @RequestParam String email,
                                   RedirectAttributes redirectAttributes) {
         return processEmailApproval(id, email, "DENIED", redirectAttributes);
     }
     
-    @GetMapping("/email/reject/{id}")
+    @RequestMapping(value = "/email/reject/{id}", method = RequestMethod.GET)
     public String emailRejectVisitor(@PathVariable Long id, 
                                    @RequestParam String email,
                                    RedirectAttributes redirectAttributes) {
         return processEmailApproval(id, email, "REJECTED", redirectAttributes);
     }
     
-    @GetMapping("/email/busy/{id}")
+    @RequestMapping(value = "/email/busy/{id}", method = RequestMethod.GET)
     public String emailBusyVisitor(@PathVariable Long id, 
                                   @RequestParam String email,
                                   RedirectAttributes redirectAttributes) {
@@ -454,3 +454,4 @@ public class VisitorApprovalController {
         return "redirect:/?approved=true";
     }
 }
+

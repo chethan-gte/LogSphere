@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class AdminController {
     @Autowired
     private com.example.demo.repository.IdleIncidentRepository idleIncidentRepository;
 
-    @GetMapping("/dashboard")
+    @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
     public String adminDashboard(Model model, HttpSession session) {
         // Check if user is logged in
         if (session.getAttribute("user") == null) {
@@ -83,4 +84,5 @@ public class AdminController {
         return "admin-dashboard";
     }
 }
+
 

@@ -59,7 +59,7 @@ public class EmployeeController {
     @Autowired
     private com.example.demo.repository.TeamRuleRepository teamRuleRepository;
 
-    @GetMapping("/dashboard")
+    @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
     public String employeeDashboard(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -208,7 +208,7 @@ public class EmployeeController {
         return "employee-dashboard";
     }
 
-    @PostMapping("/checkin")
+    @RequestMapping(value = "/checkin", method = RequestMethod.POST)
     public String checkIn(@RequestParam(required = false) String workMode,
             HttpSession session, RedirectAttributes redirectAttributes) {
         // Clock-in is only allowed through face recognition
@@ -231,7 +231,7 @@ public class EmployeeController {
         return "redirect:/employee/dashboard";
     }
 
-    @PostMapping("/checkout")
+    @RequestMapping(value = "/checkout", method = RequestMethod.POST)
     public String checkOut(@RequestParam(required = false) String workMode,
             HttpSession session, RedirectAttributes redirectAttributes) {
         // Get employee ID from session
@@ -345,7 +345,7 @@ public class EmployeeController {
         return "redirect:/employee/dashboard";
     }
 
-    @GetMapping("/attendance/history")
+    @RequestMapping(value = "/attendance/history", method = RequestMethod.GET)
     public String attendanceHistory(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -365,7 +365,7 @@ public class EmployeeController {
         return "employee-attendance-history";
     }
 
-    @GetMapping("/list")
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
     public String listEmployees(Model model, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -375,7 +375,7 @@ public class EmployeeController {
         return "employee-list";
     }
 
-    @GetMapping("/logs")
+    @RequestMapping(value = "/logs", method = RequestMethod.GET)
     public String allEmployeeLogs(Model model, HttpSession session,
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String startDate,
@@ -413,7 +413,7 @@ public class EmployeeController {
         return "admin-employee-logs";
     }
 
-    @GetMapping("/face-capture")
+    @RequestMapping(value = "/face-capture", method = RequestMethod.GET)
     public String faceCapture(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -424,7 +424,7 @@ public class EmployeeController {
         return "employee-face-capture";
     }
 
-    @PostMapping("/register-face")
+    @RequestMapping(value = "/register-face", method = RequestMethod.POST)
     public String registerFace(@RequestParam String faceImage, HttpSession session,
             RedirectAttributes redirectAttributes) {
         Employee employee = (Employee) session.getAttribute("employee");
@@ -441,7 +441,7 @@ public class EmployeeController {
         return "redirect:/employee/dashboard";
     }
 
-    @PostMapping("/checkin-face")
+    @RequestMapping(value = "/checkin-face", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<String> checkInByFace(@RequestParam String faceImage,
             @RequestParam(required = false) String workMode,
@@ -569,7 +569,7 @@ public class EmployeeController {
         return ResponseEntity.ok(statusMessage);
     }
 
-    @PostMapping("/checkout-face")
+    @RequestMapping(value = "/checkout-face", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<String> checkOutByFace(@RequestParam String faceImage, HttpSession session) {
         // Get logged-in employee from session (logged in using email and employee ID)
@@ -663,7 +663,7 @@ public class EmployeeController {
     }
 
     // Endpoint to track employee activity (heartbeat)
-    @PostMapping("/activity")
+    @RequestMapping(value = "/activity", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<?> trackActivity(@RequestParam(required = false) String activityType,
             @RequestParam(required = false) String activityDescription,
@@ -729,7 +729,7 @@ public class EmployeeController {
         return ResponseEntity.ok().body("Activity tracked");
     }
 
-    @GetMapping("/leave/apply")
+    @RequestMapping(value = "/leave/apply", method = RequestMethod.GET)
     public String showLeaveApplicationForm(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -746,7 +746,7 @@ public class EmployeeController {
         return "employee-leave-apply";
     }
 
-    @PostMapping("/leave/apply")
+    @RequestMapping(value = "/leave/apply", method = RequestMethod.POST)
     public String applyForLeave(@RequestParam String leaveType,
             @RequestParam String startDate,
             @RequestParam String endDate,
@@ -796,7 +796,7 @@ public class EmployeeController {
         }
     }
 
-    @GetMapping("/leave/history")
+    @RequestMapping(value = "/leave/history", method = RequestMethod.GET)
     public String viewLeaveHistory(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -821,7 +821,7 @@ public class EmployeeController {
         return "employee-leave-history";
     }
 
-    @GetMapping("/suggestion/submit")
+    @RequestMapping(value = "/suggestion/submit", method = RequestMethod.GET)
     public String showSuggestionForm(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -836,7 +836,7 @@ public class EmployeeController {
         return "employee-suggestion-form";
     }
 
-    @PostMapping("/suggestion/submit")
+    @RequestMapping(value = "/suggestion/submit", method = RequestMethod.POST)
     public String submitSuggestion(@RequestParam String title,
             @RequestParam String description,
             @RequestParam(required = false, defaultValue = "GENERAL") String suggestionType,
@@ -866,7 +866,7 @@ public class EmployeeController {
         }
     }
 
-    @GetMapping("/suggestion/my-suggestions")
+    @RequestMapping(value = "/suggestion/my-suggestions", method = RequestMethod.GET)
     public String viewMySuggestions(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -881,3 +881,4 @@ public class EmployeeController {
         return "employee-my-suggestions";
     }
 }
+

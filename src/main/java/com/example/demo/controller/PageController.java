@@ -3,30 +3,32 @@ package com.example.demo.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 @RequestMapping("/")
 public class PageController {
 
-    @GetMapping("/")
+    @RequestMapping(value = "/", method = RequestMethod.GET)
     public String home() {
         return "index";
     }
 
 
-    @GetMapping("/dashboard")
+    @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
     public String dashboard() {
         return "dashboard";
     }
 
-    @GetMapping("/timelog")
+    @RequestMapping(value = "/timelog", method = RequestMethod.GET)
     public String timelog() {
         return "timelog";
     }
 
-    @GetMapping("/qr-scanner")
+    @RequestMapping(value = "/qr-scanner", method = RequestMethod.GET)
     public String qrScanner() {
         return "qr-scanner";
     }
 }
+
 

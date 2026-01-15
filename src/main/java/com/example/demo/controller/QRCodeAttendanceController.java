@@ -29,7 +29,7 @@ public class QRCodeAttendanceController {
     @Autowired
     private EmailService emailService;
 
-    @PostMapping("/clockin")
+    @RequestMapping(value = "/clockin", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<?> clockInViaQR(@RequestParam String employeeId,
                                           @RequestParam String token,
@@ -103,7 +103,7 @@ public class QRCodeAttendanceController {
         }
     }
 
-    @PostMapping("/clockout")
+    @RequestMapping(value = "/clockout", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<?> clockOutViaQR(@RequestParam String employeeId,
                                            @RequestParam String token) {
@@ -169,4 +169,5 @@ public class QRCodeAttendanceController {
         }
     }
 }
+
 

@@ -22,13 +22,13 @@ public class VisitorController {
     @Autowired
     private com.example.demo.service.EmailService emailService;
 
-    @GetMapping("/register")
+    @RequestMapping(value = "/register", method = RequestMethod.GET)
     public String showRegistrationForm(Model model) {
         model.addAttribute("visitor", new Visitor());
         return "visitor-register";
     }
 
-    @PostMapping("/register")
+    @RequestMapping(value = "/register", method = RequestMethod.POST)
     public String registerVisitor(@ModelAttribute Visitor visitor, RedirectAttributes redirectAttributes) {
         visitor.setCheckInTime(LocalDateTime.now());
         visitor.setStatus("Checked In");
@@ -37,7 +37,7 @@ public class VisitorController {
         return "redirect:/visitors/dashboard";
     }
 
-    @GetMapping("/dashboard")
+    @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
     public String showDashboard(Model model, HttpSession session) {
         // Check if user is logged in
         if (session.getAttribute("user") == null) {
@@ -57,7 +57,7 @@ public class VisitorController {
         return "visitor-dashboard";
     }
 
-    @PostMapping("/checkin")
+    @RequestMapping(value = "/checkin", method = RequestMethod.POST)
     public String checkInVisitor(@RequestParam(required = false) String aadharNumber,
                                  @RequestParam(required = false) String panCardNumber,
                                  @RequestParam(required = false) String idProof, // For backward compatibility
@@ -175,7 +175,7 @@ public class VisitorController {
         return "redirect:/visitors/dashboard";
     }
 
-    @PostMapping("/checkout/{id}")
+    @RequestMapping(value = "/checkout/{id}", method = RequestMethod.POST)
     public String checkOutVisitor(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -189,7 +189,7 @@ public class VisitorController {
         return "redirect:/visitors/dashboard";
     }
 
-    @GetMapping("/delete/{id}")
+    @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     public String deleteVisitor(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -199,7 +199,7 @@ public class VisitorController {
         return "redirect:/visitors/dashboard";
     }
 
-    @GetMapping("/search")
+    @RequestMapping(value = "/search", method = RequestMethod.GET)
     public String searchVisitors(@RequestParam(required = false) String name,
                                 @RequestParam(required = false) String date,
                                 @RequestParam(required = false) String employeeName,
@@ -237,7 +237,7 @@ public class VisitorController {
         return "visitor-search";
     }
 
-    @GetMapping("/history")
+    @RequestMapping(value = "/history", method = RequestMethod.GET)
     public String visitorHistory(Model model, HttpSession session) {
         if (session.getAttribute("user") == null && session.getAttribute("employee") == null) {
             return "redirect:/login";
@@ -249,4 +249,5 @@ public class VisitorController {
         return "visitor-history";
     }
 }
+
 

@@ -7,7 +7,7 @@
     <title>LogSphere - View Candidate</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/theme.css}" href="/css/theme.css">
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
 
     <style>
         body {
@@ -84,8 +84,8 @@
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">LogSphere</span>
             <div>
-                <a href="/hr/dashboard" class="btn btn-outline-secondary btn-sm me-2">HR Dashboard</a>
-                <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+                <a th:href="@{/hr/dashboard}" class="btn btn-outline-secondary btn-sm me-2">HR Dashboard</a>
+                <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm">Logout</a>
             </div>
         </div>
     </nav>
@@ -99,7 +99,7 @@
                         <div>
                             <a th:href="@{/hr/recruitment/candidate/edit/{id}(id=${candidate.id})}"
                                 class="btn btn-warning btn-sm text-dark fw-bold">✏️ Edit</a>
-                            <a href="/hr/dashboard" class="btn btn-secondary btn-sm ms-2">Back</a>
+                            <a th:href="@{/hr/dashboard}" class="btn btn-secondary btn-sm ms-2">Back</a>
                         </div>
                     </div>
                     <div class="card-body p-4">
@@ -283,3 +283,4 @@
 </body>
 
 </html>
+

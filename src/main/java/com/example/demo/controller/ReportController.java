@@ -26,7 +26,7 @@ public class ReportController {
     @Autowired
     private VisitorRepository visitorRepository;
 
-    @GetMapping
+    @RequestMapping(method = RequestMethod.GET)
     public String reportsDashboard(Model model, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -82,7 +82,7 @@ public class ReportController {
         return "reports-dashboard";
     }
 
-    @GetMapping("/employee")
+    @RequestMapping(value = "/employee", method = RequestMethod.GET)
     public String employeeReport(@RequestParam(required = false) String period,
                                 @RequestParam(required = false) String startDate,
                                 @RequestParam(required = false) String endDate,
@@ -125,7 +125,7 @@ public class ReportController {
         return "employee-report";
     }
 
-    @GetMapping("/visitor")
+    @RequestMapping(value = "/visitor", method = RequestMethod.GET)
     public String visitorReport(@RequestParam(required = false) String period,
                                @RequestParam(required = false) String startDate,
                                @RequestParam(required = false) String endDate,
@@ -170,4 +170,5 @@ public class ReportController {
         return "visitor-report";
     }
 }
+
 
