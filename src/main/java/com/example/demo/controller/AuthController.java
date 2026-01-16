@@ -21,20 +21,21 @@ public class AuthController {
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showLoginForm(Model model, HttpSession session) {
         // If already logged in, redirect to dashboard
-        if (session.getAttribute("user") != null) {
-            return "redirect:/admin/dashboard";
-        }
+        // If already logged in, redirect to dashboard
+        // if (session.getAttribute("user") != null) {
+        // return "redirect:/admin/dashboard";
+        // }
         return "login";
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public String login(@RequestParam String email, 
-                       @RequestParam String password,
-                       HttpSession session,
-                       RedirectAttributes redirectAttributes) {
-        
+    public String login(@RequestParam String email,
+            @RequestParam String password,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
         Optional<User> userOptional = userRepository.findByEmail(email);
-        
+
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             // Simple password check (in production, use password hashing like BCrypt)
@@ -42,7 +43,7 @@ public class AuthController {
                 session.setAttribute("user", user);
                 session.setAttribute("userName", user.getName());
                 session.setAttribute("userRole", user.getRole());
-                
+
                 // Redirect based on role
                 if ("ADMIN".equals(user.getRole())) {
                     return "redirect:/admin/dashboard";
@@ -69,5 +70,3 @@ public class AuthController {
         return "redirect:/login";
     }
 }
-
-

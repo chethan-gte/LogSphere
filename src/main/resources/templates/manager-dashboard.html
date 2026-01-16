@@ -247,39 +247,45 @@
         <div class="sidebar-brand">LogSphere</div>
         <ul class="nav flex-column">
             <li class="nav-item mb-2">
-                <a class="nav-link" th:href="@{/manager/dashboard}">
+                <a class="nav-link" th:href="@{/manager/dashboard(tab='planning')}"
+                    th:classappend="${activeTab == 'planning' || activeTab == null ? 'active' : ''}">
                     <span class="me-2">📊</span> Dashboard Home
                 </a>
             </li>
 
+
             <li class="nav-item mb-2">
-                <button class="nav-link text-start w-100 active" id="planning-tab" data-bs-toggle="pill"
-                    data-bs-target="#planning" type="button"><span class="me-2">📌</span> Planning Board</button>
+                <a class="nav-link" th:href="@{/manager/dashboard(tab='feedback')}"
+                    th:classappend="${activeTab == 'feedback' ? 'active' : ''}">
+                    <span class="me-2">🗣️</span> Feedback
+                </a>
             </li>
             <li class="nav-item mb-2">
-                <button class="nav-link text-start w-100" id="feedback-tab" data-bs-toggle="pill"
-                    data-bs-target="#feedback" type="button"><span class="me-2">🗣️</span> Feedback</button>
+                <a class="nav-link" th:href="@{/manager/dashboard(tab='availability')}"
+                    th:classappend="${activeTab == 'availability' ? 'active' : ''}">
+                    <span class="me-2">📅</span> Availability
+                </a>
             </li>
             <li class="nav-item mb-2">
-                <button class="nav-link text-start w-100" id="availability-tab" data-bs-toggle="pill"
-                    data-bs-target="#availability" type="button"><span class="me-2">📅</span> Availability</button>
+                <a class="nav-link" th:href="@{/manager/dashboard(tab='recognition')}"
+                    th:classappend="${activeTab == 'recognition' ? 'active' : ''}">
+                    <span class="me-2">🏆</span> Recognition
+                </a>
             </li>
             <li class="nav-item mb-2">
-                <button class="nav-link text-start w-100" id="recognition-tab" data-bs-toggle="pill"
-                    data-bs-target="#recognition" type="button"><span class="me-2">🏆</span> Recognition</button>
-            </li>
-            <li class="nav-item mb-2">
-                <button class="nav-link text-start w-100" id="rules-tab" data-bs-toggle="pill" data-bs-target="#rules"
-                    type="button"><span class="me-2">🔧</span> Rules</button>
+                <a class="nav-link" th:href="@{/manager/dashboard(tab='rules')}"
+                    th:classappend="${activeTab == 'rules' ? 'active' : ''}">
+                    <span class="me-2">🔧</span> Rules
+                </a>
             </li>
 
             <li class="nav-item mb-2">
-                <button class="nav-link text-start w-100" id="suggestions-tab" data-bs-toggle="pill"
-                    data-bs-target="#suggestions" type="button">
+                <a class="nav-link" th:href="@{/manager/dashboard(tab='suggestions')}"
+                    th:classappend="${activeTab == 'suggestions' ? 'active' : ''}">
                     <span class="me-2">💡</span> Suggestions
                     <span th:if="${suggestionCount > 0}" class="badge bg-warning text-dark ms-2"
                         th:text="${suggestionCount}"></span>
-                </button>
+                </a>
             </li>
             <li class="nav-item mb-2">
                 <a class="nav-link" th:href="@{/reports}">
@@ -312,6 +318,52 @@
             </div>
         </div>
 
+        <!-- Idle Employees Section -->
+        <div class="row mb-4" th:if="${idleCount > 0}">
+            <div class="col-12">
+                <div class="card shadow-sm border-danger border-opacity-25">
+                    <div class="card-header bg-danger bg-opacity-10">
+                        <h5 class="text-danger mb-0">⚠️ Idle Employees Alert</h5>
+                        <small class="text-danger text-opacity-75">Employees inactive for 1+ minutes</small>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Employee Name</th>
+                                        <th>Employee ID</th>
+                                        <th>Department</th>
+                                        <th>Idle Duration</th>
+                                        <th>Idle Since</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="incident : ${idleIncidents}">
+                                        <td class="ps-4 fw-medium text-dark" th:text="${incident.employee.name}"></td>
+                                        <td class="text-secondary" th:text="${incident.employee.employeeId}"></td>
+                                        <td class="text-secondary" th:text="${incident.employee.department}"></td>
+                                        <td>
+                                            <span class="badge bg-danger bg-opacity-10 text-danger"
+                                                th:text="${incident.idleDurationMinutes} + ' minutes'"></span>
+                                        </td>
+                                        <td class="text-secondary"
+                                            th:text="${#temporals.format(incident.idleStartTime, 'yyyy-MM-dd HH:mm')}">
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning bg-opacity-10 text-warning"
+                                                th:text="${incident.status}"></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tab Content -->
         <div class="tab-content" id="managerTabContent">
 
@@ -320,7 +372,9 @@
 
 
             <!-- 2. Daily Team Planning Board -->
-            <div class="tab-pane fade show active" id="planning" role="tabpanel">
+            <div class="tab-pane fade"
+                th:classappend="${activeTab == 'planning' || activeTab == null ? 'show active' : ''}" id="planning"
+                role="tabpanel">
                 <!-- Success/Error Messages -->
                 <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                     <span th:text="${success}"></span>
@@ -408,7 +462,8 @@
             </div>
 
             <!-- 3. One-on-One Feedback Console -->
-            <div class="tab-pane fade" id="feedback" role="tabpanel">
+            <div class="tab-pane fade" th:classappend="${activeTab == 'feedback' ? 'show active' : ''}" id="feedback"
+                role="tabpanel">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                         <h5 class="text-dark fw-bold mb-0">🗣️ Feedback Console</h5>
@@ -455,7 +510,8 @@
             </div>
 
             <!-- 7. Team Availability Planner -->
-            <div class="tab-pane fade" id="availability" role="tabpanel">
+            <div class="tab-pane fade" th:classappend="${activeTab == 'availability' ? 'show active' : ''}"
+                id="availability" role="tabpanel">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white py-3">
                         <h5 class="text-dark fw-bold mb-0">📅 Team Availability Planner</h5>
@@ -494,7 +550,8 @@
             </div>
 
             <!-- 8. Motivation & Recognition Module -->
-            <div class="tab-pane fade" id="recognition" role="tabpanel">
+            <div class="tab-pane fade" th:classappend="${activeTab == 'recognition' ? 'show active' : ''}"
+                id="recognition" role="tabpanel">
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                         <h5 class="text-dark fw-bold mb-0">🏆 Recognition & Badges</h5>
@@ -524,7 +581,8 @@
             </div>
 
             <!-- 10. Custom Team Rules Engine -->
-            <div class="tab-pane fade" id="rules" role="tabpanel">
+            <div class="tab-pane fade" th:classappend="${activeTab == 'rules' ? 'show active' : ''}" id="rules"
+                role="tabpanel">
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                         <h5 class="text-dark fw-bold mb-0">🔧 Custom Team Rules</h5>
@@ -573,9 +631,123 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
+            <!-- Employee Suggestions Tab -->
+            <div class="tab-pane fade" th:classappend="${activeTab == 'suggestions' ? 'show active' : ''}"
+                id="suggestions" role="tabpanel">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="text-dark fw-bold mb-0">💡 Employee Suggestions</h5>
+                        <div>
+                            <span class="badge bg-warning text-dark me-2"
+                                th:text="${pendingSuggestions.size()} + ' Pending'"></span>
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25"
+                                th:text="${managerSuggestions.size()} + ' Manager Related'"></span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${pendingSuggestions == null || pendingSuggestions.isEmpty()}"
+                            class="text-center py-5">
+                            <h5 class="text-secondary">No pending suggestions</h5>
+                            <p class="text-muted">All suggestions have been reviewed.</p>
+                        </div>
+                        <div th:if="${pendingSuggestions != null && !pendingSuggestions.isEmpty()}">
+                            <div th:each="suggestion : ${pendingSuggestions}" class="card bg-light border mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="text-dark fw-bold mb-1" th:text="${suggestion.title}">Title</h5>
+                                            <p class="text-secondary small mb-0">
+                                                By: <span class="fw-medium text-dark"
+                                                    th:text="${suggestion.employee.name}"></span>
+                                                (<span th:text="${suggestion.employee.department}"></span>)
+                                                | Type: <span class="badge bg-secondary bg-opacity-10 text-secondary"
+                                                    th:text="${suggestion.suggestionType}"></span>
+                                                | <span
+                                                    th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy HH:mm')}"></span>
+                                            </p>
+                                        </div>
+                                        <span class="badge bg-warning text-dark"
+                                            th:text="${suggestion.status}">PENDING</span>
+                                    </div>
+                                    <p class="text-dark mt-3" th:text="${suggestion.description}">Description</p>
+                                    <form th:action="@{/manager/suggestion/respond/{id}(id=${suggestion.id})}"
+                                        method="post" class="mt-3 bg-white p-3 rounded border">
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary fw-medium">Response</label>
+                                            <textarea class="form-control" name="response" rows="3"
+                                                placeholder="Enter your response..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-secondary fw-medium">Status</label>
+                                            <select class="form-select" name="status" required>
+                                                <option value="REVIEWED">Reviewed</option>
+                                                <option value="IMPLEMENTED">Implemented</option>
+                                                <option value="REJECTED">Rejected</option>
+                                            </select>
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="submit" class="btn btn-primary btn-sm">Submit
+                                                Response</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Suggestions -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="text-dark fw-bold mb-0">All Suggestions</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Title</th>
+                                        <th>Employee</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${allSuggestions == null || allSuggestions.isEmpty()}">
+                                        <td colspan="6" class="text-center text-secondary py-4">No suggestions found
+                                        </td>
+                                    </tr>
+                                    <tr th:each="suggestion : ${allSuggestions}">
+                                        <td class="ps-4 fw-medium text-dark" th:text="${suggestion.title}">Title</td>
+                                        <td class="text-secondary" th:text="${suggestion.employee.name}">Employee</td>
+                                        <td><span class="badge bg-secondary bg-opacity-10 text-secondary"
+                                                th:text="${suggestion.suggestionType}">Type</span></td>
+                                        <td>
+                                            <span class="badge rounded-pill"
+                                                th:classappend="${suggestion.status == 'PENDING' ? 'bg-warning text-dark' : (suggestion.status == 'REVIEWED' ? 'bg-info bg-opacity-10 text-info' : (suggestion.status == 'IMPLEMENTED' ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'))}"
+                                                th:text="${suggestion.status}">Status</span>
+                                        </td>
+                                        <td class="text-secondary"
+                                            th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy')}">Date
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button type="button" class="btn btn-sm btn-light border text-primary"
+                                                data-bs-toggle="modal"
+                                                th:attr="data-bs-target='#suggestionModal' + ${suggestion.id}">
+                                                View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -650,243 +822,82 @@
         </div>
     </div>
 
-    <!-- Idle Employees Section -->
-    <div class="row mt-4" th:if="${idleCount > 0}">
-        <div class="col-12">
-            <div class="card shadow-sm border-danger border-opacity-25">
-                <div class="card-header bg-danger bg-opacity-10">
-                    <h5 class="text-danger mb-0">⚠️ Idle Employees Alert</h5>
-                    <small class="text-danger text-opacity-75">Employees inactive for 1+ minutes</small>
+    </div> <!-- Modals for viewing suggestions -->
+    <div th:each="suggestion : ${allSuggestions}" th:attr="id='suggestionModal' + ${suggestion.id}" class="modal fade"
+        tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-dark" th:text="${suggestion.title}">Title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Employee Name</th>
-                                    <th>Employee ID</th>
-                                    <th>Department</th>
-                                    <th>Idle Duration</th>
-                                    <th>Idle Since</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="incident : ${idleIncidents}">
-                                    <td class="ps-4 fw-medium text-dark" th:text="${incident.employee.name}"></td>
-                                    <td class="text-secondary" th:text="${incident.employee.employeeId}"></td>
-                                    <td class="text-secondary" th:text="${incident.employee.department}"></td>
-                                    <td>
-                                        <span class="badge bg-danger bg-opacity-10 text-danger"
-                                            th:text="${incident.idleDurationMinutes} + ' minutes'"></span>
-                                    </td>
-                                    <td class="text-secondary"
-                                        th:text="${#temporals.format(incident.idleStartTime, 'yyyy-MM-dd HH:mm')}"></td>
-                                    <td>
-                                        <span class="badge bg-warning bg-opacity-10 text-warning"
-                                            th:text="${incident.status}"></span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- Employee Suggestions Tab -->
-    <div class="tab-pane fade" id="suggestions" role="tabpanel">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                <h5 class="text-dark fw-bold mb-0">💡 Employee Suggestions</h5>
-                <div>
-                    <span class="badge bg-warning text-dark me-2"
-                        th:text="${pendingSuggestions.size()} + ' Pending'"></span>
-                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25"
-                        th:text="${managerSuggestions.size()} + ' Manager Related'"></span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div th:if="${pendingSuggestions == null || pendingSuggestions.isEmpty()}" class="text-center py-5">
-                    <h5 class="text-secondary">No pending suggestions</h5>
-                    <p class="text-muted">All suggestions have been reviewed.</p>
-                </div>
-                <div th:if="${pendingSuggestions != null && !pendingSuggestions.isEmpty()}">
-                    <div th:each="suggestion : ${pendingSuggestions}" class="card bg-light border mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="text-dark fw-bold mb-1" th:text="${suggestion.title}">Title</h5>
-                                    <p class="text-secondary small mb-0">
-                                        By: <span class="fw-medium text-dark"
-                                            th:text="${suggestion.employee.name}"></span>
-                                        (<span th:text="${suggestion.employee.department}"></span>)
-                                        | Type: <span class="badge bg-secondary bg-opacity-10 text-secondary"
-                                            th:text="${suggestion.suggestionType}"></span>
-                                        | <span
-                                            th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy HH:mm')}"></span>
-                                    </p>
-                                </div>
-                                <span class="badge bg-warning text-dark" th:text="${suggestion.status}">PENDING</span>
-                            </div>
-                            <p class="text-dark mt-3" th:text="${suggestion.description}">Description</p>
-                            <form th:action="@{/manager/suggestion/respond/{id}(id=${suggestion.id})}" method="post"
-                                class="mt-3 bg-white p-3 rounded border">
-                                <div class="mb-3">
-                                    <label class="form-label text-secondary fw-medium">Response</label>
-                                    <textarea class="form-control" name="response" rows="3"
-                                        placeholder="Enter your response..."></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label text-secondary fw-medium">Status</label>
-                                    <select class="form-select" name="status" required>
-                                        <option value="REVIEWED">Reviewed</option>
-                                        <option value="IMPLEMENTED">Implemented</option>
-                                        <option value="REJECTED">Rejected</option>
-                                    </select>
-                                </div>
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary btn-sm">Submit Response</button>
-                                </div>
-                            </form>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-secondary mb-1">Employee</p>
+                            <p class="fw-medium text-dark">
+                                <span th:text="${suggestion.employee.name}"></span>
+                                <span class="text-muted fw-normal"
+                                    th:text="'(' + ${suggestion.employee.department} + ')'"></span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-secondary mb-1">Submitted</p>
+                            <p class="fw-medium text-dark"
+                                th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy HH:mm')}"></p>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- All Suggestions -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3">
-                <h5 class="text-dark fw-bold mb-0">All Suggestions</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-4">Title</th>
-                                <th>Employee</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th class="text-end pe-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:if="${allSuggestions == null || allSuggestions.isEmpty()}">
-                                <td colspan="6" class="text-center text-secondary py-4">No suggestions found</td>
-                            </tr>
-                            <tr th:each="suggestion : ${allSuggestions}">
-                                <td class="ps-4 fw-medium text-dark" th:text="${suggestion.title}">Title</td>
-                                <td class="text-secondary" th:text="${suggestion.employee.name}">Employee</td>
-                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary"
-                                        th:text="${suggestion.suggestionType}">Type</span></td>
-                                <td>
-                                    <span class="badge rounded-pill"
-                                        th:classappend="${suggestion.status == 'PENDING' ? 'bg-warning text-dark' : (suggestion.status == 'REVIEWED' ? 'bg-info bg-opacity-10 text-info' : (suggestion.status == 'IMPLEMENTED' ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'))}"
-                                        th:text="${suggestion.status}">Status</span>
-                                </td>
-                                <td class="text-secondary"
-                                    th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy')}">Date
-                                </td>
-                                <td class="text-end pe-4">
-                                    <button type="button" class="btn btn-sm btn-light border text-primary"
-                                        data-bs-toggle="modal"
-                                        th:attr="data-bs-target='#suggestionModal' + ${suggestion.id}">
-                                        View
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modals for viewing suggestions -->
-        <div th:each="suggestion : ${allSuggestions}" th:attr="id='suggestionModal' + ${suggestion.id}"
-            class="modal fade" tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold text-dark" th:text="${suggestion.title}">Title</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="mb-3">
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary me-2"
+                            th:text="${suggestion.suggestionType}"></span>
+                        <span class="badge"
+                            th:classappend="${suggestion.status == 'PENDING' ? 'bg-warning text-dark' : (suggestion.status == 'REVIEWED' ? 'bg-info bg-opacity-10 text-info' : (suggestion.status == 'IMPLEMENTED' ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'))}"
+                            th:text="${suggestion.status}"></span>
                     </div>
-                    <div class="modal-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <p class="text-secondary mb-1">Employee</p>
-                                <p class="fw-medium text-dark">
-                                    <span th:text="${suggestion.employee.name}"></span>
-                                    <span class="text-muted fw-normal"
-                                        th:text="'(' + ${suggestion.employee.department} + ')'"></span>
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="text-secondary mb-1">Submitted</p>
-                                <p class="fw-medium text-dark"
-                                    th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy HH:mm')}"></p>
-                            </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary me-2"
-                                th:text="${suggestion.suggestionType}"></span>
-                            <span class="badge"
-                                th:classappend="${suggestion.status == 'PENDING' ? 'bg-warning text-dark' : (suggestion.status == 'REVIEWED' ? 'bg-info bg-opacity-10 text-info' : (suggestion.status == 'IMPLEMENTED' ? 'bg-success bg-opacity-10 text-success' : 'bg-secondary bg-opacity-10 text-secondary'))}"
-                                th:text="${suggestion.status}"></span>
-                        </div>
+                    <hr class="text-muted opacity-25">
 
+                    <h6 class="text-dark fw-bold mt-4">Description</h6>
+                    <p class="text-secondary bg-light p-3 rounded" th:text="${suggestion.description}">Description
+                    </p>
+
+                    <div th:if="${suggestion.response != null && !suggestion.response.isEmpty()}">
+                        <h6 class="text-primary fw-bold mt-4">Response</h6>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded border border-primary border-opacity-10">
+                            <p class="text-dark mb-2" th:text="${suggestion.response}">Response</p>
+                            <p class="text-secondary small mb-0">By: <span th:text="${suggestion.respondedBy}"></span>
+                                on
+                                <span
+                                    th:text="${#temporals.format(suggestion.respondedAt, 'MMM dd, yyyy HH:mm')}"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div th:if="${suggestion.status == 'PENDING'}">
                         <hr class="text-muted opacity-25">
-
-                        <h6 class="text-dark fw-bold mt-4">Description</h6>
-                        <p class="text-secondary bg-light p-3 rounded" th:text="${suggestion.description}">Description
-                        </p>
-
-                        <div th:if="${suggestion.response != null && !suggestion.response.isEmpty()}">
-                            <h6 class="text-primary fw-bold mt-4">Response</h6>
-                            <div class="bg-primary bg-opacity-10 p-3 rounded border border-primary border-opacity-10">
-                                <p class="text-dark mb-2" th:text="${suggestion.response}">Response</p>
-                                <p class="text-secondary small mb-0">By: <span
-                                        th:text="${suggestion.respondedBy}"></span> on
-                                    <span
-                                        th:text="${#temporals.format(suggestion.respondedAt, 'MMM dd, yyyy HH:mm')}"></span>
-                                </p>
+                        <form th:action="@{/manager/suggestion/respond/{id}(id=${suggestion.id})}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label text-secondary fw-medium">Response</label>
+                                <textarea class="form-control" name="response" rows="3" required
+                                    placeholder="Write your response here..."></textarea>
                             </div>
-                        </div>
-                        <div th:if="${suggestion.status == 'PENDING'}">
-                            <hr class="text-muted opacity-25">
-                            <form th:action="@{/manager/suggestion/respond/{id}(id=${suggestion.id})}" method="post">
-                                <div class="mb-3">
-                                    <label class="form-label text-secondary fw-medium">Response</label>
-                                    <textarea class="form-control" name="response" rows="3" required
-                                        placeholder="Write your response here..."></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label text-secondary fw-medium">Status</label>
-                                    <select class="form-select" name="status" required>
-                                        <option value="REVIEWED">Reviewed</option>
-                                        <option value="IMPLEMENTED">Implemented</option>
-                                        <option value="REJECTED">Rejected</option>
-                                    </select>
-                                </div>
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary">Submit Response</button>
-                                </div>
-                            </form>
-                        </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary fw-medium">Status</label>
+                                <select class="form-select" name="status" required>
+                                    <option value="REVIEWED">Reviewed</option>
+                                    <option value="IMPLEMENTED">Implemented</option>
+                                    <option value="REJECTED">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">Submit Response</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    </div>
-    </div>
+
 </body>
 
 </html>
-

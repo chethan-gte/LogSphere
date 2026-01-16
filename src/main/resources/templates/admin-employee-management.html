@@ -77,26 +77,12 @@
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1 text-primary fw-bold">Employee Management</span>
             <div>
-                <a th:href="@{/admin/dashboard}" id="dashboardLink" class="btn btn-outline-primary btn-sm">Back to
+                <a th:href="@{${dashboardLink}}" class="btn btn-outline-primary btn-sm">Back to
                     Dashboard</a>
             </div>
         </div>
     </nav>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const dashboardLink = document.getElementById('dashboardLink');
-            const referrer = document.referrer;
-            if (referrer) {
-                if (referrer.includes('/hr/')) {
-                    dashboardLink.href = '/hr/dashboard';
-                } else if (referrer.includes('/manager/')) {
-                    dashboardLink.href = '/manager/dashboard';
-                } else if (referrer.includes('/employee/')) {
-                    dashboardLink.href = '/employee/dashboard';
-                }
-            }
-        });
-    </script>
+
 
     <div class="container-fluid px-4 mt-4">
         <!-- Success/Error Messages -->
@@ -327,4 +313,3 @@
 </body>
 
 </html>
-

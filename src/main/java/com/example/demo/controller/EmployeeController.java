@@ -410,6 +410,18 @@ public class EmployeeController {
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
 
+        // Determine dashboard link based on role
+        String role = (String) session.getAttribute("userRole");
+        String dashboardLink = "/admin/dashboard"; // Default
+        if ("HR".equals(role)) {
+            dashboardLink = "/hr/dashboard";
+        } else if ("MANAGER".equals(role)) {
+            dashboardLink = "/manager/dashboard";
+        } else if ("EMPLOYEE".equals(role) || session.getAttribute("employee") != null) {
+            dashboardLink = "/employee/dashboard";
+        }
+        model.addAttribute("dashboardLink", dashboardLink);
+
         return "admin-employee-logs";
     }
 
@@ -881,4 +893,3 @@ public class EmployeeController {
         return "employee-my-suggestions";
     }
 }
-
