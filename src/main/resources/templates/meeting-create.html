@@ -83,7 +83,7 @@
             <span class="navbar-brand mb-0 h1 fw-bold text-primary"><i class="fas fa-calendar-plus me-2"></i>Create
                 Meeting</span>
             <div>
-                <a th:href="${redirectUrl}" class="btn btn-outline-secondary btn-sm">
+                <a th:href="@{${redirectUrl}}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
                 </a>
             </div>
@@ -178,7 +178,7 @@
                                 <button type="submit" class="btn btn-primary btn-lg shadow-sm">
                                     <i class="fas fa-check-circle me-2"></i> Create Meeting
                                 </button>
-                                <a th:href="${redirectUrl}" class="btn btn-light text-secondary">Cancel</a>
+                                <a th:href="@{${redirectUrl}}" class="btn btn-light text-secondary">Cancel</a>
                             </div>
                         </form>
                     </div>

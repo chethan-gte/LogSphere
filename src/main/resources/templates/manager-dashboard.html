@@ -608,7 +608,7 @@
                     <h5 class="modal-title fw-bold">Add New Task</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="/manager/tasks/add" method="post">
+                <form th:action="@{/manager/tasks/add}" method="post">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label text-secondary">Select Employee <span

@@ -14,6 +14,10 @@ public class PageController {
         return "index";
     }
 
+    @RequestMapping(value = "/submit", method = RequestMethod.POST)
+    public String submit() {
+        return "redirect:/dashboard";
+    }
 
     @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
     public String dashboard() {
@@ -30,5 +34,3 @@ public class PageController {
         return "qr-scanner";
     }
 }
-
-

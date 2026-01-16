@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,29 +16,37 @@
             margin-bottom: 6px;
             display: block;
         }
-        .form-control, .form-select {
+
+        .form-control,
+        .form-select {
             color: #0f1b2d !important;
             background-color: #ffffff !important;
             border: 1px solid #d9e8f6;
             padding: 10px 12px;
         }
-        .form-control:focus, .form-select:focus {
+
+        .form-control:focus,
+        .form-select:focus {
             border-color: #1a8cf0;
             box-shadow: 0 0 0 0.2rem rgba(26, 140, 240, 0.15);
         }
+
         .card-compact {
             border-radius: 14px;
             padding: 14px;
             box-shadow: 0 8px 22px rgba(15, 27, 45, 0.08);
         }
+
         .page-wrap {
             min-height: auto;
         }
+
         .container-narrow {
             max-width: 920px;
         }
     </style>
 </head>
+
 <body class="bg-light text-dark">
     <nav class="navbar navbar-light p-3 shadow-sm">
         <div class="container-fluid">
@@ -58,28 +67,28 @@
                             <div class="row g-2">
                                 <div class="col-md-6">
                                     <label for="name" class="form-label">Full Name *</label>
-                                    <input type="text" class="form-control" id="name"
-                                           th:field="*{name}" placeholder="Full name" required>
+                                    <input type="text" class="form-control" id="name" th:field="*{name}"
+                                        placeholder="Full name" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="email" class="form-label">Email *</label>
-                                    <input type="email" class="form-control" id="email"
-                                           th:field="*{email}" placeholder="name@example.com" required>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}"
+                                        placeholder="name@example.com" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="phone" class="form-label">Phone *</label>
-                                    <input type="tel" class="form-control" id="phone"
-                                           th:field="*{phone}" placeholder="Phone number" required>
+                                    <input type="tel" class="form-control" id="phone" th:field="*{phone}"
+                                        placeholder="Phone number" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="company" class="form-label">Company *</label>
-                                    <input type="text" class="form-control" id="company"
-                                           th:field="*{company}" placeholder="Organization" required>
+                                    <input type="text" class="form-control" id="company" th:field="*{company}"
+                                        placeholder="Organization" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="personToMeet" class="form-label">Person to Meet</label>
-                                    <input type="text" class="form-control" id="personToMeet"
-                                           th:field="*{personToMeet}" placeholder="Employee name">
+                                    <input type="text" class="form-control" id="personToMeet" th:field="*{personToMeet}"
+                                        placeholder="Employee name">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="purpose" class="form-label">Purpose *</label>
@@ -94,15 +103,15 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="aadharNumber" class="form-label">Aadhar (12 digits)</label>
-                                    <input type="text" class="form-control" id="aadharNumber"
-                                           th:field="*{aadharNumber}" placeholder="Optional if PAN given"
-                                           pattern="[0-9]{12}" maxlength="12">
+                                    <input type="text" class="form-control" id="aadharNumber" th:field="*{aadharNumber}"
+                                        placeholder="Optional if PAN given" pattern="[0-9]{12}" maxlength="12">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="panCardNumber" class="form-label">PAN</label>
                                     <input type="text" class="form-control" id="panCardNumber"
-                                           th:field="*{panCardNumber}" placeholder="ABCDE1234F"
-                                           pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" maxlength="10" style="text-transform: uppercase;">
+                                        th:field="*{panCardNumber}" placeholder="ABCDE1234F"
+                                        pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" maxlength="10"
+                                        style="text-transform: uppercase;">
                                 </div>
                             </div>
 
@@ -111,7 +120,8 @@
                             </div>
 
                             <div class="d-grid gap-2 mt-2">
-                                <button type="submit" class="btn btn-warning" onclick="return validateIdProof()">Register</button>
+                                <button type="submit" class="btn btn-warning"
+                                    onclick="return validateIdProof()">Register</button>
                                 <a th:href="@{/visitors/dashboard}" class="btn btn-outline-secondary">Dashboard</a>
                             </div>
                         </form>
@@ -124,7 +134,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Auto-uppercase PAN card input
-        document.getElementById('panCardNumber')?.addEventListener('input', function(e) {
+        document.getElementById('panCardNumber')?.addEventListener('input', function (e) {
             this.value = this.value.toUpperCase();
         });
 
@@ -132,29 +142,27 @@
         function validateIdProof() {
             const aadharNumber = document.getElementById('aadharNumber')?.value.trim();
             const panCardNumber = document.getElementById('panCardNumber')?.value.trim();
-            
+
             if ((!aadharNumber || aadharNumber.length === 0) && (!panCardNumber || panCardNumber.length === 0)) {
                 alert('Please provide at least one ID proof (Aadhar or PAN Card number).');
                 return false;
             }
-            
+
             // Validate Aadhar format (12 digits)
             if (aadharNumber && aadharNumber.length !== 12) {
                 alert('Aadhar number must be exactly 12 digits.');
                 return false;
             }
-            
+
             // Validate PAN format (5 letters, 4 digits, 1 letter)
             if (panCardNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panCardNumber)) {
                 alert('PAN card number must be in format: ABCDE1234F (5 letters, 4 digits, 1 letter).');
                 return false;
             }
-            
+
             return true;
         }
     </script>
 </body>
+
 </html>
-
-
-

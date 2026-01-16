@@ -85,23 +85,24 @@
             <span class="navbar-brand mb-0 h1">LogSphere <span class="text-secondary fw-normal fs-6">| Reports &
                     Analytics</span></span>
             <div>
-                <a th:href="@{/admin/dashboard}" id="dashboardLink" class="btn btn-outline-secondary me-3 btn-sm">← Back to
+                <a th:href="@{/admin/dashboard}" id="dashboardLink" class="btn btn-outline-secondary me-3 btn-sm">← Back
+                    to
                     Dashboard</a>
                 <a th:href="@{/logout}" class="btn btn-outline-danger btn-sm">Logout</a>
             </div>
         </div>
     </nav>
-    <script>
+    <script th:inline="javascript">
         document.addEventListener("DOMContentLoaded", function () {
             const dashboardLink = document.getElementById('dashboardLink');
             const referrer = document.referrer;
             if (referrer) {
                 if (referrer.includes('/hr/')) {
-                    dashboardLink.href = '/hr/dashboard';
+                    dashboardLink.href = /*[[@{/hr/dashboard}]]*/ '/hr/dashboard';
                 } else if (referrer.includes('/manager/')) {
-                    dashboardLink.href = '/manager/dashboard';
+                    dashboardLink.href = /*[[@{/manager/dashboard}]]*/ '/manager/dashboard';
                 } else if (referrer.includes('/employee/')) {
-                    dashboardLink.href = '/employee/dashboard';
+                    dashboardLink.href = /*[[@{/employee/dashboard}]]*/ '/employee/dashboard';
                 }
             }
         });
@@ -131,9 +132,11 @@
                     </div>
 
                     <div class="btn-group w-100 mt-auto" role="group">
-                        <a th:href="@{/reports/employee?period=daily}" class="btn btn-outline-primary py-2">Daily</a>
-                        <a th:href="@{/reports/employee?period=weekly}" class="btn btn-outline-primary py-2">Weekly</a>
-                        <a th:href="@{/reports/employee?period=monthly}" class="btn btn-outline-primary py-2">Monthly</a>
+                        <a th:href="@{/reports/employee(period='daily')}" class="btn btn-outline-primary py-2">Daily</a>
+                        <a th:href="@{/reports/employee(period='weekly')}"
+                            class="btn btn-outline-primary py-2">Weekly</a>
+                        <a th:href="@{/reports/employee(period='monthly')}"
+                            class="btn btn-outline-primary py-2">Monthly</a>
                     </div>
                 </div>
             </div>
@@ -150,9 +153,11 @@
                     </div>
 
                     <div class="btn-group w-100 mt-auto" role="group">
-                        <a th:href="@{/reports/visitor?period=daily}" class="btn btn-outline-primary py-2">Daily</a>
-                        <a th:href="@{/reports/visitor?period=weekly}" class="btn btn-outline-primary py-2">Weekly</a>
-                        <a th:href="@{/reports/visitor?period=monthly}" class="btn btn-outline-primary py-2">Monthly</a>
+                        <a th:href="@{/reports/visitor(period='daily')}" class="btn btn-outline-primary py-2">Daily</a>
+                        <a th:href="@{/reports/visitor(period='weekly')}"
+                            class="btn btn-outline-primary py-2">Weekly</a>
+                        <a th:href="@{/reports/visitor(period='monthly')}"
+                            class="btn btn-outline-primary py-2">Monthly</a>
                     </div>
                 </div>
             </div>
@@ -283,13 +288,14 @@
 
             // Redirect to the appropriate report endpoint based on selected type
             if (reportType === 'visitor') {
-                window.location.href = `/reports/visitor?startDate=${startDate}&endDate=${endDate}`;
+                const baseUrl = /*[[@{/reports/visitor}]]*/ '/reports/visitor';
+                window.location.href = `${baseUrl}?startDate=${startDate}&endDate=${endDate}`;
             } else {
-                window.location.href = `/reports/employee?startDate=${startDate}&endDate=${endDate}`;
+                const baseUrl = /*[[@{/reports/employee}]]*/ '/reports/employee';
+                window.location.href = `${baseUrl}?startDate=${startDate}&endDate=${endDate}`;
             }
         });
     </script>
 </body>
 
 </html>
-
