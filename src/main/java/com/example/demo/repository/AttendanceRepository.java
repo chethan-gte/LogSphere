@@ -13,19 +13,18 @@ import java.util.Optional;
 
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
-    
-    Optional<Attendance> findByEmployeeAndAttendanceDate(Employee employee, LocalDate date);
-    
+
+    List<Attendance> findByEmployeeAndAttendanceDate(Employee employee, LocalDate date);
+
     List<Attendance> findByEmployee(Employee employee);
-    
+
     List<Attendance> findByAttendanceDate(LocalDate date);
-    
+
     @Query("SELECT a FROM Attendance a WHERE a.attendanceDate BETWEEN :startDate AND :endDate")
     List<Attendance> findByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-    
-    @Query("SELECT a FROM Attendance a WHERE a.employee = :employee AND a.attendanceDate BETWEEN :startDate AND :endDate")
-    List<Attendance> findByEmployeeAndDateRange(@Param("employee") Employee employee, 
-                                                @Param("startDate") LocalDate startDate, 
-                                                @Param("endDate") LocalDate endDate);
-}
 
+    @Query("SELECT a FROM Attendance a WHERE a.employee = :employee AND a.attendanceDate BETWEEN :startDate AND :endDate")
+    List<Attendance> findByEmployeeAndDateRange(@Param("employee") Employee employee,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+}

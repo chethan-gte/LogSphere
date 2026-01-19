@@ -155,16 +155,17 @@ public class EmployeeManagementController {
         if (employee.getScheduledEndTime() == null || employee.getScheduledEndTime().isEmpty()) {
             employee.setScheduledEndTime("18:00");
         }
-        // Set password to empty string (not used for login - employees use email +
-        // employeeId)
-        // This satisfies the database requirement for the password field
-        employee.setPassword("");
+        // Password is required for employee login (email + password + employeeId)
+        if (employee.getPassword() == null || employee.getPassword().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Password is required for employee login!");
+            return "redirect:/admin/employees";
+        }
         // Generate QR code token for new employee
         String qrToken = qrCodeService.generateQRCodeToken();
         employee.setQrCodeToken(qrToken);
         employeeRepository.save(employee);
         redirectAttributes.addFlashAttribute("success",
-                "Employee added successfully! Employee can now login with email and Employee ID.");
+                "Employee added successfully! Employee can now login with email, password and Employee ID.");
         return "redirect:/admin/employees";
     }
 
@@ -186,7 +187,9 @@ public class EmployeeManagementController {
     }
 
     @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
-    public String updateEmployee(@PathVariable Long id, @ModelAttribute Employee employee,
+    public String updateEmployee(@PathVariable Long id,
+            @ModelAttribute Employee employee,
+            @RequestParam(required = false) String newPassword,
             RedirectAttributes redirectAttributes, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -204,6 +207,10 @@ public class EmployeeManagementController {
         emp.setDepartment(employee.getDepartment());
         emp.setDesignation(employee.getDesignation());
         emp.setPhone(employee.getPhone());
+        // Update password only if a new one was provided
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            emp.setPassword(newPassword);
+        }
 
         // Only update employee ID if it's different and doesn't exist
         if (!emp.getEmployeeId().equals(employee.getEmployeeId())) {
