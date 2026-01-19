@@ -43,18 +43,19 @@ public class ScheduledTaskService {
 
     @Autowired
     private VisitorRepository visitorRepository;
-    
+
     @Autowired
     private com.example.demo.repository.IdleIncidentRepository idleIncidentRepository;
 
-    // Send 5-minute reminder before clock-in time - runs every minute during work hours
+    // Send 5-minute reminder before clock-in time - runs every minute during work
+    // hours
     @Scheduled(cron = "0 * 6-10 * * MON-FRI") // Every minute from 6 AM to 10 AM, Mon-Fri
     public void sendClockInReminders() {
         LocalDate today = LocalDate.now();
         LocalTime currentTime = LocalTime.now();
-        
+
         List<Employee> allEmployees = employeeRepository.findAll();
-        
+
         for (Employee employee : allEmployees) {
             // Use default 9 AM if scheduled start time is not set
             LocalTime scheduledStartTime;
@@ -66,55 +67,57 @@ public class ScheduledTaskService {
             } else {
                 scheduledStartTime = LocalTime.parse(employee.getScheduledStartTime());
             }
-            
+
             // Skip if already checked in today
-            if ("IN".equals(employee.getStatus()) && 
-                employee.getCurrentCheckIn() != null && 
-                employee.getCurrentCheckIn().toLocalDate().equals(today)) {
+            if ("IN".equals(employee.getStatus()) &&
+                    employee.getCurrentCheckIn() != null &&
+                    employee.getCurrentCheckIn().toLocalDate().equals(today)) {
                 continue;
             }
-            
+
             // Skip if reminder already sent today
             if (Boolean.TRUE.equals(employee.getClockInReminderSent())) {
                 // Check if it's a new day
-                if (employee.getCurrentCheckIn() != null && 
-                    !employee.getCurrentCheckIn().toLocalDate().equals(today)) {
+                if (employee.getCurrentCheckIn() != null &&
+                        !employee.getCurrentCheckIn().toLocalDate().equals(today)) {
                     employee.setClockInReminderSent(false);
                 } else {
                     continue;
                 }
             }
-            
+
             LocalTime reminderTime = scheduledStartTime.minusMinutes(5);
-            
-            // Check if current time is within 1 minute of reminder time (5 minutes before scheduled time)
+
+            // Check if current time is within 1 minute of reminder time (5 minutes before
+            // scheduled time)
             // For example: if scheduled time is 9:00 AM, reminder time is 8:55 AM
             // Check if current time is between 8:54:30 and 8:55:30
-            if (currentTime.isAfter(reminderTime.minusSeconds(30)) && 
-                currentTime.isBefore(reminderTime.plusSeconds(30))) {
+            if (currentTime.isAfter(reminderTime.minusSeconds(30)) &&
+                    currentTime.isBefore(reminderTime.plusSeconds(30))) {
                 // Send reminder
-                System.out.println("Triggering clock-in reminder for: " + employee.getName() + 
-                    " at " + currentTime + " (reminder time: " + reminderTime + ", scheduled: " + scheduledStartTime + ")");
+                System.out.println("Triggering clock-in reminder for: " + employee.getName() +
+                        " at " + currentTime + " (reminder time: " + reminderTime + ", scheduled: " + scheduledStartTime
+                        + ")");
                 emailService.sendClockInReminder(
-                    employee.getEmail(),
-                    employee.getName(),
-                    scheduledStartTime.toString()
-                );
-                
+                        employee.getEmail(),
+                        employee.getName(),
+                        scheduledStartTime.toString());
+
                 employee.setClockInReminderSent(true);
                 employeeRepository.save(employee);
             }
         }
     }
 
-    // Send 5-minute reminder before clock-out time - runs every minute during afternoon hours
+    // Send 5-minute reminder before clock-out time - runs every minute during
+    // afternoon hours
     @Scheduled(cron = "0 * 14-20 * * MON-FRI") // Every minute from 2 PM to 8 PM, Mon-Fri
     public void sendClockOutReminders() {
         LocalDate today = LocalDate.now();
         LocalTime currentTime = LocalTime.now();
-        
+
         List<Employee> clockedInEmployees = employeeRepository.findByStatus("IN");
-        
+
         for (Employee employee : clockedInEmployees) {
             // Use default 6 PM if scheduled end time is not set
             LocalTime scheduledEndTime;
@@ -126,84 +129,87 @@ public class ScheduledTaskService {
             } else {
                 scheduledEndTime = LocalTime.parse(employee.getScheduledEndTime());
             }
-            
+
             // Skip if not checked in today
-            if (employee.getCurrentCheckIn() == null || 
-                !employee.getCurrentCheckIn().toLocalDate().equals(today)) {
+            if (employee.getCurrentCheckIn() == null ||
+                    !employee.getCurrentCheckIn().toLocalDate().equals(today)) {
                 continue;
             }
-            
+
             // Skip if reminder already sent today
             if (Boolean.TRUE.equals(employee.getClockOutReminderSent())) {
                 continue;
             }
-            
+
             LocalTime reminderTime = scheduledEndTime.minusMinutes(5);
-            
-            // Check if current time is within 1 minute of reminder time (5 minutes before scheduled time)
+
+            // Check if current time is within 1 minute of reminder time (5 minutes before
+            // scheduled time)
             // For example: if scheduled time is 6:00 PM, reminder time is 5:55 PM
             // Check if current time is between 5:54:30 and 5:55:30
-            if (currentTime.isAfter(reminderTime.minusSeconds(30)) && 
-                currentTime.isBefore(reminderTime.plusSeconds(30))) {
+            if (currentTime.isAfter(reminderTime.minusSeconds(30)) &&
+                    currentTime.isBefore(reminderTime.plusSeconds(30))) {
                 // Send reminder
-                System.out.println("Triggering clock-out reminder for: " + employee.getName() + 
-                    " at " + currentTime + " (reminder time: " + reminderTime + ", scheduled: " + scheduledEndTime + ")");
+                System.out.println("Triggering clock-out reminder for: " + employee.getName() +
+                        " at " + currentTime + " (reminder time: " + reminderTime + ", scheduled: " + scheduledEndTime
+                        + ")");
                 emailService.sendClockOutReminder(
-                    employee.getEmail(),
-                    employee.getName(),
-                    scheduledEndTime.toString()
-                );
-                
+                        employee.getEmail(),
+                        employee.getName(),
+                        scheduledEndTime.toString());
+
                 employee.setClockOutReminderSent(true);
                 employeeRepository.save(employee);
             }
         }
     }
 
-    // Check for late arrivals - runs every 15 minutes during work hours (8 AM to 6 PM)
+    // Check for late arrivals - runs every 15 minutes during work hours (8 AM to 6
+    // PM)
     @Scheduled(cron = "0 */15 8-18 * * MON-FRI") // Every 15 minutes from 8 AM to 6 PM, Mon-Fri
     public void checkLateArrivals() {
         LocalDate today = LocalDate.now();
         LocalTime currentTime = LocalTime.now();
-        
+
         List<Employee> allEmployees = employeeRepository.findAll();
-        
+
         for (Employee employee : allEmployees) {
             // Skip if employee doesn't have scheduled start time
             if (employee.getScheduledStartTime() == null || employee.getScheduledStartTime().isEmpty()) {
                 continue;
             }
-            
+
             // Skip if alert already sent today
             if (Boolean.TRUE.equals(employee.getLateAlertSent())) {
                 // Check if it's a new day - reset flag if needed
-                if (employee.getCurrentCheckIn() != null && 
-                    !employee.getCurrentCheckIn().toLocalDate().equals(today)) {
+                if (employee.getCurrentCheckIn() != null &&
+                        !employee.getCurrentCheckIn().toLocalDate().equals(today)) {
                     employee.setLateAlertSent(false);
                 } else {
                     continue;
                 }
             }
-            
+
             LocalTime scheduledStartTime = LocalTime.parse(employee.getScheduledStartTime());
-            
-            // Check if current time is past scheduled start time (with 5 minute grace period)
+
+            // Check if current time is past scheduled start time (with 5 minute grace
+            // period)
             if (currentTime.isAfter(scheduledStartTime.plusMinutes(5))) {
                 // Check if employee is checked in
                 if ("IN".equals(employee.getStatus()) && employee.getCurrentCheckIn() != null) {
                     // Employee checked in late
                     LocalTime actualCheckInTime = employee.getCurrentCheckIn().toLocalTime();
-                    
+
                     if (actualCheckInTime.isAfter(scheduledStartTime)) {
                         // Mark late arrival (email sending removed - only tracking for records)
                         employee.setLateAlertSent(true);
                         employeeRepository.save(employee);
-                        
+
                         // Update attendance status to LATE
-                        Optional<Attendance> attendanceOpt = attendanceRepository
-                            .findByEmployeeAndAttendanceDate(employee, today);
-                        if (attendanceOpt.isPresent()) {
-                            Attendance attendance = attendanceOpt.get();
+                        List<Attendance> attendanceOpt = attendanceRepository
+                                .findByEmployeeAndAttendanceDate(employee, today);
+                        if (!attendanceOpt.isEmpty()) {
+                            Attendance attendance = attendanceOpt.get(0);
                             attendance.setStatus("LATE");
                             attendanceRepository.save(attendance);
                         }
@@ -221,14 +227,15 @@ public class ScheduledTaskService {
         }
     }
 
-    // Check for early departures - runs every 15 minutes during work hours (2 PM to 6 PM)
+    // Check for early departures - runs every 15 minutes during work hours (2 PM to
+    // 6 PM)
     @Scheduled(cron = "0 */15 14-18 * * MON-FRI") // Every 15 minutes from 2 PM to 6 PM, Mon-Fri
     public void checkEarlyDepartures() {
         LocalDate today = LocalDate.now();
         LocalTime currentTime = LocalTime.now();
-        
+
         List<Employee> clockedInEmployees = employeeRepository.findByStatus("IN");
-        
+
         for (Employee employee : clockedInEmployees) {
             // Use default 6 PM if scheduled end time is not set
             LocalTime scheduledEndTime;
@@ -240,50 +247,50 @@ public class ScheduledTaskService {
             } else {
                 scheduledEndTime = LocalTime.parse(employee.getScheduledEndTime());
             }
-            
+
             // Skip if alert already sent today
             if (Boolean.TRUE.equals(employee.getEarlyAlertSent())) {
                 // Check if it's a new day - reset flag if needed
-                if (employee.getCurrentCheckIn() != null && 
-                    !employee.getCurrentCheckIn().toLocalDate().equals(today)) {
+                if (employee.getCurrentCheckIn() != null &&
+                        !employee.getCurrentCheckIn().toLocalDate().equals(today)) {
                     employee.setEarlyAlertSent(false);
                 } else {
                     continue;
                 }
             }
-            
+
             // Check if current time is before scheduled end time (with 5 minute buffer)
             // Only check if we're within 2 hours of scheduled end time
-            if (currentTime.isBefore(scheduledEndTime.minusMinutes(5)) && 
-                currentTime.isAfter(scheduledEndTime.minusHours(2))) {
+            if (currentTime.isBefore(scheduledEndTime.minusMinutes(5)) &&
+                    currentTime.isAfter(scheduledEndTime.minusHours(2))) {
                 // This is a pre-check - employee is still clocked in but approaching end time
                 // We'll check again when they clock out
                 continue;
             }
         }
-        
+
         // Check employees who have already clocked out early
         List<Employee> allEmployees = employeeRepository.findAll();
         for (Employee employee : allEmployees) {
             if (employee.getScheduledEndTime() == null || employee.getScheduledEndTime().isEmpty()) {
                 continue;
             }
-            
+
             if (Boolean.TRUE.equals(employee.getEarlyAlertSent())) {
-                if (employee.getCurrentCheckOut() != null && 
-                    !employee.getCurrentCheckOut().toLocalDate().equals(today)) {
+                if (employee.getCurrentCheckOut() != null &&
+                        !employee.getCurrentCheckOut().toLocalDate().equals(today)) {
                     employee.setEarlyAlertSent(false);
                 } else {
                     continue;
                 }
             }
-            
+
             // Check if employee checked out today
-            if (employee.getCurrentCheckOut() != null && 
-                employee.getCurrentCheckOut().toLocalDate().equals(today)) {
+            if (employee.getCurrentCheckOut() != null &&
+                    employee.getCurrentCheckOut().toLocalDate().equals(today)) {
                 LocalTime actualCheckOutTime = employee.getCurrentCheckOut().toLocalTime();
                 LocalTime sixPM = LocalTime.of(18, 0); // 6:00 PM
-                
+
                 // Use default 6 PM if scheduled end time is not set
                 LocalTime scheduledEndTime = sixPM;
                 String scheduledTimeStr = "18:00";
@@ -295,10 +302,10 @@ public class ScheduledTaskService {
                     employee.setScheduledEndTime("18:00");
                     employeeRepository.save(employee);
                 }
-                
+
                 // Check if employee clocked out before scheduled time
-                if (actualCheckOutTime.isBefore(scheduledEndTime) && 
-                    (employee.getEarlyAlertSent() == null || !employee.getEarlyAlertSent())) {
+                if (actualCheckOutTime.isBefore(scheduledEndTime) &&
+                        (employee.getEarlyAlertSent() == null || !employee.getEarlyAlertSent())) {
                     // Mark early clock-out (email sending removed - only tracking for records)
                     employee.setEarlyAlertSent(true);
                     employeeRepository.save(employee);
@@ -312,35 +319,34 @@ public class ScheduledTaskService {
     public void checkMissedClockOuts() {
         List<Employee> clockedInEmployees = employeeRepository.findByStatus("IN");
         LocalTime currentTime = LocalTime.now();
-        
+
         // Only check if it's past scheduled end time
         for (Employee employee : clockedInEmployees) {
             if (employee.getScheduledEndTime() != null && !employee.getScheduledEndTime().isEmpty()) {
                 LocalTime scheduledEndTime = LocalTime.parse(employee.getScheduledEndTime());
-                
+
                 // If current time is 30 minutes past scheduled end time and still clocked in
                 if (currentTime.isAfter(scheduledEndTime.plusMinutes(30))) {
-                    // Check if employee has been clocked in for more than 8 hours (likely forgot to clock out)
+                    // Check if employee has been clocked in for more than 8 hours (likely forgot to
+                    // clock out)
                     if (employee.getCurrentCheckIn() != null) {
                         long hoursSinceCheckIn = java.time.temporal.ChronoUnit.HOURS.between(
-                            employee.getCurrentCheckIn(), LocalDateTime.now());
-                        
+                                employee.getCurrentCheckIn(), LocalDateTime.now());
+
                         if (hoursSinceCheckIn > 8) {
                             // Send missed clock out alert to employee
                             emailService.sendMissedClockOutAlert(
-                                employee.getEmail(),
-                                employee.getName(),
-                                employee.getCurrentCheckIn().toLocalTime().toString()
-                            );
-                            
+                                    employee.getEmail(),
+                                    employee.getName(),
+                                    employee.getCurrentCheckIn().toLocalTime().toString());
+
                             // Send alert to admin
                             userRepository.findByEmail("admin@logsphere.com").ifPresent(admin -> {
                                 emailService.sendMissedClockOutAlertToAdmin(
-                                    admin.getEmail(),
-                                    employee.getName(),
-                                    employee.getEmployeeId(),
-                                    employee.getCurrentCheckIn().toLocalTime().toString()
-                                );
+                                        admin.getEmail(),
+                                        employee.getName(),
+                                        employee.getEmployeeId(),
+                                        employee.getCurrentCheckIn().toLocalTime().toString());
                             });
                         }
                     }
@@ -354,11 +360,11 @@ public class ScheduledTaskService {
     public void resetDailyFlags() {
         List<Employee> employees = employeeRepository.findAll();
         LocalDate today = LocalDate.now();
-        
+
         for (Employee employee : employees) {
             // Reset flags only if it's a new day
             boolean shouldReset = false;
-            
+
             if (employee.getCurrentCheckIn() != null) {
                 shouldReset = !employee.getCurrentCheckIn().toLocalDate().equals(today);
             } else if (employee.getCurrentCheckOut() != null) {
@@ -367,7 +373,7 @@ public class ScheduledTaskService {
                 // No check-in/out today, reset flags
                 shouldReset = true;
             }
-            
+
             if (shouldReset) {
                 employee.setLateAlertSent(false);
                 employee.setEarlyAlertSent(false);
@@ -387,21 +393,21 @@ public class ScheduledTaskService {
 
         for (Employee employee : clockedInEmployees) {
             LocalDateTime lastActivity = employee.getLastActivityTime();
-            
+
             // If no activity time set, use check-in time
             if (lastActivity == null && employee.getCurrentCheckIn() != null) {
                 lastActivity = employee.getCurrentCheckIn();
             }
-            
+
             if (lastActivity != null) {
                 long minutesIdle = java.time.temporal.ChronoUnit.MINUTES.between(lastActivity, now);
 
                 // Alert if idle for more than 1 minute
                 if (minutesIdle >= 1) {
                     // Check if there's already an active incident
-                    Optional<com.example.demo.model.IdleIncident> existingIncident = 
-                        idleIncidentRepository.findActiveIncidentByEmployee(employee);
-                    
+                    Optional<com.example.demo.model.IdleIncident> existingIncident = idleIncidentRepository
+                            .findActiveIncidentByEmployee(employee);
+
                     if (existingIncident.isEmpty() || !Boolean.TRUE.equals(existingIncident.get().getAlertSent())) {
                         // Create or update idle incident
                         com.example.demo.model.IdleIncident incident;
@@ -410,22 +416,22 @@ public class ScheduledTaskService {
                         } else {
                             incident = new com.example.demo.model.IdleIncident(employee, lastActivity);
                         }
-                        
+
                         incident.setIdleDurationMinutes(minutesIdle);
                         incident.setStatus("ACTIVE");
                         incident = idleIncidentRepository.save(incident);
-                        
+
                         // Mark alert as sent (for dashboard notification tracking)
                         // Email sending removed - notifications now only shown in dashboard
                         if (!Boolean.TRUE.equals(incident.getAlertSent())) {
                             incident.setAlertSent(true);
                             idleIncidentRepository.save(incident);
-                            
+
                             employee.setIdleAlertSent(true);
                             employeeRepository.save(employee);
-                            
-                            System.out.println("Idle incident logged for: " + employee.getName() + 
-                                " - Idle for " + minutesIdle + " minutes (notification shown in dashboard)");
+
+                            System.out.println("Idle incident logged for: " + employee.getName() +
+                                    " - Idle for " + minutesIdle + " minutes (notification shown in dashboard)");
                         }
                     } else {
                         // Update existing incident duration
@@ -445,11 +451,11 @@ public class ScheduledTaskService {
         List<Employee> employees = employeeRepository.findAll();
 
         for (Employee employee : employees) {
-            Optional<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
-            
-            if (attendanceOpt.isPresent()) {
-                Attendance attendance = attendanceOpt.get();
-                
+            List<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
+
+            if (!attendanceOpt.isEmpty()) {
+                Attendance attendance = attendanceOpt.get(0);
+
                 // Calculate effort score
                 double score = effortScoreService.calculateEffortScore(employee, attendance);
                 attendance.setEffortScore(score);
@@ -457,7 +463,7 @@ public class ScheduledTaskService {
 
                 // Update employee's overall effort score (average of last 7 days)
                 updateEmployeeEffortScore(employee);
-                
+
                 // Update consistency days
                 effortScoreService.updateConsistencyDays(employee);
                 employeeRepository.save(employee);
@@ -468,17 +474,17 @@ public class ScheduledTaskService {
     private void updateEmployeeEffortScore(Employee employee) {
         LocalDate today = LocalDate.now();
         LocalDate sevenDaysAgo = today.minusDays(7);
-        
+
         List<Attendance> recentAttendance = attendanceRepository.findByEmployeeAndDateRange(
-            employee, sevenDaysAgo, today);
-        
+                employee, sevenDaysAgo, today);
+
         if (!recentAttendance.isEmpty()) {
             double averageScore = recentAttendance.stream()
-                .filter(a -> a.getEffortScore() != null)
-                .mapToDouble(Attendance::getEffortScore)
-                .average()
-                .orElse(100.0);
-            
+                    .filter(a -> a.getEffortScore() != null)
+                    .mapToDouble(Attendance::getEffortScore)
+                    .average()
+                    .orElse(100.0);
+
             employee.setEffortScore(averageScore);
         }
     }
@@ -498,16 +504,16 @@ public class ScheduledTaskService {
             long minutesUntilMeeting = java.time.temporal.ChronoUnit.MINUTES.between(now, startTime);
 
             // Send 1 hour reminder (60 minutes before)
-            if (minutesUntilMeeting <= 60 && minutesUntilMeeting > 55 && 
-                (meeting.getReminder1HourSent() == null || !meeting.getReminder1HourSent())) {
+            if (minutesUntilMeeting <= 60 && minutesUntilMeeting > 55 &&
+                    (meeting.getReminder1HourSent() == null || !meeting.getReminder1HourSent())) {
                 sendOneHourReminder(meeting);
                 meeting.setReminder1HourSent(true);
                 meetingRepository.save(meeting);
             }
 
             // Send 15 minutes reminder
-            if (minutesUntilMeeting <= 15 && minutesUntilMeeting > 10 && 
-                (meeting.getReminder15MinSent() == null || !meeting.getReminder15MinSent())) {
+            if (minutesUntilMeeting <= 15 && minutesUntilMeeting > 10 &&
+                    (meeting.getReminder15MinSent() == null || !meeting.getReminder15MinSent())) {
                 sendFifteenMinuteReminder(meeting);
                 meeting.setReminder15MinSent(true);
                 meetingRepository.save(meeting);
@@ -524,32 +530,30 @@ public class ScheduledTaskService {
 
         // Send reminder to organizer
         emailService.sendMeetingReminder(
-            organizerEmail,
-            organizerName,
-            meeting.getTitle(),
-            organizerName,
-            visitorName,
-            location,
-            meeting.getStartTime(),
-            meeting.getEndTime(),
-            timeUntil
-        );
+                organizerEmail,
+                organizerName,
+                meeting.getTitle(),
+                organizerName,
+                visitorName,
+                location,
+                meeting.getStartTime(),
+                meeting.getEndTime(),
+                timeUntil);
 
         // Send reminder to visitor if applicable
         if (meeting.getVisitorId() != null) {
             Visitor visitor = visitorRepository.findById(meeting.getVisitorId()).orElse(null);
             if (visitor != null && visitor.getEmail() != null && !visitor.getEmail().isEmpty()) {
                 emailService.sendMeetingReminder(
-                    visitor.getEmail(),
-                    visitor.getName(),
-                    meeting.getTitle(),
-                    organizerName,
-                    visitorName,
-                    location,
-                    meeting.getStartTime(),
-                    meeting.getEndTime(),
-                    timeUntil
-                );
+                        visitor.getEmail(),
+                        visitor.getName(),
+                        meeting.getTitle(),
+                        organizerName,
+                        visitorName,
+                        location,
+                        meeting.getStartTime(),
+                        meeting.getEndTime(),
+                        timeUntil);
             }
         }
     }
@@ -563,34 +567,31 @@ public class ScheduledTaskService {
 
         // Send reminder to organizer
         emailService.sendMeetingReminder(
-            organizerEmail,
-            organizerName,
-            meeting.getTitle(),
-            organizerName,
-            visitorName,
-            location,
-            meeting.getStartTime(),
-            meeting.getEndTime(),
-            timeUntil
-        );
+                organizerEmail,
+                organizerName,
+                meeting.getTitle(),
+                organizerName,
+                visitorName,
+                location,
+                meeting.getStartTime(),
+                meeting.getEndTime(),
+                timeUntil);
 
         // Send reminder to visitor if applicable
         if (meeting.getVisitorId() != null) {
             Visitor visitor = visitorRepository.findById(meeting.getVisitorId()).orElse(null);
             if (visitor != null && visitor.getEmail() != null && !visitor.getEmail().isEmpty()) {
                 emailService.sendMeetingReminder(
-                    visitor.getEmail(),
-                    visitor.getName(),
-                    meeting.getTitle(),
-                    organizerName,
-                    visitorName,
-                    location,
-                    meeting.getStartTime(),
-                    meeting.getEndTime(),
-                    timeUntil
-                );
+                        visitor.getEmail(),
+                        visitor.getName(),
+                        meeting.getTitle(),
+                        organizerName,
+                        visitorName,
+                        location,
+                        meeting.getStartTime(),
+                        meeting.getEndTime(),
+                        timeUntil);
             }
         }
     }
 }
-
