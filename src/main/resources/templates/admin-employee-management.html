@@ -127,7 +127,8 @@
                                 <label class="form-label">Password <span class="text-danger">*</span></label>
                                 <input type="password" class="form-control" th:field="*{password}"
                                     placeholder="Set login password" required>
-                                <small class="text-muted">Employee will login using Email + Password + Employee ID</small>
+                                <small class="text-muted">Employee will login using Email + Password + Employee
+                                    ID</small>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Department <span class="text-danger">*</span></label>
@@ -144,6 +145,14 @@
                                     <option th:each="desig : ${designations}" th:value="${desig}" th:text="${desig}">
                                     </option>
                                 </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Base Salary</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" step="0.01" class="form-control" th:field="*{salary}"
+                                        placeholder="0.00">
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Phone</label>

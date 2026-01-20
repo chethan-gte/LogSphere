@@ -207,6 +207,7 @@ public class EmployeeManagementController {
         emp.setDepartment(employee.getDepartment());
         emp.setDesignation(employee.getDesignation());
         emp.setPhone(employee.getPhone());
+        emp.setSalary(employee.getSalary());
         // Update password only if a new one was provided
         if (newPassword != null && !newPassword.trim().isEmpty()) {
             emp.setPassword(newPassword);
