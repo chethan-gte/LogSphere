@@ -795,14 +795,26 @@ public class HRController {
 
         List<Payroll> pendingPayrolls = payrollRepository.findByStatus("PENDING");
         for (Payroll payroll : pendingPayrolls) {
-            payroll.setPayslipGenerated(true);
-            payroll.setStatus("PROCESSED");
             payrollRepository.save(payroll);
         }
-
-        redirectAttributes.addFlashAttribute("success",
-                "Generated payslips for " + pendingPayrolls.size() + " payroll records!");
+        redirectAttributes.addFlashAttribute("success", "All pending payslips generated successfully!");
         return "redirect:/hr/dashboard";
+    }
+
+    @RequestMapping(value = "/api/employees/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public Employee getEmployeeDetails(@PathVariable Long id, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return null;
+        }
+        Employee employee = employeeRepository.findById(id).orElse(null);
+        if (employee != null) {
+            System.out.println("HR fetching employee: " + employee.getName() + ", Salary: " + employee.getSalary());
+        } else {
+            System.out.println("HR fetching employee: Not Found for ID " + id);
+        }
+        return employee;
     }
 
     @RequestMapping(value = "/suggestion/respond/{id}", method = RequestMethod.POST)
