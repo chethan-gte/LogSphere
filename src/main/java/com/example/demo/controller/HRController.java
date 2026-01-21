@@ -664,8 +664,13 @@ public class HRController {
             return "redirect:/hr/login";
         }
 
-        List<Employee> allEmployees = employeeRepository.findAll();
+        // Get only active employees for payroll
+        List<Employee> allEmployees = employeeRepository.findAll()
+                .stream()
+                .filter(emp -> emp.getIsActive() == null || emp.getIsActive())
+                .collect(Collectors.toList());
         model.addAttribute("employees", allEmployees);
+        System.out.println("Loaded " + allEmployees.size() + " active employees for payroll form");
 
         return "hr-add-payroll";
     }
@@ -784,6 +789,72 @@ public class HRController {
             redirectAttributes.addFlashAttribute("error", "Error generating payslip: " + e.getMessage());
             return "redirect:/hr/dashboard";
         }
+    }
+
+    @RequestMapping(value = "/api/payroll/base-salary/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public Map<String, Object> getEmployeeBaseSalary(@PathVariable Long id, HttpSession session) {
+        System.out.println("DEBUG: Fetching base salary for Employee ID: " + id);
+        User user = (User) session.getAttribute("user");
+        Map<String, Object> response = new HashMap<>();
+
+        if (user == null || !"HR".equals(user.getRole())) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return response;
+        }
+
+        try {
+            Optional<Employee> employeeOpt = employeeRepository.findById(id);
+            if (employeeOpt.isPresent()) {
+                Employee emp = employeeOpt.get();
+                System.out
+                        .println("DEBUG: Employee found: " + emp.getName() + ", Salary in Profile: " + emp.getSalary());
+
+                // 1. Check Employee Profile Salary (Admin Set)
+                if (emp.getSalary() != null && emp.getSalary() > 0) {
+                    response.put("success", true);
+                    response.put("baseSalary", emp.getSalary());
+                    return response;
+                }
+
+                // 2. Fallback: Fetch by ID to be safe
+                System.out.println("DEBUG: Fetching payrolls for Employee ID: " + id);
+                List<Payroll> payrolls = payrollRepository.findByEmployee_Id(id);
+                System.out
+                        .println("DEBUG: Found " + (payrolls != null ? payrolls.size() : "null") + " payroll records.");
+
+                if (payrolls != null && !payrolls.isEmpty()) {
+                    // Sort by PayPeriodEnd descending (latest first)
+                    payrolls.sort((p1, p2) -> {
+                        if (p2.getPayPeriodEnd() == null || p1.getPayPeriodEnd() == null)
+                            return 0;
+                        return p2.getPayPeriodEnd().compareTo(p1.getPayPeriodEnd());
+                    });
+
+                    Double latestBaseSalary = payrolls.get(0).getBaseSalary();
+                    System.out.println("DEBUG: Latest base salary from payroll: " + latestBaseSalary);
+
+                    response.put("success", true);
+                    response.put("baseSalary", latestBaseSalary);
+                } else {
+                    System.out.println("DEBUG: No payroll records found.");
+                    response.put("success", true); // Soft success
+                    response.put("baseSalary", 0.0);
+                    response.put("message", "No base salary set");
+                }
+            } else {
+                response.put("success", false);
+                response.put("message", "Employee not found");
+            }
+        } catch (Exception e) {
+            System.err.println("ERROR in getEmployeeBaseSalary: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error: " + e.getMessage());
+        }
+
+        return response;
     }
 
     @RequestMapping(value = "/payroll/generate-all", method = RequestMethod.GET)

@@ -13,7 +13,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
@@ -109,7 +111,11 @@ public class AdminController {
     @RequestMapping(value = "/api/employees", method = RequestMethod.GET)
     @org.springframework.web.bind.annotation.ResponseBody
     public List<com.example.demo.model.Employee> getAllEmployees() {
-        return employeeRepository.findAll();
+        // Return only active employees
+        return employeeRepository.findAll()
+                .stream()
+                .filter(emp -> emp.getIsActive() == null || emp.getIsActive())
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @RequestMapping(value = "/api/employees/{id}", method = RequestMethod.GET)
@@ -117,6 +123,65 @@ public class AdminController {
     public com.example.demo.model.Employee getEmployeeDetails(
             @org.springframework.web.bind.annotation.PathVariable Long id) {
         return employeeRepository.findById(id).orElse(null);
+    }
+
+    @RequestMapping(value = "/api/payroll/base-salary/{employeeId}", method = RequestMethod.GET)
+    @org.springframework.web.bind.annotation.ResponseBody
+    public java.util.Map<String, Object> getBaseSalaryFromPayroll(
+            @org.springframework.web.bind.annotation.PathVariable Long employeeId,
+            HttpSession session) {
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        // Check if user is logged in (admin should have access)
+        if (session.getAttribute("user") == null) {
+            response.put("success", false);
+            response.put("message", "Unauthorized");
+            return response;
+        }
+
+        try {
+            java.util.Optional<com.example.demo.model.Employee> employeeOpt = employeeRepository.findById(employeeId);
+            if (!employeeOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Employee not found");
+                return response;
+            }
+
+            com.example.demo.model.Employee employee = employeeOpt.get();
+
+            // Prefer the salary stored on the employee profile (set by Admin)
+            Double employeeSalary = employee.getSalary();
+            if (employeeSalary != null && employeeSalary > 0) {
+                response.put("success", true);
+                response.put("baseSalary", employeeSalary);
+                response.put("employeeName", employee.getName());
+                response.put("employeeId", employee.getEmployeeId());
+                return response;
+            }
+
+            // Fallback: use the most recent payroll record if available
+            List<com.example.demo.model.Payroll> payrolls = payrollRepository
+                    .findByEmployeeOrderByPayPeriodEndDesc(employee);
+
+            if (payrolls != null && !payrolls.isEmpty()) {
+                // Get the most recent payroll (first in the list since it's ordered by PayPeriodEnd DESC)
+                com.example.demo.model.Payroll latestPayroll = payrolls.get(0);
+                response.put("success", true);
+                response.put("baseSalary", latestPayroll.getBaseSalary());
+                response.put("employeeName", employee.getName());
+                response.put("employeeId", employee.getEmployeeId());
+            } else {
+                response.put("success", false);
+                response.put("message", "No payroll record found and employee has no base salary set");
+                response.put("baseSalary", 0);
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching base salary: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Error: " + e.getMessage());
+        }
+
+        return response;
     }
 
     @RequestMapping(value = "/payroll/save", method = RequestMethod.POST)
@@ -132,6 +197,10 @@ public class AdminController {
                 response.put("message", "Employee not found");
                 return response;
             }
+
+            // Persist the admin-set base salary on the employee profile so HR can only read it
+            employee.setSalary(baseSalary);
+            employeeRepository.save(employee);
 
             com.example.demo.model.Payroll payroll = new com.example.demo.model.Payroll();
             payroll.setEmployee(employee);
