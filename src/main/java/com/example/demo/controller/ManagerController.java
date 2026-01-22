@@ -546,7 +546,7 @@ public class ManagerController {
             return "redirect:/manager/dashboard";
         }
         
-        model.addAttribute("rule", ruleOpt.get());
+        model.addAttribute("rule", ruleOpt.get()); 
         return "manager-edit-rule";
     }
     
