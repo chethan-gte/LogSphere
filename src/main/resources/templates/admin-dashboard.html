@@ -228,9 +228,30 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" th:href="@{/admin/employees}">
-                    <span>👨‍💼</span> Manage Employees
+                <a class="nav-link" data-bs-toggle="collapse" href="#manageEmployeesSubmenu" role="button"
+                    aria-expanded="false" aria-controls="manageEmployeesSubmenu">
+                    <span>👨‍💼</span> Manage Employees <i class="fas fa-chevron-down ms-auto"
+                        style="font-size: 0.8em;"></i>
                 </a>
+                <div class="collapse" id="manageEmployeesSubmenu">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/employees}">
+                                <span class="small">Employee Registration</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/register/hr}">
+                                <span class="small">HR Registration</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/register/manager}">
+                                <span class="small">Manager Registration</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link" th:href="@{/admin/payroll}">
@@ -252,6 +273,17 @@
 
     <!-- Main Content -->
     <div class="main-content">
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4"
+            role="alert">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4"
+            role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-5">
             <div>
@@ -647,4 +679,3 @@
 </body>
 
 </html>
-
