@@ -37,6 +37,9 @@ public class ManagerController {
     private MeetingRepository meetingRepository;
 
     @Autowired
+    private com.example.demo.repository.NotificationRepository notificationRepository;
+
+    @Autowired
     private LeaveRequestRepository leaveRequestRepository;
 
     @Autowired
@@ -662,6 +665,79 @@ public class ManagerController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error responding to suggestion: " + e.getMessage());
             return "redirect:/manager/dashboard?tab=suggestions";
+        }
+
+    }
+
+    @RequestMapping(value = "/meetings/create", method = RequestMethod.POST)
+    public String createTeamMeeting(@RequestParam String title,
+            @RequestParam(required = false) String description,
+            @RequestParam String date,
+            @RequestParam String startTime,
+            @RequestParam(required = false) String endTime,
+            @RequestParam(required = false) String meetingType,
+            @RequestParam(required = false) List<Long> employeeIds,
+            @RequestParam(required = false, defaultValue = "false") boolean addEveryone,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return "redirect:/manager/login";
+        }
+
+        try {
+            Meeting meeting = new Meeting();
+            meeting.setTitle(title);
+            meeting.setDescription(description);
+            meeting.setStatus("SCHEDULED");
+            if (meetingType != null && !meetingType.isEmpty()) {
+                meeting.setMeetingType(meetingType);
+            }
+
+            // Handle Date and Time
+            LocalDate meetingDate = LocalDate.parse(date);
+            LocalDateTime startDateTime = meetingDate.atTime(java.time.LocalTime.parse(startTime));
+            meeting.setStartTime(startDateTime);
+
+            if (endTime != null && !endTime.isEmpty()) {
+                LocalDateTime endDateTime = meetingDate.atTime(java.time.LocalTime.parse(endTime));
+                meeting.setEndTime(endDateTime);
+            }
+
+            // Handle Attendees
+            List<Employee> attendees = new ArrayList<>();
+            if (addEveryone) {
+                attendees = employeeRepository.findAll().stream()
+                        .filter(Employee::getIsActive)
+                        .collect(Collectors.toList());
+            } else if (employeeIds != null && !employeeIds.isEmpty()) {
+                attendees = employeeRepository.findAllById(employeeIds);
+            }
+            meeting.setAttendees(attendees);
+
+            // Set organizer (optional, could be linked to manager user if User entity had
+            // link to Employee)
+            // For now, leaving organizer null or could fetch a specific "Manager" employee
+            // profile if it existed.
+
+            meetingRepository.save(meeting);
+
+            // Create Notifications for Attendees
+            // Create Notifications for Attendees
+            for (Employee attendee : attendees) {
+                String message = "New Meeting: " + title + " on " + meetingDate + " at " + startTime;
+                com.example.demo.model.Notification notification = new com.example.demo.model.Notification(attendee,
+                        message, meeting.getId());
+                notificationRepository.save(notification);
+
+            }
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Team meeting scheduled successfully with " + attendees.size() + " attendees!");
+            return "redirect:/manager/dashboard?tab=planning";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error creating meeting: " + e.getMessage());
+            return "redirect:/manager/dashboard?tab=planning";
         }
     }
 }

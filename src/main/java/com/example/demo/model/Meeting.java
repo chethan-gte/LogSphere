@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "meetings")
@@ -41,6 +42,10 @@ public class Meeting {
 
     @Column(name = "meeting_type")
     private String meetingType; // INTERNAL, EXTERNAL, CLIENT
+
+    @ManyToMany
+    @JoinTable(name = "meeting_attendees", joinColumns = @JoinColumn(name = "meeting_id"), inverseJoinColumns = @JoinColumn(name = "employee_id"))
+    private List<Employee> attendees;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -157,6 +162,14 @@ public class Meeting {
         this.meetingType = meetingType;
     }
 
+    public List<Employee> getAttendees() {
+        return attendees;
+    }
+
+    public void setAttendees(List<Employee> attendees) {
+        this.attendees = attendees;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -181,4 +194,3 @@ public class Meeting {
         this.reminder15MinSent = reminder15MinSent;
     }
 }
-
