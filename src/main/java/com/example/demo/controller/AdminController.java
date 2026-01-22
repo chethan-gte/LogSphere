@@ -163,7 +163,8 @@ public class AdminController {
                     .findByEmployeeOrderByPayPeriodEndDesc(employee);
 
             if (payrolls != null && !payrolls.isEmpty()) {
-                // Get the most recent payroll (first in the list since it's ordered by PayPeriodEnd DESC)
+                // Get the most recent payroll (first in the list since it's ordered by
+                // PayPeriodEnd DESC)
                 com.example.demo.model.Payroll latestPayroll = payrolls.get(0);
                 response.put("success", true);
                 response.put("baseSalary", latestPayroll.getBaseSalary());
@@ -198,7 +199,8 @@ public class AdminController {
                 return response;
             }
 
-            // Persist the admin-set base salary on the employee profile so HR can only read it
+            // Persist the admin-set base salary on the employee profile so HR can only read
+            // it
             employee.setSalary(baseSalary);
             employeeRepository.save(employee);
 
@@ -223,5 +225,73 @@ public class AdminController {
             response.put("message", "Error saving payroll: " + e.getMessage());
         }
         return response;
+    }
+
+    @Autowired
+    private com.example.demo.repository.UserRepository userRepository;
+
+    @RequestMapping(value = "/register/hr", method = RequestMethod.GET)
+    public String showHrRegistrationForm(Model model, HttpSession session) {
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("user", new com.example.demo.model.User());
+        model.addAttribute("role", "HR");
+        return "admin-register-hr";
+    }
+
+    @RequestMapping(value = "/register/hr", method = RequestMethod.POST)
+    public String registerHr(@org.springframework.web.bind.annotation.ModelAttribute com.example.demo.model.User user,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes,
+            HttpSession session) {
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
+
+        // Check if email already exists
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Email already exists!");
+            return "redirect:/admin/register/hr";
+        }
+
+        user.setRole("HR");
+        // In a real app, hash the password here
+        userRepository.save(user);
+
+        redirectAttributes.addFlashAttribute("success", "HR registered successfully!");
+        return "redirect:/admin/dashboard";
+    }
+
+    @RequestMapping(value = "/register/manager", method = RequestMethod.GET)
+    public String showManagerRegistrationForm(Model model, HttpSession session) {
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("user", new com.example.demo.model.User());
+        model.addAttribute("role", "MANAGER");
+        return "admin-register-manager";
+    }
+
+    @RequestMapping(value = "/register/manager", method = RequestMethod.POST)
+    public String registerManager(
+            @org.springframework.web.bind.annotation.ModelAttribute com.example.demo.model.User user,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes,
+            HttpSession session) {
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
+
+        // Check if email already exists
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Email already exists!");
+            return "redirect:/admin/register/manager";
+        }
+
+        user.setRole("MANAGER");
+        // In a real app, hash the password here
+        userRepository.save(user);
+
+        redirectAttributes.addFlashAttribute("success", "Manager registered successfully!");
+        return "redirect:/admin/dashboard";
     }
 }
