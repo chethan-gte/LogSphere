@@ -561,8 +561,12 @@ public class ManagerController {
         if (!ruleOpt.isPresent()) {
             return "redirect:/manager/dashboard?tab=rules";
         }
+        
+        model.addAttribute("rule", ruleOpt.get()); 
+
 
         model.addAttribute("rule", ruleOpt.get());
+
         return "manager-edit-rule";
     }
 
