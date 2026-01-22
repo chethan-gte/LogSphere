@@ -13,6 +13,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @Controller
 @RequestMapping("/manager")
@@ -350,6 +355,7 @@ public class ManagerController {
             @RequestParam String priority,
             @RequestParam(required = false) String dueDate,
             @RequestParam Long employeeId,
+            @RequestParam(required = false) MultipartFile attachment,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
@@ -379,6 +385,26 @@ public class ManagerController {
                 task.setDueDate(LocalDate.parse(dueDate));
             } catch (Exception e) {
                 // Invalid date format, ignore
+            }
+        }
+
+        // Handle file upload
+        if (attachment != null && !attachment.isEmpty()) {
+            try {
+                String uploadDir = "src/main/resources/static/uploads/tasks/";
+                Path uploadPath = Paths.get(uploadDir);
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+
+                String fileName = UUID.randomUUID().toString() + "_" + attachment.getOriginalFilename();
+                Path filePath = uploadPath.resolve(fileName);
+                Files.copy(attachment.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                task.setAttachmentUrl("/uploads/tasks/" + fileName);
+            } catch (Exception e) {
+                System.err.println("Error creating task attachment: " + e.getMessage());
+                // Continue creating task without attachment
             }
         }
 
