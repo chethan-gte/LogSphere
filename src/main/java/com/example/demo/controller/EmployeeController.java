@@ -67,14 +67,17 @@ public class EmployeeController {
         }
 
         // Check if employee has face image registered
-        if (employee.getFaceImage() == null || employee.getFaceImage().isEmpty()) {
-            return "redirect:/employee/face-capture";
-        }
+        // Bypassing mandatory face registration for now
+        /*
+         * if (employee.getFaceImage() == null || employee.getFaceImage().isEmpty()) {
+         * return "redirect:/employee/face-capture";
+         * }
+         */
 
         // Get today's attendance
         LocalDate today = LocalDate.now();
-        Optional<Attendance> todayAttendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
-        Attendance todayAttendance = todayAttendanceOpt.orElse(null);
+        List<Attendance> todayAttendances = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
+        Attendance todayAttendance = todayAttendances.isEmpty() ? null : todayAttendances.get(0);
 
         // Calculate check-in status if employee is clocked in
         String checkInStatusDisplay = null;
@@ -85,7 +88,12 @@ public class EmployeeController {
             LocalTime scheduledTime = LocalTime.of(9, 0); // Default 9 AM
 
             if (employee.getScheduledStartTime() != null && !employee.getScheduledStartTime().isEmpty()) {
-                scheduledTime = LocalTime.parse(employee.getScheduledStartTime());
+                try {
+                    scheduledTime = LocalTime.parse(employee.getScheduledStartTime());
+                } catch (Exception e) {
+                    System.err.println("Error parsing scheduled start time: " + e.getMessage());
+                    // Keep default
+                }
             }
 
             if (checkInTime.isBefore(scheduledTime)) {
@@ -103,7 +111,12 @@ public class EmployeeController {
             LocalTime scheduledEndTime = LocalTime.of(18, 0); // Default 6 PM
 
             if (employee.getScheduledEndTime() != null && !employee.getScheduledEndTime().isEmpty()) {
-                scheduledEndTime = LocalTime.parse(employee.getScheduledEndTime());
+                try {
+                    scheduledEndTime = LocalTime.parse(employee.getScheduledEndTime());
+                } catch (Exception e) {
+                    System.err.println("Error parsing scheduled end time: " + e.getMessage());
+                    // Keep default
+                }
             }
 
             if (checkOutTime.isBefore(scheduledEndTime)) {
@@ -186,7 +199,6 @@ public class EmployeeController {
         model.addAttribute("todayActivities", todayActivities);
         model.addAttribute("recentActivities", recentActivities);
         model.addAttribute("productiveMinutes", productiveMinutes);
-        model.addAttribute("productiveMinutes", productiveMinutes);
         model.addAttribute("nonProductiveMinutes", nonProductiveMinutes);
 
         // Fetch Badges
@@ -220,14 +232,122 @@ public class EmployeeController {
         }
 
         // Check if face is registered
-        if (sessionEmployee.getFaceImage() == null || sessionEmployee.getFaceImage().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error",
-                    "Face recognition is required for clock-in. Please register your face first.");
-            return "redirect:/employee/face-capture";
+        /*
+         * if (sessionEmployee.getFaceImage() == null ||
+         * sessionEmployee.getFaceImage().isEmpty()) {
+         * redirectAttributes.addFlashAttribute("error",
+         * "Face recognition is required for clock-in. Please register your face first."
+         * );
+         * return "redirect:/employee/face-capture";
+         * }
+         * 
+         * redirectAttributes.addFlashAttribute("error",
+         * "Clock-in requires face recognition. Please use the face recognition feature on the dashboard to clock in."
+         * );
+         * return "redirect:/employee/dashboard";
+         */
+
+        // Bypass face recognition for now
+        // Proceed with clock-in logic directly
+
+        // Logic from original method that would have happened if face was verified...
+        // ... wait, the original method just redirected to dashboard saying "use face
+        // recognition".
+        // If we want to support non-face clock-in, we need the ACTUAL clock-in logic
+        // here.
+        // Let's check if there's a logic to actually clock in.
+        // The previous code returned "redirect:/employee/dashboard" with an error.
+        // It seems the ACTUAL clock in logic is probably in a different method or
+        // handled by the dashboard JS calling an endpoint?
+        // Ah, this IS the /checkin endpoint.
+
+        // If this endpoint was just blocking, where is the logic?
+        // Maybe I need to IMPLEMENT the clock-in logic here since it was blocking
+        // before.
+
+        // IMPORTANT: Dashboard shows Clock-Out only when employee.status == 'IN'.
+        // So clock-in must update Employee status + currentCheckIn in DB + session.
+        Optional<Employee> employeeOpt = employeeRepository.findByEmployeeId(sessionEmployee.getEmployeeId());
+        if (!employeeOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Employee not found. Please login again.");
+            return "redirect:/employee/login";
         }
 
-        redirectAttributes.addFlashAttribute("error",
-                "Clock-in requires face recognition. Please use the face recognition feature on the dashboard to clock in.");
+        Employee employee = employeeOpt.get();
+        if ("IN".equals(employee.getStatus())) {
+            redirectAttributes.addFlashAttribute("error", "You are already clocked in!");
+            return "redirect:/employee/dashboard";
+        }
+
+        // Update work mode if provided
+        if (workMode != null && !workMode.isEmpty()) {
+            employee.setWorkMode(workMode);
+        } else if (employee.getWorkMode() == null || employee.getWorkMode().isEmpty()) {
+            employee.setWorkMode("OFFICE");
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+        employee.setStatus("IN");
+        employee.setCurrentCheckIn(now);
+        employee.setLastActivityTime(now);
+
+        employee = employeeRepository.save(employee);
+        session.setAttribute("employee", employee);
+        session.setAttribute("employeeId", employee.getEmployeeId());
+
+        // Upsert attendance (avoid duplicates)
+        List<Attendance> existingAttendances = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
+        Attendance attendance = existingAttendances.isEmpty() ? new Attendance(employee, today)
+                : existingAttendances.get(0);
+
+        attendance.setCheckInTime(now);
+        attendance.setWorkMode(employee.getWorkMode());
+        // Determine status based on time
+        LocalTime nowTime = now.toLocalTime();
+        LocalTime scheduledTime = LocalTime.of(9, 0); // Default 9 AM
+
+        if (employee.getScheduledStartTime() != null && !employee.getScheduledStartTime().isEmpty()) {
+            try {
+                scheduledTime = LocalTime.parse(employee.getScheduledStartTime());
+            } catch (Exception e) {
+                // Keep default
+            }
+        }
+
+        if (nowTime.isAfter(scheduledTime)) {
+            attendance.setStatus("LATE");
+        } else {
+            attendance.setStatus("PRESENT");
+        }
+
+        attendanceRepository.save(attendance);
+
+        // UPDATE EMPLOYEE STATUS TO "IN" - CRITICAL FIX
+        sessionEmployee.setStatus("IN");
+        sessionEmployee.setCurrentCheckIn(LocalDateTime.now());
+        sessionEmployee.setLastActivityTime(LocalDateTime.now());
+        employeeRepository.save(sessionEmployee);
+
+        // Update session with fresh employee data
+        session.setAttribute("employee", sessionEmployee);
+
+        // Check for late arrival and send email alert (matching QR code flow)
+        if (employee.getScheduledStartTime() != null && !employee.getScheduledStartTime().isEmpty()) {
+            LocalTime actualTime = now.toLocalTime();
+            if (actualTime.isAfter(scheduledTime.plusMinutes(5)) &&
+                    !Boolean.TRUE.equals(employee.getLateAlertSent())) {
+                emailService.sendLateArrivalAlert(
+                        employee.getEmail(),
+                        employee.getName(),
+                        employee.getScheduledStartTime(),
+                        actualTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
+                employee.setLateAlertSent(true);
+                employeeRepository.save(employee);
+            }
+        }
+
+        redirectAttributes.addFlashAttribute("success", "Clocked in successfully!");
         return "redirect:/employee/dashboard";
     }
 
@@ -286,10 +406,10 @@ public class EmployeeController {
 
         // Update attendance record
         LocalDate today = LocalDate.now();
-        Optional<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
+        List<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
 
-        if (attendanceOpt.isPresent()) {
-            Attendance attendance = attendanceOpt.get();
+        if (!attendanceOpt.isEmpty()) {
+            Attendance attendance = attendanceOpt.get(0);
             attendance.setCheckOutTime(now);
 
             if (attendance.getCheckInTime() != null) {
@@ -410,6 +530,18 @@ public class EmployeeController {
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
 
+        // Determine dashboard link based on role
+        String role = (String) session.getAttribute("userRole");
+        String dashboardLink = "/admin/dashboard"; // Default
+        if ("HR".equals(role)) {
+            dashboardLink = "/hr/dashboard";
+        } else if ("MANAGER".equals(role)) {
+            dashboardLink = "/manager/dashboard";
+        } else if ("EMPLOYEE".equals(role) || session.getAttribute("employee") != null) {
+            dashboardLink = "/employee/dashboard";
+        }
+        model.addAttribute("dashboardLink", dashboardLink);
+
         return "admin-employee-logs";
     }
 
@@ -516,11 +648,11 @@ public class EmployeeController {
         employee = employeeRepository.save(employee);
 
         LocalDate today = LocalDate.now();
-        Optional<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
+        List<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
         Attendance attendance;
 
-        if (attendanceOpt.isPresent()) {
-            attendance = attendanceOpt.get();
+        if (!attendanceOpt.isEmpty()) {
+            attendance = attendanceOpt.get(0);
         } else {
             attendance = new Attendance(employee, today);
         }
@@ -646,10 +778,10 @@ public class EmployeeController {
         employee = employeeRepository.save(employee);
 
         LocalDate today = LocalDate.now();
-        Optional<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
+        List<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
 
-        if (attendanceOpt.isPresent()) {
-            Attendance attendance = attendanceOpt.get();
+        if (!attendanceOpt.isEmpty()) {
+            Attendance attendance = attendanceOpt.get(0);
             attendance.setCheckOutTime(now);
             if (attendance.getCheckInTime() != null) {
                 long minutes = ChronoUnit.MINUTES.between(attendance.getCheckInTime(), now);
@@ -881,4 +1013,3 @@ public class EmployeeController {
         return "employee-my-suggestions";
     }
 }
-

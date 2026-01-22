@@ -98,27 +98,13 @@
             <span class="navbar-brand mb-0 h1 fw-bold text-primary"><i class="fas fa-clipboard-list me-2"></i>Employee
                 Logs</span>
             <div>
-                <a th:href="@{/admin/dashboard}" id="dashboardLink" class="btn btn-outline-secondary btn-sm">
+                <a th:href="@{${dashboardLink}}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
                 </a>
             </div>
         </div>
     </nav>
-    <script th:inline="javascript">
-        document.addEventListener("DOMContentLoaded", function () {
-            const dashboardLink = document.getElementById('dashboardLink');
-            const referrer = document.referrer;
-            if (referrer) {
-                if (referrer.includes('/hr/')) {
-                    dashboardLink.href = /*[[@{/hr/dashboard}]]*/ '/hr/dashboard';
-                } else if (referrer.includes('/manager/')) {
-                    dashboardLink.href = /*[[@{/manager/dashboard}]]*/ '/manager/dashboard';
-                } else if (referrer.includes('/employee/')) {
-                    dashboardLink.href = /*[[@{/employee/dashboard}]]*/ '/employee/dashboard';
-                }
-            }
-        });
-    </script>
+
 
     <div class="container-fluid px-4 pb-4">
         <!-- Search Filters -->
@@ -225,4 +211,3 @@
 </body>
 
 </html>
-

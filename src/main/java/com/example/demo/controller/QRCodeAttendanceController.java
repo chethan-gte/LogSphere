@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -32,8 +33,8 @@ public class QRCodeAttendanceController {
     @RequestMapping(value = "/clockin", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<?> clockInViaQR(@RequestParam String employeeId,
-                                          @RequestParam String token,
-                                          @RequestParam String workMode) {
+            @RequestParam String token,
+            @RequestParam String workMode) {
         try {
             Optional<Employee> employeeOpt = employeeRepository.findByEmployeeId(employeeId);
             if (employeeOpt.isEmpty()) {
@@ -63,11 +64,11 @@ public class QRCodeAttendanceController {
 
             // Create attendance record
             LocalDate today = LocalDate.now();
-            Optional<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
+            List<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
             Attendance attendance;
 
-            if (attendanceOpt.isPresent()) {
-                attendance = attendanceOpt.get();
+            if (!attendanceOpt.isEmpty()) {
+                attendance = attendanceOpt.get(0);
             } else {
                 attendance = new Attendance(employee, today);
             }
@@ -82,21 +83,20 @@ public class QRCodeAttendanceController {
                 LocalTime scheduledTime = LocalTime.parse(employee.getScheduledStartTime());
                 LocalTime actualTime = now.toLocalTime();
 
-                if (actualTime.isAfter(scheduledTime.plusMinutes(5)) && 
-                    !Boolean.TRUE.equals(employee.getLateAlertSent())) {
+                if (actualTime.isAfter(scheduledTime.plusMinutes(5)) &&
+                        !Boolean.TRUE.equals(employee.getLateAlertSent())) {
                     emailService.sendLateArrivalAlert(
-                        employee.getEmail(),
-                        employee.getName(),
-                        employee.getScheduledStartTime(),
-                        actualTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-                    );
+                            employee.getEmail(),
+                            employee.getName(),
+                            employee.getScheduledStartTime(),
+                            actualTime.format(DateTimeFormatter.ofPattern("HH:mm")));
                     employee.setLateAlertSent(true);
                     employeeRepository.save(employee);
                 }
             }
 
             return ResponseEntity.ok().body("{\"success\": true, \"message\": \"Clocked in successfully\", " +
-                    "\"workMode\": \"" + employee.getWorkMode() + "\", \"time\": \"" + 
+                    "\"workMode\": \"" + employee.getWorkMode() + "\", \"time\": \"" +
                     now.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "\"}");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"" + e.getMessage() + "\"}");
@@ -106,7 +106,7 @@ public class QRCodeAttendanceController {
     @RequestMapping(value = "/clockout", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<?> clockOutViaQR(@RequestParam String employeeId,
-                                           @RequestParam String token) {
+            @RequestParam String token) {
         try {
             Optional<Employee> employeeOpt = employeeRepository.findByEmployeeId(employeeId);
             if (employeeOpt.isEmpty()) {
@@ -129,8 +129,8 @@ public class QRCodeAttendanceController {
             // Check for early departure (email sending removed - only tracking for records)
             if (employee.getScheduledEndTime() != null && !employee.getScheduledEndTime().isEmpty()) {
                 LocalTime scheduledEndTime = LocalTime.parse(employee.getScheduledEndTime());
-                if (currentTime.isBefore(scheduledEndTime.minusMinutes(5)) && 
-                    !Boolean.TRUE.equals(employee.getEarlyAlertSent())) {
+                if (currentTime.isBefore(scheduledEndTime.minusMinutes(5)) &&
+                        !Boolean.TRUE.equals(employee.getEarlyAlertSent())) {
                     employee.setEarlyAlertSent(true);
                 }
             }
@@ -147,10 +147,10 @@ public class QRCodeAttendanceController {
 
             // Update attendance record
             LocalDate today = LocalDate.now();
-            Optional<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
+            List<Attendance> attendanceOpt = attendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
 
-            if (attendanceOpt.isPresent()) {
-                Attendance attendance = attendanceOpt.get();
+            if (!attendanceOpt.isEmpty()) {
+                Attendance attendance = attendanceOpt.get(0);
                 attendance.setCheckOutTime(now);
 
                 if (attendance.getCheckInTime() != null) {
@@ -169,5 +169,3 @@ public class QRCodeAttendanceController {
         }
     }
 }
-
-

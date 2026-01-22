@@ -110,7 +110,7 @@
                 <h4 class="mb-0"><i class="fas fa-filter me-2 text-primary"></i>Search Filters</h4>
             </div>
             <div class="card-body p-4">
-                <form method="get" action="/visitors/search" class="row g-3">
+                <form method="get" th:action="@{/visitors/search}" class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Search by Name</label>
                         <div class="input-group">
@@ -209,4 +209,3 @@
 </body>
 
 </html>
-

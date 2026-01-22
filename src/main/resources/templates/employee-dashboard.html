@@ -306,6 +306,8 @@
 
                         <div th:if="${employee.status == 'OUT'}">
                             <!-- Face Recognition Status -->
+                            <!-- Face Recognition Status (HIDDEN) -->
+                            <!--/*
                             <div th:if="${employee.faceImage != null && !employee.faceImage.isEmpty()}"
                                 class="alert alert-success d-flex align-items-center p-3 mb-4">
                                 <i class="fas fa-smile-beam fs-4 me-3"></i>
@@ -324,6 +326,7 @@
                                             class="alert-link">Register face</a> to enable clock-in.</div>
                                 </div>
                             </div>
+                            */-->
 
                             <!-- Work Mode Selector -->
                             <div class="mb-4">
@@ -347,7 +350,9 @@
                                 </div>
                             </div>
 
-                            <!-- Face Recognition Camera Section -->
+                            <!-- Face Recognition Camera Section (DISABLED) -->
+                            <!-- Face Recognition Camera Section (DISABLED) -->
+                            <!--/*
                             <div class="mb-3" th:if="${employee.faceImage != null && !employee.faceImage.isEmpty()}">
                                 <div id="checkinInstructions" class="text-center mb-2">
                                     <p class="text-secondary small mb-0">Camera required for verification upon clock-in
@@ -373,6 +378,15 @@
                                     <i class="fas fa-check-circle me-2"></i> Capture & Verify
                                 </button>
                             </form>
+                            */-->
+
+                            <!-- Direct Clock-In Form (Face Auth Bypassed) -->
+                            <form th:action="@{/employee/checkin}" method="post">
+                                <input type="hidden" name="workMode" id="workModeInput" value="OFFICE">
+                                <button type="submit" class="btn btn-success btn-lg w-100 mb-2 shadow-sm py-3">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Clock In Now
+                                </button>
+                            </form>
                         </div>
 
                         <div th:if="${employee.status == 'IN'}">
@@ -382,6 +396,9 @@
                                     th:text="${employee.workMode}"></span>
                             </div>
 
+                            <!-- Face Recognition Checkout (DISABLED) -->
+                            <!-- Face Recognition Checkout (DISABLED) -->
+                            <!--/*
                             <div class="mb-3">
                                 <video id="checkoutVideo" width="100%" height="240" autoplay
                                     style="display:none; border-radius: 8px;"></video>
@@ -394,6 +411,14 @@
                                 <button type="button" class="btn btn-danger btn-lg w-100 mb-3 shadow-sm py-3"
                                     onclick="startFaceCheckOut()">
                                     <i class="fas fa-sign-out-alt me-2"></i> Clock Out
+                                </button>
+                            </form>
+                            */-->
+
+                            <!-- Direct Clock-Out Form (Face Auth Bypassed) -->
+                            <form th:action="@{/employee/checkout}" method="post">
+                                <button type="submit" class="btn btn-danger btn-lg w-100 mb-3 shadow-sm py-3">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Clock Out Now
                                 </button>
                             </form>
 

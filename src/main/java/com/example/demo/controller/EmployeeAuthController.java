@@ -43,6 +43,7 @@ public class EmployeeAuthController {
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public String employeeLogin(@RequestParam String email,
+                               @RequestParam String password,
                                @RequestParam String employeeId,
                                @RequestParam(required = false) String returnUrl,
                                HttpSession session,
@@ -52,8 +53,10 @@ public class EmployeeAuthController {
         
         if (employeeOpt.isPresent()) {
             Employee employee = employeeOpt.get();
-            // Verify employee ID matches
-            if (employee.getEmployeeId().equals(employeeId)) {
+            // Verify employee ID + password match
+            if (employee.getEmployeeId().equals(employeeId) &&
+                    employee.getPassword() != null &&
+                    employee.getPassword().equals(password)) {
                 // Employee exists in database (added by admin), allow login
                 session.setAttribute("employee", employee);
                 session.setAttribute("employeeName", employee.getName());
@@ -70,7 +73,7 @@ public class EmployeeAuthController {
                 }
                 return "redirect:/employee/dashboard";
             } else {
-                redirectAttributes.addFlashAttribute("error", "Invalid employee ID!");
+                redirectAttributes.addFlashAttribute("error", "Invalid email / password / employee ID!");
                 return "redirect:/employee/login";
             }
         } else {

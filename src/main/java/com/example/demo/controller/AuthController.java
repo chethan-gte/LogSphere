@@ -24,9 +24,10 @@ public class AuthController {
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showLoginForm(Model model, HttpSession session) {
         // If already logged in, redirect to dashboard
-        if (session.getAttribute("user") != null) {
-            return "redirect:/admin/dashboard";
-        }
+        // If already logged in, redirect to dashboard
+        // if (session.getAttribute("user") != null) {
+        // return "redirect:/admin/dashboard";
+        // }
         return "login";
     }
 

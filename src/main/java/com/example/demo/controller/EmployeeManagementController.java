@@ -38,67 +38,65 @@ public class EmployeeManagementController {
 
     // List of departments
     private static final List<String> DEPARTMENTS = Arrays.asList(
-        "Software Development",
-        "Web Development",
-        "Mobile App Development",
-        "Quality Assurance (QA) / Testing",
-        "DevOps & Cloud Engineering",
-        "UI/UX Design",
-        "Data Science & Analytics",
-        "Artificial Intelligence & Machine Learning",
-        "Cyber Security",
-        "System Administration",
-        "Network Engineering",
-        "IT Support / Help Desk",
-        "Database Administration"
-    );
+            "Software Development",
+            "Web Development",
+            "Mobile App Development",
+            "Quality Assurance (QA) / Testing",
+            "DevOps & Cloud Engineering",
+            "UI/UX Design",
+            "Data Science & Analytics",
+            "Artificial Intelligence & Machine Learning",
+            "Cyber Security",
+            "System Administration",
+            "Network Engineering",
+            "IT Support / Help Desk",
+            "Database Administration");
 
     // List of designations
     private static final List<String> DESIGNATIONS = Arrays.asList(
-        "Software Engineer",
-        "Junior Software Developer",
-        "Senior Software Developer",
-        "Full Stack Developer",
-        "Frontend Developer",
-        "Backend Developer",
-        "Java Developer",
-        ".NET Developer",
-        "Python Developer",
-        "Mobile App Developer",
-        "Game Developer",
-        "QA Engineer",
-        "Manual Tester",
-        "Automation Tester",
-        "Test Lead",
-        "Quality Analyst",
-        "UI Designer",
-        "UX Designer",
-        "Graphic Designer",
-        "Product Designer",
-        "Data Analyst",
-        "Data Scientist",
-        "Big Data Engineer",
-        "Cloud Engineer",
-        "DevOps Engineer",
-        "ML Engineer",
-        "System Administrator",
-        "Network Engineer",
-        "IT Support Engineer",
-        "Technical Support Executive",
-        "Help Desk Analyst",
-        "Project Manager",
-        "Scrum Master",
-        "Product Owner",
-        "Business Analyst",
-        "Technical Lead",
-        "Team Lead",
-        "HR Executive",
-        "HR Manager",
-        "Talent Acquisition Specialist",
-        "HR Business Partner",
-        "Payroll Executive",
-        "Office Administrator"
-    );
+            "Software Engineer",
+            "Junior Software Developer",
+            "Senior Software Developer",
+            "Full Stack Developer",
+            "Frontend Developer",
+            "Backend Developer",
+            "Java Developer",
+            ".NET Developer",
+            "Python Developer",
+            "Mobile App Developer",
+            "Game Developer",
+            "QA Engineer",
+            "Manual Tester",
+            "Automation Tester",
+            "Test Lead",
+            "Quality Analyst",
+            "UI Designer",
+            "UX Designer",
+            "Graphic Designer",
+            "Product Designer",
+            "Data Analyst",
+            "Data Scientist",
+            "Big Data Engineer",
+            "Cloud Engineer",
+            "DevOps Engineer",
+            "ML Engineer",
+            "System Administrator",
+            "Network Engineer",
+            "IT Support Engineer",
+            "Technical Support Executive",
+            "Help Desk Analyst",
+            "Project Manager",
+            "Scrum Master",
+            "Product Owner",
+            "Business Analyst",
+            "Technical Lead",
+            "Team Lead",
+            "HR Executive",
+            "HR Manager",
+            "Talent Acquisition Specialist",
+            "HR Business Partner",
+            "Payroll Executive",
+            "Office Administrator");
 
     @RequestMapping(method = RequestMethod.GET)
     public String listEmployees(Model model, HttpSession session) {
@@ -111,11 +109,22 @@ public class EmployeeManagementController {
         model.addAttribute("employee", new Employee());
         model.addAttribute("departments", DEPARTMENTS);
         model.addAttribute("designations", DESIGNATIONS);
+        // Determine dashboard link based on role
+        String role = (String) session.getAttribute("userRole");
+        String dashboardLink = "/admin/dashboard"; // Default
+        if ("HR".equals(role)) {
+            dashboardLink = "/hr/dashboard";
+        } else if ("MANAGER".equals(role)) {
+            dashboardLink = "/manager/dashboard";
+        }
+        model.addAttribute("dashboardLink", dashboardLink);
+
         return "admin-employee-management";
     }
 
     @RequestMapping(value = "/add", method = RequestMethod.POST)
-    public String addEmployee(@ModelAttribute Employee employee, RedirectAttributes redirectAttributes, HttpSession session) {
+    public String addEmployee(@ModelAttribute Employee employee, RedirectAttributes redirectAttributes,
+            HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
         }
@@ -146,14 +155,17 @@ public class EmployeeManagementController {
         if (employee.getScheduledEndTime() == null || employee.getScheduledEndTime().isEmpty()) {
             employee.setScheduledEndTime("18:00");
         }
-        // Set password to empty string (not used for login - employees use email + employeeId)
-        // This satisfies the database requirement for the password field
-        employee.setPassword("");
+        // Password is required for employee login (email + password + employeeId)
+        if (employee.getPassword() == null || employee.getPassword().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Password is required for employee login!");
+            return "redirect:/admin/employees";
+        }
         // Generate QR code token for new employee
         String qrToken = qrCodeService.generateQRCodeToken();
         employee.setQrCodeToken(qrToken);
         employeeRepository.save(employee);
-        redirectAttributes.addFlashAttribute("success", "Employee added successfully! Employee can now login with email and Employee ID.");
+        redirectAttributes.addFlashAttribute("success",
+                "Employee added successfully! Employee can now login with email, password and Employee ID.");
         return "redirect:/admin/employees";
     }
 
@@ -175,7 +187,10 @@ public class EmployeeManagementController {
     }
 
     @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
-    public String updateEmployee(@PathVariable Long id, @ModelAttribute Employee employee, RedirectAttributes redirectAttributes, HttpSession session) {
+    public String updateEmployee(@PathVariable Long id,
+            @ModelAttribute Employee employee,
+            @RequestParam(required = false) String newPassword,
+            RedirectAttributes redirectAttributes, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
         }
@@ -192,6 +207,11 @@ public class EmployeeManagementController {
         emp.setDepartment(employee.getDepartment());
         emp.setDesignation(employee.getDesignation());
         emp.setPhone(employee.getPhone());
+        emp.setSalary(employee.getSalary());
+        // Update password only if a new one was provided
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            emp.setPassword(newPassword);
+        }
 
         // Only update employee ID if it's different and doesn't exist
         if (!emp.getEmployeeId().equals(employee.getEmployeeId())) {
@@ -209,7 +229,7 @@ public class EmployeeManagementController {
         } else if (emp.getScheduledStartTime() == null || emp.getScheduledStartTime().isEmpty()) {
             emp.setScheduledStartTime("09:00");
         }
-        
+
         if (employee.getScheduledEndTime() != null && !employee.getScheduledEndTime().isEmpty()) {
             emp.setScheduledEndTime(employee.getScheduledEndTime());
         } else if (emp.getScheduledEndTime() == null || emp.getScheduledEndTime().isEmpty()) {
@@ -250,12 +270,12 @@ public class EmployeeManagementController {
 
             // Now delete the employee
             employeeRepository.deleteById(id);
-            
-            redirectAttributes.addFlashAttribute("success", 
-                "Employee deleted successfully! All related records (attendance, tasks, meetings) have been removed.");
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Employee deleted successfully! All related records (attendance, tasks, meetings) have been removed.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                "Failed to delete employee: " + e.getMessage() + ". Please try again or contact support.");
+            redirectAttributes.addFlashAttribute("error",
+                    "Failed to delete employee: " + e.getMessage() + ". Please try again or contact support.");
             System.err.println("Error deleting employee: " + e.getMessage());
             e.printStackTrace();
         }
@@ -263,5 +283,3 @@ public class EmployeeManagementController {
         return "redirect:/admin/employees";
     }
 }
-
-
