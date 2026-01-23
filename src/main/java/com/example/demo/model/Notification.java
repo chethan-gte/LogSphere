@@ -12,8 +12,12 @@ public class Notification {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = false)
+    @JoinColumn(name = "employee_id", nullable = true)
     private Employee recipient;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = true)
+    private User userRecipient;
 
     @Column(nullable = false)
     private String message;
@@ -47,6 +51,12 @@ public class Notification {
         this.meetingId = meetingId;
     }
 
+    public Notification(User userRecipient, String message, Long meetingId) {
+        this.userRecipient = userRecipient;
+        this.message = message;
+        this.meetingId = meetingId;
+    }
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -62,6 +72,14 @@ public class Notification {
 
     public void setRecipient(Employee recipient) {
         this.recipient = recipient;
+    }
+
+    public User getUserRecipient() {
+        return userRecipient;
+    }
+
+    public void setUserRecipient(User userRecipient) {
+        this.userRecipient = userRecipient;
     }
 
     public String getMessage() {

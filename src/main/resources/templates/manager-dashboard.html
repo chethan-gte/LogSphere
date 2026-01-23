@@ -317,7 +317,47 @@
                 <p class="text-secondary mb-0">Welcome back, <span class="fw-semibold text-primary"
                         th:text="${userName}">Manager</span></p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center">
+                <!-- Notifications -->
+                <div class="dropdown me-2">
+                    <button class="btn btn-light position-relative shadow-sm bg-white" type="button"
+                        id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        🔔
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                            th:if="${notifications != null && !notifications.empty}">
+                            <span th:text="${notifications.size()}"></span>
+                            <span class="visually-hidden">unread messages</span>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="notificationDropdown"
+                        style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li
+                            class="dropdown-header fw-bold text-uppercase text-secondary small d-flex justify-content-between align-items-center">
+                            <span>Notifications</span>
+                        </li>
+                        <li th:if="${notifications == null || notifications.empty}"
+                            class="dropdown-item text-muted text-center py-3">No new notifications</li>
+                        <li th:each="notification : ${notifications}" class="notification-item">
+                            <a class="dropdown-item d-flex align-items-start py-2 border-bottom" href="#"
+                                th:onclick="'showMeetingDetails(' + ${notification.meetingId} + ', ' + ${notification.id} + ', this); return false;'">
+                                <div class="me-2 mt-1 text-primary">🔵</div>
+                                <div>
+                                    <p class="mb-1 text-wrap small fw-medium" th:text="${notification.message}">Message
+                                    </p>
+                                    <small class="text-secondary" style="font-size: 0.75rem;"
+                                        th:text="${#temporals.format(notification.createdAt, 'MMM dd, HH:mm')}">Date</small>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="p-2 text-center border-top bg-light">
+                            <a th:href="@{/manager/notifications}"
+                                class="text-decoration-none small fw-bold text-primary">
+                                View All Notifications
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
                 <a th:href="@{/}" class="btn btn-outline-primary shadow-sm bg-white">🏠 Home</a>
                 <button onclick="location.reload()" class="btn btn-outline-secondary shadow-sm bg-white">🔄
                     Refresh</button>
@@ -1039,7 +1079,71 @@
                 });
             }
         });
+
+        const contextPath = /*[[@{/}]]*/ '/';
+
+        function showMeetingDetails(meetingId, notifId, linkElement) {
+            // Mark as read immediately
+            if (notifId) {
+                fetch(contextPath + 'manager/notification/read/' + notifId, { method: 'POST' })
+                    .then(response => {
+                        if (response.ok) {
+                            // Remove item from list
+                            const item = linkElement.closest('.notification-item');
+                            if (item) item.remove();
+                            // Update badge
+                            const badge = document.querySelector('#notificationDropdown .badge');
+                            if (badge) {
+                                let count = parseInt(badge.querySelector('span').innerText);
+                                if (count > 1) {
+                                    badge.querySelector('span').innerText = count - 1;
+                                } else {
+                                    badge.remove();
+                                }
+                            }
+                        }
+                    });
+            }
+
+            if (!meetingId) return;
+
+            // Fetch meeting details
+            fetch(contextPath + 'manager/api/meetings/' + meetingId)
+                .then(response => {
+                    if (response.ok) return response.json();
+                    throw new Error('Meeting not found');
+                })
+                .then(meeting => {
+                    const startDate = new Date(meeting.startTime);
+                    const endDate = meeting.endTime ? new Date(meeting.endTime) : null;
+
+                    const dateStr = startDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    const timeStr = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
+                        (endDate ? ' - ' + endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+
+                    Swal.fire({
+                        title: meeting.title,
+                        html: `
+                            <div class="text-start">
+                                <div class="mb-2"><strong>📅 Date:</strong> ${dateStr}</div>
+                                <div class="mb-2"><strong>⏰ Time:</strong> ${timeStr}</div>
+                                <div class="mb-2"><strong>🏷️ Type:</strong> <span class="badge bg-primary bg-opacity-10 text-primary">${meeting.meetingType || 'Meeting'}</span></div>
+                                <div class="mb-2"><strong>📍 Location:</strong> ${meeting.location || 'Online/TBD'}</div>
+                                <div class="mt-3 p-2 bg-light rounded border">${meeting.description || 'No description provided.'}</div>
+                            </div>
+                        `,
+                        icon: 'info',
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#1a8cf0'
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Could not load meeting details.', 'error');
+                });
+        }
     </script>
 </body>
+
 
 </html>
