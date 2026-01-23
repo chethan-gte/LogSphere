@@ -1081,11 +1081,13 @@
         });
 
         const contextPath = /*[[@{/}]]*/ '/';
+        const meetingApiUrl = /*[[@{/manager/api/meetings/}]]*/ '/manager/api/meetings/';
+        const notificationReadUrl = /*[[@{/manager/notification/read/}]]*/ '/manager/notification/read/';
 
         function showMeetingDetails(meetingId, notifId, linkElement) {
             // Mark as read immediately
             if (notifId) {
-                fetch(contextPath + 'manager/notification/read/' + notifId, { method: 'POST' })
+                fetch(notificationReadUrl + notifId, { method: 'POST' })
                     .then(response => {
                         if (response.ok) {
                             // Remove item from list
@@ -1108,7 +1110,7 @@
             if (!meetingId) return;
 
             // Fetch meeting details
-            fetch(contextPath + 'manager/api/meetings/' + meetingId)
+            fetch(meetingApiUrl + meetingId)
                 .then(response => {
                     if (response.ok) return response.json();
                     throw new Error('Meeting not found');

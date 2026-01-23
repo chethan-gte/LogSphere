@@ -65,26 +65,7 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" th:href="@{/manager/dashboard}">
-                <i class="fas fa-cube me-2"></i>LogSphere
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/manager/dashboard}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-danger" th:href="@{/logout}">Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Navbar removed as requested -->
 
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -135,12 +116,13 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:inline="javascript">
         const contextPath = /*[[@{/}]]*/ '/';
+        const meetingApiUrl = /*[[@{/manager/api/meetings/}]]*/ '/manager/api/meetings/';
 
         function showMeetingDetails(meetingId) {
             if (!meetingId) return;
 
             // Fetch meeting details
-            fetch(contextPath + 'manager/api/meetings/' + meetingId)
+            fetch(meetingApiUrl + meetingId)
                 .then(response => {
                     if (response.ok) return response.json();
                     throw new Error('Meeting not found');
