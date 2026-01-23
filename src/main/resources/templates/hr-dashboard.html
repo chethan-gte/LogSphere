@@ -796,6 +796,28 @@
     </div>
 
     <!-- Modals (Copied and styled for light theme) -->
+    <!-- Schedule Meeting Modal -->
+    <div class="modal fade" id="scheduleMeetingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Schedule Meeting For</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="d-grid gap-3">
+                        <a th:href="@{/hr/meeting/schedule/employee}" class="btn btn-outline-primary btn-lg py-3">
+                            <i class="fas fa-users me-2"></i> Employees
+                        </a>
+                        <a th:href="@{/hr/meeting/schedule/manager}" class="btn btn-outline-dark btn-lg py-3">
+                            <i class="fas fa-user-tie me-2"></i> Managers
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="rejectModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -818,27 +840,7 @@
         </div>
     </div>
 
-    <!-- Schedule Meeting Modal -->
-    <div class="modal fade" id="scheduleMeetingModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">Schedule Meeting For</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4 text-center">
-                    <div class="d-grid gap-3">
-                        <a th:href="@{/hr/meeting/schedule/employee}" class="btn btn-outline-primary btn-lg py-3">
-                            Employees
-                        </a>
-                        <a th:href="@{/hr/meeting/schedule/manager}" class="btn btn-outline-dark btn-lg py-3">
-                            Managers
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Suggestions Modals -->
     <div th:each="suggestion : ${allSuggestions}" th:attr="id='suggestionModal' + ${suggestion.id}" class="modal fade"
