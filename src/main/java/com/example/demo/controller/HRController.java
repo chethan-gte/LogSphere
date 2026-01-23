@@ -61,6 +61,9 @@ public class HRController {
     @Autowired
     private com.example.demo.repository.MeetingRepository meetingRepository;
 
+    @Autowired
+    private com.example.demo.repository.NotificationRepository notificationRepository;
+
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showHRLoginForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -1013,6 +1016,15 @@ public class HRController {
         if ("EMPLOYEE".equals(targetType)) {
              if (Boolean.TRUE.equals(isEveryone)) {
                  meeting.setIsAllEmployees(true);
+                 List<Employee> allEmployees = employeeRepository.findAll(); 
+                 // We don't necessarily need to link all employees to the meeting object if we just want notifications, 
+                 // but typically having them in the list is good. 
+                 // However, for large companies "All Employees" might be too many for ManyToMany.
+                 // But for this requirement, I will just send notifications.
+                 // NOTE: Meeting model has `isAllEmployees` flag, so maybe we rely on that for "View My Meetings".
+                 // BUT for notifications, we need individual records unless we have a "Global Notification" system.
+                 // The current Notification model is per-recipient. So I must create N notifications.
+
              } else if (employeeIds != null && !employeeIds.isEmpty()) {
                  List<Employee> selected = employeeRepository.findAllById(employeeIds);
                  meeting.setEmployeeParticipants(selected);
@@ -1026,7 +1038,44 @@ public class HRController {
              }
         }
         
-        meetingRepository.save(meeting);
+        Meeting savedMeeting = meetingRepository.save(meeting);
+        
+        // Create Notifications for Employees
+        if ("EMPLOYEE".equals(targetType)) {
+            List<Employee> recipients = new ArrayList<>();
+            if (Boolean.TRUE.equals(isEveryone)) {
+                recipients = employeeRepository.findAll();
+            } else if (savedMeeting.getEmployeeParticipants() != null) {
+                recipients = savedMeeting.getEmployeeParticipants();
+            }
+            
+            for (Employee emp : recipients) {
+                Notification notification = new Notification();
+                notification.setRecipient(emp);
+                notification.setMessage("New Meeting: " + savedMeeting.getTitle());
+                notification.setMeetingId(savedMeeting.getId());
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setIsRead(false);
+                notificationRepository.save(notification);
+            }
+        } else if ("MANAGER".equals(targetType)) {
+            List<User> recipients = new ArrayList<>();
+             if (Boolean.TRUE.equals(isEveryone)) {
+                 recipients = userRepository.findByRole("MANAGER");
+             } else if (savedMeeting.getManagerParticipants() != null) {
+                 recipients = savedMeeting.getManagerParticipants();
+             }
+             
+             for (User mgr : recipients) {
+                 Notification notification = new Notification();
+                 notification.setUserRecipient(mgr);
+                 notification.setMessage("New Meeting: " + savedMeeting.getTitle());
+                 notification.setMeetingId(savedMeeting.getId());
+                 notification.setCreatedAt(LocalDateTime.now());
+                 notification.setIsRead(false);
+                 notificationRepository.save(notification);
+             }
+        }
         
         redirectAttributes.addFlashAttribute("success", "Meeting scheduled successfully!");
         return "redirect:/hr/dashboard";

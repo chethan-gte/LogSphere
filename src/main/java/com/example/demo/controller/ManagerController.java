@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -302,6 +303,11 @@ public class ManagerController {
 
         // Rules
         model.addAttribute("activeRules", activeRules);
+
+        // Fetch Notifications
+        List<Notification> notifications = notificationRepository
+                .findByUserRecipientAndIsReadFalseOrderByCreatedAtDesc(user);
+        model.addAttribute("notifications", notifications);
 
         // General
         model.addAttribute("allEmployees", allEmployees);
@@ -771,5 +777,54 @@ public class ManagerController {
             redirectAttributes.addFlashAttribute("error", "Error creating meeting: " + e.getMessage());
             return "redirect:/manager/dashboard?tab=planning";
         }
+    }
+
+    @RequestMapping(value = "/notification/read/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<String> markNotificationAsRead(@PathVariable Long id, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return ResponseEntity.badRequest().body("Unauthorized");
+        }
+
+        Optional<Notification> notifOpt = notificationRepository.findById(id);
+        if (notifOpt.isPresent()) {
+            Notification notification = notifOpt.get();
+            // Ensure this notification belongs to the current user
+            if (notification.getUserRecipient() != null && notification.getUserRecipient().getId().equals(user.getId())) {
+                notification.setIsRead(true);
+                notificationRepository.save(notification);
+                return ResponseEntity.ok("Marked as read");
+            }
+        }
+        return ResponseEntity.badRequest().body("Notification not found or unauthorized");
+    }
+
+    @RequestMapping(value = "/api/meetings/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<?> getMeetingDetails(@PathVariable Long id, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return ResponseEntity.badRequest().body("Unauthorized");
+        }
+        Optional<Meeting> meetingOpt = meetingRepository.findById(id);
+        if (meetingOpt.isPresent()) {
+            return ResponseEntity.ok(meetingOpt.get());
+        }
+        return ResponseEntity.badRequest().body("Meeting not found");
+    }
+
+    @GetMapping("/notifications")
+    public String viewNotificationHistory(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+        
+        List<Notification> notifications = notificationRepository.findByUserRecipientOrderByCreatedAtDesc(user);
+        model.addAttribute("notifications", notifications);
+        model.addAttribute("userName", user.getName());
+        
+        return "manager-notifications";
     }
 }
