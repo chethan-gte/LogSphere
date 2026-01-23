@@ -208,6 +208,23 @@
                 <button class="nav-link w-100 text-start" id="payroll-tab" data-bs-toggle="pill"
                     data-bs-target="#payroll" type="button">💰 Payroll</button>
             </li>
+
+            <li class="nav-item mb-1">
+                <a class="nav-link" data-bs-toggle="collapse" href="#meetingSubmenu" role="button" aria-expanded="false"
+                    aria-controls="meetingSubmenu">
+                    📅 Schedule Meeting
+                </a>
+                <div class="collapse" id="meetingSubmenu">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link small py-1" th:href="@{/hr/meeting/schedule/employee}">Employees</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link small py-1" th:href="@{/hr/meeting/schedule/manager}">Managers</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
             <li class="nav-item mb-1">
                 <button class="nav-link w-100 text-start" id="notifications-tab" data-bs-toggle="pill"
                     data-bs-target="#notifications" type="button">🔔 Alerts</button>
