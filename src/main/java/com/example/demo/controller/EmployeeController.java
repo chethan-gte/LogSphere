@@ -60,6 +60,7 @@ public class EmployeeController {
     private com.example.demo.repository.TeamRuleRepository teamRuleRepository;
 
     @Autowired
+
     private com.example.demo.repository.NotificationRepository notificationRepository;
 
     @Autowired
@@ -228,6 +229,8 @@ public class EmployeeController {
             employee.setEarlyAlertSent(false);
             employeeRepository.save(employee);
         }
+
+
 
         return "employee-dashboard";
     }

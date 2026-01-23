@@ -220,6 +220,11 @@
                         th:text="${suggestionCount}"></span>
                 </button>
             </li>
+            <li class="nav-item mb-1">
+                <button class="nav-link w-100 text-start" data-bs-toggle="modal" data-bs-target="#scheduleMeetingModal">
+                    📅 Schedule Meeting
+                </button>
+            </li>
 
             <li class="nav-item mb-1">
                 <a class="nav-link" th:href="@{/admin/employees}">👨‍💼 Manage Employees</a>
@@ -250,6 +255,14 @@
         </div>
 
         <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
 
         <!-- Tab Content -->
@@ -800,6 +813,28 @@
                             <button type="submit" class="btn btn-danger">Confirm Rejection</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Meeting Modal -->
+    <div class="modal fade" id="scheduleMeetingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Schedule Meeting For</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="d-grid gap-3">
+                        <a th:href="@{/hr/meeting/schedule/employee}" class="btn btn-outline-primary btn-lg py-3">
+                            Employees
+                        </a>
+                        <a th:href="@{/hr/meeting/schedule/manager}" class="btn btn-outline-dark btn-lg py-3">
+                            Managers
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
