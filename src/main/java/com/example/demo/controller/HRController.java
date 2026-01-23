@@ -142,6 +142,49 @@ public class HRController {
         Map<String, Long> attendanceStatusCount = monthlyAttendance.stream()
                 .collect(Collectors.groupingBy(Attendance::getStatus, Collectors.counting()));
 
+        // Calculate Detailed Attendance Report for Table
+        List<Map<String, Object>> attendanceReport = new ArrayList<>();
+        int daysPassed = today.getDayOfMonth();
+
+        for (Employee emp : allEmployees) {
+            Map<String, Object> report = new HashMap<>();
+            report.put("id", emp.getEmployeeId()); // Visible ID
+            report.put("name", emp.getName());
+
+            // Today's Status
+            Optional<Attendance> todayRecord = todayAttendance.stream()
+                    .filter(a -> a.getEmployee().getId().equals(emp.getId()))
+                    .findFirst();
+
+            if (todayRecord.isPresent()) {
+                Attendance att = todayRecord.get();
+                report.put("login",
+                        att.getCheckInTime() != null ? att.getCheckInTime().toLocalTime().toString().substring(0, 5)
+                                : "-");
+                report.put("logout",
+                        att.getCheckOutTime() != null ? att.getCheckOutTime().toLocalTime().toString().substring(0, 5)
+                                : "-");
+            } else {
+                report.put("login", "-");
+                report.put("logout", "-");
+            }
+
+            // Monthly Counts
+            long presentDays = monthlyAttendance.stream()
+                    .filter(a -> a.getEmployee().getId().equals(emp.getId()))
+                    .count();
+
+            report.put("presentDays", presentDays);
+            // Simple absent calculation: Days passed in month - Days Present.
+            // Note: This includes weekends in "Absent" count if they aren't marked present.
+            // For a robust system, we'd check work schedule, but this meets the immediate
+            // requirement.
+            report.put("absentDays", Math.max(0, daysPassed - presentDays));
+
+            attendanceReport.add(report);
+        }
+        model.addAttribute("attendanceReport", attendanceReport);
+
         // 3. Leave Management
         List<LeaveRequest> pendingLeaves = leaveRequestRepository.findByStatus("PENDING");
         List<LeaveRequest> approvedLeaves = leaveRequestRepository.findByStatus("APPROVED");
