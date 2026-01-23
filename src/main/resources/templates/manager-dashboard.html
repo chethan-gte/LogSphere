@@ -11,6 +11,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -250,6 +251,11 @@
                 <a class="nav-link" th:href="@{/manager/dashboard(tab='planning')}"
                     th:classappend="${activeTab == 'planning' || activeTab == null ? 'active' : ''}">
                     <span class="me-2">📊</span> Dashboard Home
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#createMeetingModal">
+                    <span class="me-2">➕</span> Create Meeting
                 </a>
             </li>
 
@@ -780,7 +786,7 @@
                     <h5 class="modal-title fw-bold">Add New Task</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form th:action="@{/manager/tasks/add}" method="post">
+                <form th:action="@{/manager/tasks/add}" method="post" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label text-secondary">Select Employee <span
@@ -811,6 +817,11 @@
                         <div class="mb-3">
                             <label class="form-label text-secondary">Due Date</label>
                             <input type="date" class="form-control" name="dueDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Attachment</label>
+                            <input type="file" class="form-control" name="attachment">
+                            <small class="text-muted">Optional: Upload any file (Image, PDF, XML, WAR, etc.)</small>
                         </div>
                     </div>
                     <div class="modal-footer bg-light border-top-0 rounded-bottom">
@@ -897,7 +908,130 @@
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Create Meeting Modal -->
+    <div class="modal fade" id="createMeetingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">📅 Schedule Team Meeting</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/manager/meetings/create}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="title" required
+                                placeholder="e.g., Weekly Sync">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Description</label>
+                            <textarea class="form-control" name="description" rows="2"
+                                placeholder="Meeting agenda..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Meeting Type <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" name="meetingType" required>
+                                <option value="" selected disabled>Select Type...</option>
+                                <option value="INTERNAL">Internal</option>
+                                <option value="EXTERNAL">External</option>
+                                <option value="CLIENT">Client</option>
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col">
+                                <label class="form-label text-secondary">Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="date" required id="meetingDate"
+                                    onchange="updateDay()">
+                                <small id="dayDisplay" class="text-muted"></small>
+                            </div>
+                            <div class="col">
+                                <label class="form-label text-secondary">Start Time <span
+                                        class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="startTime" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label text-secondary">End Time</label>
+                                <input type="time" class="form-control" name="endTime">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="addEveryone" name="addEveryone"
+                                onchange="toggleEmployeeSelect()">
+                            <label class="form-check-label fw-medium" for="addEveryone">Add Everyone (All Active
+                                Employees)</label>
+                        </div>
+
+                        <div class="mb-3" id="employeeSelectDiv">
+                            <label class="form-label text-secondary">Select Attendees</label>
+                            <select class="form-select" name="employeeIds" multiple size="5">
+                                <option th:each="emp : ${allEmployees}" th:value="${emp.id}"
+                                    th:text="${emp.name + ' (' + emp.department + ')'}"></option>
+                            </select>
+                            <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Schedule Meeting</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateDay() {
+            const dateInput = document.getElementById('meetingDate');
+            const dayDisplay = document.getElementById('dayDisplay');
+            if (dateInput.value) {
+                const date = new Date(dateInput.value);
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                dayDisplay.textContent = days[date.getDay()];
+            }
+        }
+
+        function toggleEmployeeSelect() {
+            const checkBox = document.getElementById('addEveryone');
+            const selectDiv = document.getElementById('employeeSelectDiv');
+            if (checkBox.checked) {
+                selectDiv.style.opacity = '0.5';
+                selectDiv.style.pointerEvents = 'none';
+                // Deselect options visual cue
+                const selectElement = selectDiv.querySelector('select');
+                Array.from(selectElement.options).forEach(option => option.selected = false);
+            } else {
+                selectDiv.style.opacity = '1';
+                selectDiv.style.pointerEvents = 'auto';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const successMsg = "[[${success}]]";
+            const errorMsg = "[[${error}]]";
+
+            if (successMsg && successMsg !== 'null' && successMsg !== '') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: successMsg,
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+
+            if (errorMsg && errorMsg !== 'null' && errorMsg !== '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMsg
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
