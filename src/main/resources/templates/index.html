@@ -88,6 +88,7 @@
         .brand-highlight {
             background: linear-gradient(135deg, #1a8cf0 0%, #0066cc 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -125,6 +126,24 @@
         .bg-gradient-primary {
             background: linear-gradient(135deg, #1a8cf0 0%, #0066cc 100%);
         }
+
+        /* Fix for mobile navbar scrolling */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                max-height: calc(100vh - 80px);
+                overflow-y: auto;
+                padding-bottom: 20px;
+            }
+
+            /* Ensure dropdown fits within the scrollable area */
+            .dropdown-menu {
+                border: none;
+                background-color: #f8f9fa;
+                box-shadow: none !important;
+                padding-left: 20px;
+                margin-top: 10px !important;
+            }
+        }
     </style>
 </head>
 
@@ -157,11 +176,13 @@
                                 aria-labelledby="quickAccessMenu">
                                 <li><a class="dropdown-item rounded-2 py-2" th:href="@{/reception/dashboard}">Visitor
                                         Registration</a></li>
-                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/employee/login}">Employee Login</a>
+                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/employee/login}">Employee
+                                        Login</a>
                                 </li>
                                 <li><a class="dropdown-item rounded-2 py-2" th:href="@{/login}">Admin Login</a></li>
                                 <li><a class="dropdown-item rounded-2 py-2" th:href="@{/hr/login}">HR Login</a></li>
-                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/manager/login}">Manager Login</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" th:href="@{/manager/login}">Manager
+                                        Login</a></li>
                             </ul>
                         </div>
                     </li>
@@ -176,12 +197,12 @@
             <!-- Success/Error Messages -->
             <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm border-0"
                 role="alert"
-                style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 1050; min-width: 400px; max-width: 600px;">
+                style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 1050; width: 90%; max-width: 600px;">
                 <strong>Success!</strong> <span th:text="${success}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert"
-                style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 1050; min-width: 400px; max-width: 600px;">
+                style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 1050; width: 90%; max-width: 600px;">
                 <strong>Error!</strong> <span th:text="${error}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -365,7 +386,8 @@
             <h2 class="display-5 fw-bold mb-4">Ready to Get Started?</h2>
             <p class="lead mb-5 opacity-90">Join thousands of businesses using LogSphere to manage their workforce
                 efficiently.</p>
-            <a th:href="@{/login}" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm text-primary">Login
+            <a th:href="@{/login}"
+                class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm text-primary">Login
                 Now</a>
         </div>
     </section>
@@ -381,4 +403,3 @@
 </body>
 
 </html>
-

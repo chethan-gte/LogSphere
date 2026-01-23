@@ -8,180 +8,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" th:href="@{/css/theme.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f7ff;
-            color: #333;
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            min-height: 100vh;
-            background: #e3f2fd;
-            color: #0f1b2d;
-            border-right: 1px solid #dcdfe6;
-            width: 260px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding: 20px;
-            z-index: 1000;
-        }
-
-        .sidebar .nav-link {
-            color: #4a5568;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar .nav-link:hover {
-            background: #d0e6fb;
-            color: #0d6efd;
-        }
-
-        .sidebar .nav-link.active {
-            background: #ffffff;
-            color: #0d6efd;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            font-weight: 600;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            padding: 30px;
-            min-height: 100vh;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-        }
-
-        /* Cards */
-        .card {
-            border: none;
-            border-radius: 16px;
-            background: #ffffff;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-            margin-bottom: 24px;
-            transition: transform 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        }
-
-        .card-header {
-            background: transparent;
-            border-bottom: 1px solid #f0f0f0;
-            padding: 20px 24px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #0f1b2d;
-        }
-
-        /* Stats Cards */
-        .stat-card.border-primary {
-            border-left: 4px solid #0d6efd !important;
-        }
-
-        .stat-card.border-success {
-            border-left: 4px solid #198754 !important;
-        }
-
-        .stat-card.border-danger {
-            border-left: 4px solid #dc3545 !important;
-        }
-
-        .stat-card.border-warning {
-            border-left: 4px solid #ffc107 !important;
-        }
-
-        .stat-card.border-info {
-            border-left: 4px solid #0dcaf0 !important;
-        }
-
-        .stat-card h5 {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #6c757d;
-        }
-
-        .stat-card h2 {
-            font-weight: 700;
-            margin-bottom: 0;
-        }
-
-        /* Tables */
-        .table {
-            --bs-table-bg: transparent;
-        }
-
-        .table th {
-            font-weight: 600;
-            color: #495057;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .table td {
-            vertical-align: middle;
-            color: #212529;
-        }
-
-        /* Common Elements */
-        .btn-primary {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-        }
-
-        .text-primary {
-            color: #0d6efd !important;
-        }
-
-        .live-badge {
-            animation: pulse 2s infinite;
-            font-size: 0.8em;
-            vertical-align: middle;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
+        /* Shared Styles are in theme.css */
     </style>
+
 </head>
 
 <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <h3 class="text-primary mb-5 px-3">LogSphere</h3>
         <ul class="nav flex-column">
             <li class="nav-item mb-1">
@@ -242,10 +83,15 @@
     <div class="main-content">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h2 class="fw-bold mb-1">HR Dashboard <span class="live-badge text-success small">● LIVE</span></h2>
-                <p class="text-secondary mb-0">Welcome back, <span class="fw-semibold text-dark"
-                        th:text="${userName}">HR Admin</span></p>
+            <div class="d-flex align-items-center">
+                <button class="sidebar-toggle-btn me-2" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div>
+                    <h2 class="fw-bold mb-1">HR Dashboard <span class="live-badge text-success small">● LIVE</span></h2>
+                    <p class="text-secondary mb-0">Welcome back, <span class="fw-semibold text-dark"
+                            th:text="${userName}">HR Admin</span></p>
+                </div>
             </div>
             <div class="d-flex gap-2">
                 <a th:href="@{/}" class="btn btn-light border shadow-sm text-secondary fw-medium">Home</a>
@@ -885,6 +731,13 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
+        }
+    </script>
     <script th:inline="javascript">
         // Common Chart Options for Light Theme
         const lightChartOptions = {
@@ -965,6 +818,12 @@
             const form = document.getElementById('rejectForm');
             form.action = '/hr/leave/reject/' + leaveId;
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
+        }
+
+        // Toggle Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
         }
     </script>
 </body>

@@ -8,104 +8,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f7ff;
-            color: #333;
-        }
-
-        .stat-card {
-            transition: transform 0.3s ease;
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar {
-            min-height: 100vh;
-            background: #ffffff;
-            color: #0f1b2d;
-            border-right: 1px solid #e0e0e0;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
-            z-index: 1000;
-        }
-
-        .sidebar .nav-link {
-            color: #4a5568;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-        }
-
-        .sidebar .nav-link:hover {
-            background: #f8fafc;
-            color: #1a8cf0;
-        }
-
-        .sidebar .nav-link.active {
-            background: #eff6ff;
-            color: #1a8cf0;
-            font-weight: 600;
-        }
-
-        .sidebar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1a8cf0;
-            padding: 1rem 0;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .main-content {
-            margin-left: 0;
-            background: #f3f7ff;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-
-        @media (min-width: 768px) {
-            .sidebar {
-                position: fixed;
-                width: 260px;
-            }
-
-            .main-content {
-                margin-left: 260px;
-            }
-        }
-
-        .live-badge {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
-
+        /* Specific overrides for Manager Dashboard */
         .kanban-column {
             min-height: 500px;
             background: #f8fafc;
@@ -168,83 +77,15 @@
             background: #f3f4f6;
             color: #374151;
         }
-
-        /* Global Light Theme Overrides */
-        .card {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            border-radius: 12px;
-            margin-bottom: 24px;
-        }
-
-        .card-header {
-            background-color: #ffffff;
-            border-bottom: 1px solid #f0f0f0;
-            padding: 16px 20px;
-            font-weight: 600;
-        }
-
-        .table {
-            --bs-table-bg: transparent;
-            --bs-table-color: #333;
-            margin-bottom: 0;
-        }
-
-        .table thead th {
-            background-color: #f8fafc;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 12px 16px;
-        }
-
-        .table tbody td {
-            padding: 16px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: #f8fafc;
-        }
-
-        .nav-pills .nav-link {
-            border-radius: 8px;
-            padding: 10px 20px;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        .nav-pills .nav-link.active {
-            background-color: #1a8cf0;
-            color: #fff;
-            box-shadow: 0 4px 6px rgba(26, 140, 240, 0.2);
-        }
-
-        .modal-content {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #f0f0f0;
-            background-color: #fff;
-            border-radius: 16px 16px 0 0;
-        }
-
-        .btn-warning {
-            color: #fff;
-        }
     </style>
 </head>
 
 <body class="bg-light text-dark">
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <!-- Sidebar -->
-    <div class="sidebar p-3">
+    <div class="sidebar p-3" id="sidebar">
         <div class="sidebar-brand">LogSphere</div>
         <ul class="nav flex-column">
             <li class="nav-item mb-2">
@@ -310,12 +151,17 @@
     <div class="main-content">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold text-dark">Manager Dashboard <span
-                        class="badge bg-success bg-opacity-10 text-success fs-6 align-middle ms-2 live-badge">🟢
-                        LIVE</span></h2>
-                <p class="text-secondary mb-0">Welcome back, <span class="fw-semibold text-primary"
-                        th:text="${userName}">Manager</span></p>
+            <div class="d-flex align-items-center">
+                <button class="sidebar-toggle-btn me-2" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div>
+                    <h2 class="fw-bold text-dark">Manager Dashboard <span
+                            class="badge bg-success bg-opacity-10 text-success fs-6 align-middle ms-2 live-badge">🟢
+                            LIVE</span></h2>
+                    <p class="text-secondary mb-0">Welcome back, <span class="fw-semibold text-primary"
+                            th:text="${userName}">Manager</span></p>
+                </div>
             </div>
             <div class="d-flex gap-2 align-items-center">
                 <!-- Notifications -->
@@ -387,7 +233,8 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="incident : ${idleIncidents}">
-                                        <td class="ps-4 fw-medium text-dark" th:text="${incident.employee.name}"></td>
+                                        <td class="ps-4 fw-medium text-dark" th:text="${incident.employee.name}">
+                                        </td>
                                         <td class="text-secondary" th:text="${incident.employee.employeeId}"></td>
                                         <td class="text-secondary" th:text="${incident.employee.department}"></td>
                                         <td>
@@ -534,7 +381,8 @@
                                             found</td>
                                     </tr>
                                     <tr th:each="feedback : ${allFeedbacks}">
-                                        <td class="ps-4 fw-medium text-dark" th:text="${feedback.employee.name}"></td>
+                                        <td class="ps-4 fw-medium text-dark" th:text="${feedback.employee.name}">
+                                        </td>
                                         <td class="text-secondary"
                                             th:text="${#temporals.format(feedback.createdAt, 'MMM dd, yyyy HH:mm')}">
                                         </td>
@@ -650,7 +498,8 @@
                                 </thead>
                                 <tbody>
                                     <tr th:if="${activeRules.isEmpty()}">
-                                        <td colspan="5" class="text-center text-secondary py-4">No custom rules defined
+                                        <td colspan="5" class="text-center text-secondary py-4">No custom rules
+                                            defined
                                         </td>
                                     </tr>
                                     <tr th:each="rule : ${activeRules}">
@@ -704,7 +553,8 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <div>
-                                            <h5 class="text-dark fw-bold mb-1" th:text="${suggestion.title}">Title</h5>
+                                            <h5 class="text-dark fw-bold mb-1" th:text="${suggestion.title}">Title
+                                            </h5>
                                             <p class="text-secondary small mb-0">
                                                 By: <span class="fw-medium text-dark"
                                                     th:text="${suggestion.employee.name}"></span>
@@ -769,8 +619,10 @@
                                         </td>
                                     </tr>
                                     <tr th:each="suggestion : ${allSuggestions}">
-                                        <td class="ps-4 fw-medium text-dark" th:text="${suggestion.title}">Title</td>
-                                        <td class="text-secondary" th:text="${suggestion.employee.name}">Employee</td>
+                                        <td class="ps-4 fw-medium text-dark" th:text="${suggestion.title}">Title
+                                        </td>
+                                        <td class="text-secondary" th:text="${suggestion.employee.name}">Employee
+                                        </td>
                                         <td><span class="badge bg-secondary bg-opacity-10 text-secondary"
                                                 th:text="${suggestion.suggestionType}">Type</span></td>
                                         <td>
@@ -779,7 +631,8 @@
                                                 th:text="${suggestion.status}">Status</span>
                                         </td>
                                         <td class="text-secondary"
-                                            th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy')}">Date
+                                            th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy')}">
+                                            Date
                                         </td>
                                         <td class="text-end pe-4">
                                             <button type="button" class="btn btn-sm btn-light border text-primary"
@@ -799,6 +652,13 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
+        }
+    </script>
     <script th:inline="javascript">
         // Workload Chart
 
@@ -875,7 +735,7 @@
         </div>
     </div>
 
-    </div> <!-- Modals for viewing suggestions -->
+    <!-- Modals for viewing suggestions -->
     <div th:each="suggestion : ${allSuggestions}" th:attr="id='suggestionModal' + ${suggestion.id}" class="modal fade"
         tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
