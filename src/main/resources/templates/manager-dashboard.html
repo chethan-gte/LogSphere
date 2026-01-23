@@ -8,13 +8,103 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/theme.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* Specific overrides for Manager Dashboard */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f7ff;
+            color: #333;
+        }
+
+        .stat-card {
+            transition: transform 0.3s ease;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: #ffffff;
+            color: #0f1b2d;
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
+            z-index: 1000;
+        }
+
+        .sidebar .nav-link {
+            color: #4a5568;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .nav-link:hover {
+            background: #f8fafc;
+            color: #1a8cf0;
+        }
+
+        .sidebar .nav-link.active {
+            background: #eff6ff;
+            color: #1a8cf0;
+            font-weight: 600;
+        }
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a8cf0;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .main-content {
+            margin-left: 0;
+            background: #f3f7ff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar {
+                position: fixed;
+                width: 260px;
+            }
+
+            .main-content {
+                margin-left: 260px;
+            }
+        }
+
+        .live-badge {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
         .kanban-column {
             min-height: 500px;
             background: #f8fafc;
@@ -77,26 +167,89 @@
             background: #f3f4f6;
             color: #374151;
         }
+
+        /* Global Light Theme Overrides */
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 16px 20px;
+            font-weight: 600;
+        }
+
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: #333;
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 16px;
+        }
+
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 8px;
+            padding: 10px 20px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #1a8cf0;
+            color: #fff;
+            box-shadow: 0 4px 6px rgba(26, 140, 240, 0.2);
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #f0f0f0;
+            background-color: #fff;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .btn-warning {
+            color: #fff;
+        }
     </style>
 </head>
 
 <body class="bg-light text-dark">
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-
     <!-- Sidebar -->
-    <div class="sidebar p-3" id="sidebar">
+    <div class="sidebar p-3">
         <div class="sidebar-brand">LogSphere</div>
         <ul class="nav flex-column">
             <li class="nav-item mb-2">
                 <a class="nav-link" th:href="@{/manager/dashboard(tab='planning')}"
                     th:classappend="${activeTab == 'planning' || activeTab == null ? 'active' : ''}">
                     <span class="me-2">📊</span> Dashboard Home
-                </a>
-            </li>
-            <li class="nav-item mb-2">
-                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#createMeetingModal">
-                    <span class="me-2">➕</span> Create Meeting
                 </a>
             </li>
 
@@ -151,59 +304,14 @@
     <div class="main-content">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="d-flex align-items-center">
-                <button class="sidebar-toggle-btn me-2" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div>
-                    <h2 class="fw-bold text-dark">Manager Dashboard <span
-                            class="badge bg-success bg-opacity-10 text-success fs-6 align-middle ms-2 live-badge">🟢
-                            LIVE</span></h2>
-                    <p class="text-secondary mb-0">Welcome back, <span class="fw-semibold text-primary"
-                            th:text="${userName}">Manager</span></p>
-                </div>
+            <div>
+                <h2 class="fw-bold text-dark">Manager Dashboard <span
+                        class="badge bg-success bg-opacity-10 text-success fs-6 align-middle ms-2 live-badge">🟢
+                        LIVE</span></h2>
+                <p class="text-secondary mb-0">Welcome back, <span class="fw-semibold text-primary"
+                        th:text="${userName}">Manager</span></p>
             </div>
-            <div class="d-flex gap-2 align-items-center">
-                <!-- Notifications -->
-                <div class="dropdown me-2">
-                    <button class="btn btn-light position-relative shadow-sm bg-white" type="button"
-                        id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        🔔
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                            th:if="${notifications != null && !notifications.empty}">
-                            <span th:text="${notifications.size()}"></span>
-                            <span class="visually-hidden">unread messages</span>
-                        </span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="notificationDropdown"
-                        style="width: 320px; max-height: 400px; overflow-y: auto;">
-                        <li
-                            class="dropdown-header fw-bold text-uppercase text-secondary small d-flex justify-content-between align-items-center">
-                            <span>Notifications</span>
-                        </li>
-                        <li th:if="${notifications == null || notifications.empty}"
-                            class="dropdown-item text-muted text-center py-3">No new notifications</li>
-                        <li th:each="notification : ${notifications}" class="notification-item">
-                            <a class="dropdown-item d-flex align-items-start py-2 border-bottom" href="#"
-                                th:onclick="'showMeetingDetails(' + ${notification.meetingId} + ', ' + ${notification.id} + ', this); return false;'">
-                                <div class="me-2 mt-1 text-primary">🔵</div>
-                                <div>
-                                    <p class="mb-1 text-wrap small fw-medium" th:text="${notification.message}">Message
-                                    </p>
-                                    <small class="text-secondary" style="font-size: 0.75rem;"
-                                        th:text="${#temporals.format(notification.createdAt, 'MMM dd, HH:mm')}">Date</small>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="p-2 text-center border-top bg-light">
-                            <a th:href="@{/manager/notifications}"
-                                class="text-decoration-none small fw-bold text-primary">
-                                View All Notifications
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
+            <div class="d-flex gap-2">
                 <a th:href="@{/}" class="btn btn-outline-primary shadow-sm bg-white">🏠 Home</a>
                 <button onclick="location.reload()" class="btn btn-outline-secondary shadow-sm bg-white">🔄
                     Refresh</button>
@@ -233,8 +341,7 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="incident : ${idleIncidents}">
-                                        <td class="ps-4 fw-medium text-dark" th:text="${incident.employee.name}">
-                                        </td>
+                                        <td class="ps-4 fw-medium text-dark" th:text="${incident.employee.name}"></td>
                                         <td class="text-secondary" th:text="${incident.employee.employeeId}"></td>
                                         <td class="text-secondary" th:text="${incident.employee.department}"></td>
                                         <td>
@@ -277,8 +384,6 @@
                     <span th:text="${error}"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-
-
 
                 <div class="mb-4 d-flex justify-content-between align-items-center">
                     <h4 class="text-dark fw-bold mb-0">Daily Planning</h4>
@@ -381,8 +486,7 @@
                                             found</td>
                                     </tr>
                                     <tr th:each="feedback : ${allFeedbacks}">
-                                        <td class="ps-4 fw-medium text-dark" th:text="${feedback.employee.name}">
-                                        </td>
+                                        <td class="ps-4 fw-medium text-dark" th:text="${feedback.employee.name}"></td>
                                         <td class="text-secondary"
                                             th:text="${#temporals.format(feedback.createdAt, 'MMM dd, yyyy HH:mm')}">
                                         </td>
@@ -498,8 +602,7 @@
                                 </thead>
                                 <tbody>
                                     <tr th:if="${activeRules.isEmpty()}">
-                                        <td colspan="5" class="text-center text-secondary py-4">No custom rules
-                                            defined
+                                        <td colspan="5" class="text-center text-secondary py-4">No custom rules defined
                                         </td>
                                     </tr>
                                     <tr th:each="rule : ${activeRules}">
@@ -553,8 +656,7 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <div>
-                                            <h5 class="text-dark fw-bold mb-1" th:text="${suggestion.title}">Title
-                                            </h5>
+                                            <h5 class="text-dark fw-bold mb-1" th:text="${suggestion.title}">Title</h5>
                                             <p class="text-secondary small mb-0">
                                                 By: <span class="fw-medium text-dark"
                                                     th:text="${suggestion.employee.name}"></span>
@@ -619,10 +721,8 @@
                                         </td>
                                     </tr>
                                     <tr th:each="suggestion : ${allSuggestions}">
-                                        <td class="ps-4 fw-medium text-dark" th:text="${suggestion.title}">Title
-                                        </td>
-                                        <td class="text-secondary" th:text="${suggestion.employee.name}">Employee
-                                        </td>
+                                        <td class="ps-4 fw-medium text-dark" th:text="${suggestion.title}">Title</td>
+                                        <td class="text-secondary" th:text="${suggestion.employee.name}">Employee</td>
                                         <td><span class="badge bg-secondary bg-opacity-10 text-secondary"
                                                 th:text="${suggestion.suggestionType}">Type</span></td>
                                         <td>
@@ -631,8 +731,7 @@
                                                 th:text="${suggestion.status}">Status</span>
                                         </td>
                                         <td class="text-secondary"
-                                            th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy')}">
-                                            Date
+                                            th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy')}">Date
                                         </td>
                                         <td class="text-end pe-4">
                                             <button type="button" class="btn btn-sm btn-light border text-primary"
@@ -652,13 +751,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Toggle Sidebar
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('show');
-            document.querySelector('.sidebar-overlay').classList.toggle('show');
-        }
-    </script>
     <script th:inline="javascript">
         // Workload Chart
 
@@ -735,7 +827,7 @@
         </div>
     </div>
 
-    <!-- Modals for viewing suggestions -->
+    </div> <!-- Modals for viewing suggestions -->
     <div th:each="suggestion : ${allSuggestions}" th:attr="id='suggestionModal' + ${suggestion.id}" class="modal fade"
         tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -810,202 +902,7 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Create Meeting Modal -->
-    <div class="modal fade" id="createMeetingModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">📅 Schedule Team Meeting</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form th:action="@{/manager/meetings/create}" method="post">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label text-secondary">Title <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="title" required
-                                placeholder="e.g., Weekly Sync">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-secondary">Description</label>
-                            <textarea class="form-control" name="description" rows="2"
-                                placeholder="Meeting agenda..."></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-secondary">Meeting Type <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select" name="meetingType" required>
-                                <option value="" selected disabled>Select Type...</option>
-                                <option value="INTERNAL">Internal</option>
-                                <option value="EXTERNAL">External</option>
-                                <option value="CLIENT">Client</option>
-                            </select>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col">
-                                <label class="form-label text-secondary">Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="date" required id="meetingDate"
-                                    onchange="updateDay()">
-                                <small id="dayDisplay" class="text-muted"></small>
-                            </div>
-                            <div class="col">
-                                <label class="form-label text-secondary">Start Time <span
-                                        class="text-danger">*</span></label>
-                                <input type="time" class="form-control" name="startTime" required>
-                            </div>
-                            <div class="col">
-                                <label class="form-label text-secondary">End Time</label>
-                                <input type="time" class="form-control" name="endTime">
-                            </div>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="addEveryone" name="addEveryone"
-                                onchange="toggleEmployeeSelect()">
-                            <label class="form-check-label fw-medium" for="addEveryone">Add Everyone (All Active
-                                Employees)</label>
-                        </div>
-
-                        <div class="mb-3" id="employeeSelectDiv">
-                            <label class="form-label text-secondary">Select Attendees</label>
-                            <div class="border rounded p-3"
-                                style="max-height: 200px; overflow-y: auto; background-color: #fff;">
-                                <div th:each="emp : ${allEmployees}" class="form-check mb-2">
-                                    <input class="form-check-input employee-checkbox" type="checkbox" name="employeeIds"
-                                        th:value="${emp.id}" th:id="'emp_' + ${emp.id}">
-                                    <label class="form-check-label" th:for="'emp_' + ${emp.id}"
-                                        th:text="${emp.name + ' (' + emp.department + ')'}"></label>
-                                </div>
-                            </div>
-                            <small class="text-muted">Select multiple employees by checking the boxes</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Schedule Meeting</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function updateDay() {
-            const dateInput = document.getElementById('meetingDate');
-            const dayDisplay = document.getElementById('dayDisplay');
-            if (dateInput.value) {
-                const date = new Date(dateInput.value);
-                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                dayDisplay.textContent = days[date.getDay()];
-            }
-        }
-
-        function toggleEmployeeSelect() {
-            const checkBox = document.getElementById('addEveryone');
-            const selectDiv = document.getElementById('employeeSelectDiv');
-            const checkboxes = selectDiv.querySelectorAll('.employee-checkbox');
-
-            if (checkBox.checked) {
-                selectDiv.style.opacity = '0.5';
-                selectDiv.style.pointerEvents = 'none';
-                // Uncheck all employee checkboxes
-                checkboxes.forEach(cb => cb.checked = false);
-            } else {
-                selectDiv.style.opacity = '1';
-                selectDiv.style.pointerEvents = 'auto';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const successMsg = "[[${success}]]";
-            const errorMsg = "[[${error}]]";
-
-            if (successMsg && successMsg !== 'null' && successMsg !== '') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: successMsg,
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            }
-
-            if (errorMsg && errorMsg !== 'null' && errorMsg !== '') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errorMsg
-                });
-            }
-        });
-
-        const contextPath = /*[[@{/}]]*/ '/';
-        const meetingApiUrl = /*[[@{/manager/api/meetings/}]]*/ '/manager/api/meetings/';
-        const notificationReadUrl = /*[[@{/manager/notification/read/}]]*/ '/manager/notification/read/';
-
-        function showMeetingDetails(meetingId, notifId, linkElement) {
-            // Mark as read immediately
-            if (notifId) {
-                fetch(notificationReadUrl + notifId, { method: 'POST' })
-                    .then(response => {
-                        if (response.ok) {
-                            // Remove item from list
-                            const item = linkElement.closest('.notification-item');
-                            if (item) item.remove();
-                            // Update badge
-                            const badge = document.querySelector('#notificationDropdown .badge');
-                            if (badge) {
-                                let count = parseInt(badge.querySelector('span').innerText);
-                                if (count > 1) {
-                                    badge.querySelector('span').innerText = count - 1;
-                                } else {
-                                    badge.remove();
-                                }
-                            }
-                        }
-                    });
-            }
-
-            if (!meetingId) return;
-
-            // Fetch meeting details
-            fetch(meetingApiUrl + meetingId)
-                .then(response => {
-                    if (response.ok) return response.json();
-                    throw new Error('Meeting not found');
-                })
-                .then(meeting => {
-                    const startDate = new Date(meeting.startTime);
-                    const endDate = meeting.endTime ? new Date(meeting.endTime) : null;
-
-                    const dateStr = startDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    const timeStr = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
-                        (endDate ? ' - ' + endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
-
-                    Swal.fire({
-                        title: meeting.title,
-                        html: `
-                            <div class="text-start">
-                                <div class="mb-2"><strong>📅 Date:</strong> ${dateStr}</div>
-                                <div class="mb-2"><strong>⏰ Time:</strong> ${timeStr}</div>
-                                <div class="mb-2"><strong>🏷️ Type:</strong> <span class="badge bg-primary bg-opacity-10 text-primary">${meeting.meetingType || 'Meeting'}</span></div>
-                                <div class="mb-2"><strong>📍 Location:</strong> ${meeting.location || 'Online/TBD'}</div>
-                                <div class="mt-3 p-2 bg-light rounded border">${meeting.description || 'No description provided.'}</div>
-                            </div>
-                        `,
-                        icon: 'info',
-                        confirmButtonText: 'Close',
-                        confirmButtonColor: '#1a8cf0'
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                    Swal.fire('Error', 'Could not load meeting details.', 'error');
-                });
-        }
-    </script>
 </body>
-
 
 </html>
