@@ -839,6 +839,21 @@ public class EmployeeController {
         return ResponseEntity.badRequest().body("Meeting not found");
     }
 
+    @RequestMapping(value = "/notifications/history", method = RequestMethod.GET)
+    public String getNotificationHistory(Model model, HttpSession session) {
+        Employee employee = (Employee) session.getAttribute("employee");
+        if (employee == null) {
+            return "redirect:/employee/login";
+        }
+
+        // Fetch all notifications (read and unread) sorted by newest first
+        List<com.example.demo.model.Notification> allNotifications = notificationRepository
+                .findByRecipientOrderByCreatedAtDesc(employee);
+        model.addAttribute("notifications", allNotifications);
+
+        return "employee-notification-history";
+    }
+
     // Endpoint to track employee activity (heartbeat)
 
     @RequestMapping(value = "/activity", method = RequestMethod.POST)
