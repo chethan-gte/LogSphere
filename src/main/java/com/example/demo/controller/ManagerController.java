@@ -809,7 +809,16 @@ public class ManagerController {
         }
         Optional<Meeting> meetingOpt = meetingRepository.findById(id);
         if (meetingOpt.isPresent()) {
-            return ResponseEntity.ok(meetingOpt.get());
+            Meeting meeting = meetingOpt.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", meeting.getId());
+            response.put("title", meeting.getTitle());
+            response.put("description", meeting.getDescription());
+            response.put("startTime", meeting.getStartTime());
+            response.put("endTime", meeting.getEndTime());
+            response.put("location", meeting.getLocation());
+            response.put("meetingType", meeting.getMeetingType());
+            return ResponseEntity.ok(response);
         }
         return ResponseEntity.badRequest().body("Meeting not found");
     }
