@@ -58,6 +58,9 @@ public class HRController {
     @Autowired
     private com.example.demo.repository.EmployeeActivityRepository employeeActivityRepository;
 
+    @Autowired
+    private com.example.demo.repository.MeetingRepository meetingRepository;
+
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showHRLoginForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -797,6 +800,8 @@ public class HRController {
         System.out.println("DEBUG: Fetching base salary for Employee ID: " + id);
         User user = (User) session.getAttribute("user");
         Map<String, Object> response = new HashMap<>();
+        
+
 
         if (user == null || !"HR".equals(user.getRole())) {
             response.put("success", false);
@@ -920,5 +925,67 @@ public class HRController {
             redirectAttributes.addFlashAttribute("error", "Error responding to suggestion: " + e.getMessage());
             return "redirect:/hr/dashboard";
         }
+    }
+
+    @RequestMapping(value = "/meeting/schedule/employee", method = RequestMethod.GET)
+    public String showScheduleEmployeeMeetingForm(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+        
+        List<Employee> employees = employeeRepository.findAll();
+        model.addAttribute("employees", employees);
+        model.addAttribute("meeting", new Meeting());
+        return "hr-meeting-schedule-employee";
+    }
+
+    @RequestMapping(value = "/meeting/schedule/manager", method = RequestMethod.GET)
+    public String showScheduleManagerMeetingForm(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+        
+        List<User> managers = userRepository.findByRole("MANAGER");
+        model.addAttribute("managers", managers);
+        model.addAttribute("meeting", new Meeting());
+        return "hr-meeting-schedule-manager";
+    }
+
+    @RequestMapping(value = "/meeting/create", method = RequestMethod.POST)
+    public String createHRMeeting(@ModelAttribute Meeting meeting,
+                                  @RequestParam(required = false) List<Long> employeeIds,
+                                  @RequestParam(required = false) List<Long> managerIds,
+                                  @RequestParam(required = false) Boolean isEveryone,
+                                  @RequestParam(required = false) String targetType,
+                                  HttpSession session,
+                                  RedirectAttributes redirectAttributes) {
+                                      
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+
+        if ("EMPLOYEE".equals(targetType)) {
+             if (Boolean.TRUE.equals(isEveryone)) {
+                 meeting.setIsAllEmployees(true);
+             } else if (employeeIds != null && !employeeIds.isEmpty()) {
+                 List<Employee> selected = employeeRepository.findAllById(employeeIds);
+                 meeting.setEmployeeParticipants(selected);
+             }
+        } else if ("MANAGER".equals(targetType)) {
+             if (Boolean.TRUE.equals(isEveryone)) {
+                 meeting.setIsAllManagers(true);
+             } else if (managerIds != null && !managerIds.isEmpty()) {
+                 List<User> selected = userRepository.findAllById(managerIds);
+                 meeting.setManagerParticipants(selected);
+             }
+        }
+        
+        meetingRepository.save(meeting);
+        
+        redirectAttributes.addFlashAttribute("success", "Meeting scheduled successfully!");
+        return "redirect:/hr/dashboard";
     }
 }
