@@ -126,7 +126,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6" id="visitorContainer">
                                     <label class="form-label">Visitor (Optional)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light text-secondary border-end-0"><i
@@ -139,6 +139,20 @@
                                     </div>
                                     <small class="text-muted d-block mt-1 ps-1" style="font-size: 0.75rem;">Only shows
                                         registered/approved visitors.</small>
+                                </div>
+                                <div class="col-md-6 d-none" id="participantsContainer">
+                                    <label class="form-label">Participants</label>
+                                    <div class="form-check form-switch p-2 bg-light rounded border">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" id="inviteEveryone"
+                                            name="inviteEveryone">
+                                        <label class="form-check-label fw-medium" for="inviteEveryone"
+                                            id="inviteEveryoneLabel">
+                                            Invite Everyone
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mt-1 ps-1" style="font-size: 0.75rem;">
+                                        Send email invitations to all selected role members automatically.
+                                    </small>
                                 </div>
                             </div>
 
@@ -165,30 +179,70 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Meeting Type</label>
-                                    <select class="form-select" th:field="*{meetingType}">
+                                    <select class="form-select" th:field="*{meetingType}" id="meetingType">
                                         <option value="">Select Type</option>
                                         <option value="INTERNAL">Internal</option>
                                         <option value="EXTERNAL">External</option>
                                         <option value="CLIENT">Client Meeting</option>
+                                        <option value="HR">HR Meeting</option>
+                                        <option value="MANAGER">Manager Meeting</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="d-grid gap-2 mt-5">
-                                <button type="submit" class="btn btn-primary btn-lg shadow-sm">
-                                    <i class="fas fa-check-circle me-2"></i> Create Meeting
-                                </button>
-                                <a th:href="@{${redirectUrl}}" class="btn btn-light text-secondary">Cancel</a>
-                            </div>
-                        </form>
+
                     </div>
+
+                    <div class="d-grid gap-2 mt-5">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="fas fa-check-circle me-2"></i> Create Meeting
+                        </button>
+                        <a th:href="@{${redirectUrl}}" class="btn btn-light text-secondary">Cancel</a>
+                    </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const meetingTypeSelect = document.getElementById('meetingType');
+            const inviteEveryoneLabel = document.getElementById('inviteEveryoneLabel');
+
+            const visitorContainer = document.getElementById('visitorContainer');
+            const participantsContainer = document.getElementById('participantsContainer');
+
+            function updateUI() {
+                const type = meetingTypeSelect.value;
+                if (type === 'HR') {
+                    inviteEveryoneLabel.textContent = 'Invite Everyone (All HRs)';
+                    visitorContainer.classList.add('d-none');
+                    participantsContainer.classList.remove('d-none');
+                } else if (type === 'MANAGER') {
+                    inviteEveryoneLabel.textContent = 'Invite Everyone (All Managers)';
+                    visitorContainer.classList.add('d-none');
+                    participantsContainer.classList.remove('d-none');
+                } else if (type === 'INTERNAL') {
+                    inviteEveryoneLabel.textContent = 'Invite Everyone (All Employees)';
+                    visitorContainer.classList.add('d-none');
+                    participantsContainer.classList.remove('d-none');
+                } else {
+                    // EXTERNAL, CLIENT, VISITOR, or empty
+                    inviteEveryoneLabel.textContent = 'Notify Visitor';
+                    visitorContainer.classList.remove('d-none');
+                    participantsContainer.classList.add('d-none');
+                }
+            }
+
+            meetingTypeSelect.addEventListener('change', updateUI);
+
+            // Run on load
+            updateUI();
+        });
+    </script>
 </body>
 
 </html>
-

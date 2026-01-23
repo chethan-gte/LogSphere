@@ -319,6 +319,73 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Upcoming Meetings (Restored) -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold mb-0">Upcoming Meetings</h5>
+                                <a th:href="@{/meetings/list}" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="ps-4">Title</th>
+                                                <th>Organizer</th>
+                                                <th>Date & Time</th>
+                                                <th>Location</th>
+                                                <th>Type</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="meeting : ${meetings}" th:if="${!meetings.isEmpty()}">
+                                                <td class="ps-4 fw-medium">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="icon-shape icon-sm bg-primary bg-opacity-10 text-primary rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                                            style="width: 36px; height: 36px;">
+                                                            <i class="fas fa-calendar-day"></i>
+                                                        </div>
+                                                        <span th:text="${meeting.title}">Title</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        th:text="${meeting.organizer != null ? meeting.organizer.name : 'Management'}">Start</span>
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        th:text="${#temporals.format(meeting.startTime, 'MMM dd, HH:mm')}">Date</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border"
+                                                        th:text="${meeting.location}">Location</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info bg-opacity-10 text-info"
+                                                        th:text="${meeting.meetingType}">Type</span>
+                                                </td>
+                                                <td>
+                                                    <a th:href="@{'/meetings/edit/' + ${meeting.id}}"
+                                                        class="btn btn-sm btn-light text-secondary"><i
+                                                            class="fas fa-edit"></i></a>
+                                                </td>
+                                            </tr>
+                                            <tr th:if="${meetings == null || meetings.isEmpty()}">
+                                                <td colspan="6" class="text-center py-4 text-muted">
+                                                    No upcoming meetings found.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 2. Attendance -->
