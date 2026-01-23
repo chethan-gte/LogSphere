@@ -58,6 +58,12 @@ public class HRController {
     @Autowired
     private com.example.demo.repository.EmployeeActivityRepository employeeActivityRepository;
 
+    @Autowired
+    private com.example.demo.repository.MeetingRepository meetingRepository;
+
+    @Autowired
+    private com.example.demo.repository.NotificationRepository notificationRepository;
+
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showHRLoginForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -141,6 +147,49 @@ public class HRController {
         List<Attendance> monthlyAttendance = attendanceRepository.findByDateRange(startOfMonth, endOfMonth);
         Map<String, Long> attendanceStatusCount = monthlyAttendance.stream()
                 .collect(Collectors.groupingBy(Attendance::getStatus, Collectors.counting()));
+
+        // Calculate Detailed Attendance Report for Table
+        List<Map<String, Object>> attendanceReport = new ArrayList<>();
+        int daysPassed = today.getDayOfMonth();
+
+        for (Employee emp : allEmployees) {
+            Map<String, Object> report = new HashMap<>();
+            report.put("id", emp.getEmployeeId()); // Visible ID
+            report.put("name", emp.getName());
+
+            // Today's Status
+            Optional<Attendance> todayRecord = todayAttendance.stream()
+                    .filter(a -> a.getEmployee().getId().equals(emp.getId()))
+                    .findFirst();
+
+            if (todayRecord.isPresent()) {
+                Attendance att = todayRecord.get();
+                report.put("login",
+                        att.getCheckInTime() != null ? att.getCheckInTime().toLocalTime().toString().substring(0, 5)
+                                : "-");
+                report.put("logout",
+                        att.getCheckOutTime() != null ? att.getCheckOutTime().toLocalTime().toString().substring(0, 5)
+                                : "-");
+            } else {
+                report.put("login", "-");
+                report.put("logout", "-");
+            }
+
+            // Monthly Counts
+            long presentDays = monthlyAttendance.stream()
+                    .filter(a -> a.getEmployee().getId().equals(emp.getId()))
+                    .count();
+
+            report.put("presentDays", presentDays);
+            // Simple absent calculation: Days passed in month - Days Present.
+            // Note: This includes weekends in "Absent" count if they aren't marked present.
+            // For a robust system, we'd check work schedule, but this meets the immediate
+            // requirement.
+            report.put("absentDays", Math.max(0, daysPassed - presentDays));
+
+            attendanceReport.add(report);
+        }
+        model.addAttribute("attendanceReport", attendanceReport);
 
         // 3. Leave Management
         List<LeaveRequest> pendingLeaves = leaveRequestRepository.findByStatus("PENDING");
@@ -797,6 +846,8 @@ public class HRController {
         System.out.println("DEBUG: Fetching base salary for Employee ID: " + id);
         User user = (User) session.getAttribute("user");
         Map<String, Object> response = new HashMap<>();
+        
+
 
         if (user == null || !"HR".equals(user.getRole())) {
             response.put("success", false);
@@ -920,5 +971,113 @@ public class HRController {
             redirectAttributes.addFlashAttribute("error", "Error responding to suggestion: " + e.getMessage());
             return "redirect:/hr/dashboard";
         }
+    }
+
+    @RequestMapping(value = "/meeting/schedule/employee", method = RequestMethod.GET)
+    public String showScheduleEmployeeMeetingForm(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+        
+        List<Employee> employees = employeeRepository.findAll();
+        model.addAttribute("employees", employees);
+        model.addAttribute("meeting", new Meeting());
+        return "hr-meeting-schedule-employee";
+    }
+
+    @RequestMapping(value = "/meeting/schedule/manager", method = RequestMethod.GET)
+    public String showScheduleManagerMeetingForm(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+        
+        List<User> managers = userRepository.findByRole("MANAGER");
+        model.addAttribute("managers", managers);
+        model.addAttribute("meeting", new Meeting());
+        return "hr-meeting-schedule-manager";
+    }
+
+    @RequestMapping(value = "/meeting/create", method = RequestMethod.POST)
+    public String createHRMeeting(@ModelAttribute Meeting meeting,
+                                  @RequestParam(required = false) List<Long> employeeIds,
+                                  @RequestParam(required = false) List<Long> managerIds,
+                                  @RequestParam(required = false) Boolean isEveryone,
+                                  @RequestParam(required = false) String targetType,
+                                  HttpSession session,
+                                  RedirectAttributes redirectAttributes) {
+                                      
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+
+        if ("EMPLOYEE".equals(targetType)) {
+             if (Boolean.TRUE.equals(isEveryone)) {
+                 meeting.setIsAllEmployees(true);
+                 List<Employee> allEmployees = employeeRepository.findAll(); 
+                 // We don't necessarily need to link all employees to the meeting object if we just want notifications, 
+                 // but typically having them in the list is good. 
+                 // However, for large companies "All Employees" might be too many for ManyToMany.
+                 // But for this requirement, I will just send notifications.
+                 // NOTE: Meeting model has `isAllEmployees` flag, so maybe we rely on that for "View My Meetings".
+                 // BUT for notifications, we need individual records unless we have a "Global Notification" system.
+                 // The current Notification model is per-recipient. So I must create N notifications.
+
+             } else if (employeeIds != null && !employeeIds.isEmpty()) {
+                 List<Employee> selected = employeeRepository.findAllById(employeeIds);
+                 meeting.setEmployeeParticipants(selected);
+             }
+        } else if ("MANAGER".equals(targetType)) {
+             if (Boolean.TRUE.equals(isEveryone)) {
+                 meeting.setIsAllManagers(true);
+             } else if (managerIds != null && !managerIds.isEmpty()) {
+                 List<User> selected = userRepository.findAllById(managerIds);
+                 meeting.setManagerParticipants(selected);
+             }
+        }
+        
+        Meeting savedMeeting = meetingRepository.save(meeting);
+        
+        // Create Notifications for Employees
+        if ("EMPLOYEE".equals(targetType)) {
+            List<Employee> recipients = new ArrayList<>();
+            if (Boolean.TRUE.equals(isEveryone)) {
+                recipients = employeeRepository.findAll();
+            } else if (savedMeeting.getEmployeeParticipants() != null) {
+                recipients = savedMeeting.getEmployeeParticipants();
+            }
+            
+            for (Employee emp : recipients) {
+                Notification notification = new Notification();
+                notification.setRecipient(emp);
+                notification.setMessage("New Meeting: " + savedMeeting.getTitle());
+                notification.setMeetingId(savedMeeting.getId());
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setIsRead(false);
+                notificationRepository.save(notification);
+            }
+        } else if ("MANAGER".equals(targetType)) {
+            List<User> recipients = new ArrayList<>();
+             if (Boolean.TRUE.equals(isEveryone)) {
+                 recipients = userRepository.findByRole("MANAGER");
+             } else if (savedMeeting.getManagerParticipants() != null) {
+                 recipients = savedMeeting.getManagerParticipants();
+             }
+             
+             for (User mgr : recipients) {
+                 Notification notification = new Notification();
+                 notification.setUserRecipient(mgr);
+                 notification.setMessage("New Meeting: " + savedMeeting.getTitle());
+                 notification.setMeetingId(savedMeeting.getId());
+                 notification.setCreatedAt(LocalDateTime.now());
+                 notification.setIsRead(false);
+                 notificationRepository.save(notification);
+             }
+        }
+        
+        redirectAttributes.addFlashAttribute("success", "Meeting scheduled successfully!");
+        return "redirect:/hr/dashboard";
     }
 }

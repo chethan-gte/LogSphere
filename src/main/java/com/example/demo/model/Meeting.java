@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "meetings")
@@ -27,6 +28,36 @@ public class Meeting {
     @Column(name = "visitor_name")
     private String visitorName;
 
+    @ManyToOne
+    @JoinColumn(name = "target_employee_id")
+    private Employee targetEmployee;
+
+    @ManyToOne
+    @JoinColumn(name = "target_manager_id")
+    private User targetManager;
+
+    @Column(name = "is_all_employees")
+    private Boolean isAllEmployees = false;
+
+    @Column(name = "is_all_managers")
+    private Boolean isAllManagers = false;
+
+    @ManyToMany
+    @JoinTable(
+        name = "meeting_participants_employees",
+        joinColumns = @JoinColumn(name = "meeting_id"),
+        inverseJoinColumns = @JoinColumn(name = "employee_id")
+    )
+    private List<Employee> employeeParticipants;
+
+    @ManyToMany
+    @JoinTable(
+        name = "meeting_participants_managers",
+        joinColumns = @JoinColumn(name = "meeting_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> managerParticipants;
+
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
@@ -41,6 +72,10 @@ public class Meeting {
 
     @Column(name = "meeting_type")
     private String meetingType; // INTERNAL, EXTERNAL, CLIENT
+
+    @ManyToMany
+    @JoinTable(name = "meeting_attendees", joinColumns = @JoinColumn(name = "meeting_id"), inverseJoinColumns = @JoinColumn(name = "employee_id"))
+    private List<Employee> attendees;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -117,6 +152,54 @@ public class Meeting {
         this.visitorName = visitorName;
     }
 
+    public Employee getTargetEmployee() {
+        return targetEmployee;
+    }
+
+    public void setTargetEmployee(Employee targetEmployee) {
+        this.targetEmployee = targetEmployee;
+    }
+
+    public User getTargetManager() {
+        return targetManager;
+    }
+
+    public void setTargetManager(User targetManager) {
+        this.targetManager = targetManager;
+    }
+
+    public Boolean getIsAllEmployees() {
+        return isAllEmployees;
+    }
+
+    public void setIsAllEmployees(Boolean isAllEmployees) {
+        this.isAllEmployees = isAllEmployees;
+    }
+
+    public Boolean getIsAllManagers() {
+        return isAllManagers;
+    }
+
+    public void setIsAllManagers(Boolean isAllManagers) {
+        this.isAllManagers = isAllManagers;
+    }
+
+    public List<Employee> getEmployeeParticipants() {
+        return employeeParticipants;
+    }
+
+    public void setEmployeeParticipants(List<Employee> employeeParticipants) {
+        this.employeeParticipants = employeeParticipants;
+    }
+
+    public List<User> getManagerParticipants() {
+        return managerParticipants;
+    }
+
+    public void setManagerParticipants(List<User> managerParticipants) {
+        this.managerParticipants = managerParticipants;
+    }
+
     public LocalDateTime getStartTime() {
         return startTime;
     }
@@ -157,6 +240,14 @@ public class Meeting {
         this.meetingType = meetingType;
     }
 
+    public List<Employee> getAttendees() {
+        return attendees;
+    }
+
+    public void setAttendees(List<Employee> attendees) {
+        this.attendees = attendees;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -181,4 +272,3 @@ public class Meeting {
         this.reminder15MinSent = reminder15MinSent;
     }
 }
-

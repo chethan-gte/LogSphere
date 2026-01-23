@@ -59,7 +59,15 @@ public class EmployeeController {
     @Autowired
     private com.example.demo.repository.TeamRuleRepository teamRuleRepository;
 
+    @Autowired
+
+    private com.example.demo.repository.NotificationRepository notificationRepository;
+
+    @Autowired
+    private com.example.demo.repository.MeetingRepository meetingRepository;
+
     @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
+
     public String employeeDashboard(Model model, HttpSession session) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
@@ -209,6 +217,11 @@ public class EmployeeController {
         List<com.example.demo.model.TeamRule> activeRules = teamRuleRepository.findByIsActiveTrue();
         model.addAttribute("activeRules", activeRules);
 
+        // Fetch Notifications
+        List<com.example.demo.model.Notification> notifications = notificationRepository
+                .findByRecipientAndIsReadFalseOrderByCreatedAtDesc(employee);
+        model.addAttribute("notifications", notifications);
+
         // Reset alert flags at start of new day
         if (employee.getCurrentCheckIn() == null ||
                 !employee.getCurrentCheckIn().toLocalDate().equals(LocalDate.now())) {
@@ -216,6 +229,8 @@ public class EmployeeController {
             employee.setEarlyAlertSent(false);
             employeeRepository.save(employee);
         }
+
+
 
         return "employee-dashboard";
     }
@@ -794,7 +809,56 @@ public class EmployeeController {
         return ResponseEntity.ok("Clocked out successfully at " + now.toLocalTime());
     }
 
+    @RequestMapping(value = "/notification/read/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<String> markNotificationAsRead(@PathVariable Long id, HttpSession session) {
+        Employee employee = (Employee) session.getAttribute("employee");
+        if (employee == null) {
+            return ResponseEntity.badRequest().body("Unauthorized");
+        }
+        Optional<com.example.demo.model.Notification> notifOpt = notificationRepository.findById(id);
+        if (notifOpt.isPresent()) {
+            com.example.demo.model.Notification notification = notifOpt.get();
+            if (notification.getRecipient().getId().equals(employee.getId())) {
+                notification.setIsRead(true);
+                notificationRepository.save(notification);
+                return ResponseEntity.ok("Marked as read");
+            }
+        }
+        return ResponseEntity.badRequest().body("Failed");
+    }
+
+    @RequestMapping(value = "/api/meetings/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<?> getMeetingDetails(@PathVariable Long id, HttpSession session) {
+        Employee employee = (Employee) session.getAttribute("employee");
+        if (employee == null) {
+            return ResponseEntity.badRequest().body("Unauthorized");
+        }
+        Optional<com.example.demo.model.Meeting> meetingOpt = meetingRepository.findById(id);
+        if (meetingOpt.isPresent()) {
+            return ResponseEntity.ok(meetingOpt.get());
+        }
+        return ResponseEntity.badRequest().body("Meeting not found");
+    }
+
+    @RequestMapping(value = "/notifications/history", method = RequestMethod.GET)
+    public String getNotificationHistory(Model model, HttpSession session) {
+        Employee employee = (Employee) session.getAttribute("employee");
+        if (employee == null) {
+            return "redirect:/employee/login";
+        }
+
+        // Fetch all notifications (read and unread) sorted by newest first
+        List<com.example.demo.model.Notification> allNotifications = notificationRepository
+                .findByRecipientOrderByCreatedAtDesc(employee);
+        model.addAttribute("notifications", allNotifications);
+
+        return "employee-notification-history";
+    }
+
     // Endpoint to track employee activity (heartbeat)
+
     @RequestMapping(value = "/activity", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<?> trackActivity(@RequestParam(required = false) String activityType,

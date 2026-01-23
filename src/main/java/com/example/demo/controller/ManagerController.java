@@ -8,11 +8,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @Controller
 @RequestMapping("/manager")
@@ -35,6 +41,9 @@ public class ManagerController {
 
     @Autowired
     private MeetingRepository meetingRepository;
+
+    @Autowired
+    private com.example.demo.repository.NotificationRepository notificationRepository;
 
     @Autowired
     private LeaveRequestRepository leaveRequestRepository;
@@ -295,6 +304,11 @@ public class ManagerController {
         // Rules
         model.addAttribute("activeRules", activeRules);
 
+        // Fetch Notifications
+        List<Notification> notifications = notificationRepository
+                .findByUserRecipientAndIsReadFalseOrderByCreatedAtDesc(user);
+        model.addAttribute("notifications", notifications);
+
         // General
         model.addAttribute("allEmployees", allEmployees);
         model.addAttribute("presentEmployees", presentEmployees);
@@ -341,6 +355,8 @@ public class ManagerController {
         // Add task model for form
         model.addAttribute("task", new Task());
 
+
+
         return "manager-dashboard";
     }
 
@@ -350,6 +366,7 @@ public class ManagerController {
             @RequestParam String priority,
             @RequestParam(required = false) String dueDate,
             @RequestParam Long employeeId,
+            @RequestParam(required = false) MultipartFile attachment,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
@@ -379,6 +396,26 @@ public class ManagerController {
                 task.setDueDate(LocalDate.parse(dueDate));
             } catch (Exception e) {
                 // Invalid date format, ignore
+            }
+        }
+
+        // Handle file upload
+        if (attachment != null && !attachment.isEmpty()) {
+            try {
+                String uploadDir = "src/main/resources/static/uploads/tasks/";
+                Path uploadPath = Paths.get(uploadDir);
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+
+                String fileName = UUID.randomUUID().toString() + "_" + attachment.getOriginalFilename();
+                Path filePath = uploadPath.resolve(fileName);
+                Files.copy(attachment.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                task.setAttachmentUrl("/uploads/tasks/" + fileName);
+            } catch (Exception e) {
+                System.err.println("Error creating task attachment: " + e.getMessage());
+                // Continue creating task without attachment
             }
         }
 
@@ -561,8 +598,12 @@ public class ManagerController {
         if (!ruleOpt.isPresent()) {
             return "redirect:/manager/dashboard?tab=rules";
         }
+        
+        model.addAttribute("rule", ruleOpt.get()); 
+
 
         model.addAttribute("rule", ruleOpt.get());
+
         return "manager-edit-rule";
     }
 
@@ -663,5 +704,127 @@ public class ManagerController {
             redirectAttributes.addFlashAttribute("error", "Error responding to suggestion: " + e.getMessage());
             return "redirect:/manager/dashboard?tab=suggestions";
         }
+
+    }
+
+    @RequestMapping(value = "/meetings/create", method = RequestMethod.POST)
+    public String createTeamMeeting(@RequestParam String title,
+            @RequestParam(required = false) String description,
+            @RequestParam String date,
+            @RequestParam String startTime,
+            @RequestParam(required = false) String endTime,
+            @RequestParam(required = false) String meetingType,
+            @RequestParam(required = false) List<Long> employeeIds,
+            @RequestParam(required = false, defaultValue = "false") boolean addEveryone,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return "redirect:/manager/login";
+        }
+
+        try {
+            Meeting meeting = new Meeting();
+            meeting.setTitle(title);
+            meeting.setDescription(description);
+            meeting.setStatus("SCHEDULED");
+            if (meetingType != null && !meetingType.isEmpty()) {
+                meeting.setMeetingType(meetingType);
+            }
+
+            // Handle Date and Time
+            LocalDate meetingDate = LocalDate.parse(date);
+            LocalDateTime startDateTime = meetingDate.atTime(java.time.LocalTime.parse(startTime));
+            meeting.setStartTime(startDateTime);
+
+            if (endTime != null && !endTime.isEmpty()) {
+                LocalDateTime endDateTime = meetingDate.atTime(java.time.LocalTime.parse(endTime));
+                meeting.setEndTime(endDateTime);
+            }
+
+            // Handle Attendees
+            List<Employee> attendees = new ArrayList<>();
+            if (addEveryone) {
+                attendees = employeeRepository.findAll().stream()
+                        .filter(Employee::getIsActive)
+                        .collect(Collectors.toList());
+            } else if (employeeIds != null && !employeeIds.isEmpty()) {
+                attendees = employeeRepository.findAllById(employeeIds);
+            }
+            meeting.setAttendees(attendees);
+
+            // Set organizer (optional, could be linked to manager user if User entity had
+            // link to Employee)
+            // For now, leaving organizer null or could fetch a specific "Manager" employee
+            // profile if it existed.
+
+            meetingRepository.save(meeting);
+
+            // Create Notifications for Attendees
+            // Create Notifications for Attendees
+            for (Employee attendee : attendees) {
+                String message = "New Meeting: " + title + " on " + meetingDate + " at " + startTime;
+                com.example.demo.model.Notification notification = new com.example.demo.model.Notification(attendee,
+                        message, meeting.getId());
+                notificationRepository.save(notification);
+
+            }
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Team meeting scheduled successfully with " + attendees.size() + " attendees!");
+            return "redirect:/manager/dashboard?tab=planning";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error creating meeting: " + e.getMessage());
+            return "redirect:/manager/dashboard?tab=planning";
+        }
+    }
+
+    @RequestMapping(value = "/notification/read/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<String> markNotificationAsRead(@PathVariable Long id, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return ResponseEntity.badRequest().body("Unauthorized");
+        }
+
+        Optional<Notification> notifOpt = notificationRepository.findById(id);
+        if (notifOpt.isPresent()) {
+            Notification notification = notifOpt.get();
+            // Ensure this notification belongs to the current user
+            if (notification.getUserRecipient() != null && notification.getUserRecipient().getId().equals(user.getId())) {
+                notification.setIsRead(true);
+                notificationRepository.save(notification);
+                return ResponseEntity.ok("Marked as read");
+            }
+        }
+        return ResponseEntity.badRequest().body("Notification not found or unauthorized");
+    }
+
+    @RequestMapping(value = "/api/meetings/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<?> getMeetingDetails(@PathVariable Long id, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return ResponseEntity.badRequest().body("Unauthorized");
+        }
+        Optional<Meeting> meetingOpt = meetingRepository.findById(id);
+        if (meetingOpt.isPresent()) {
+            return ResponseEntity.ok(meetingOpt.get());
+        }
+        return ResponseEntity.badRequest().body("Meeting not found");
+    }
+
+    @GetMapping("/notifications")
+    public String viewNotificationHistory(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+        
+        List<Notification> notifications = notificationRepository.findByUserRecipientOrderByCreatedAtDesc(user);
+        model.addAttribute("notifications", notifications);
+        model.addAttribute("userName", user.getName());
+        
+        return "manager-notifications";
     }
 }

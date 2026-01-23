@@ -129,6 +129,55 @@
                     <li class="nav-item"><a th:href="@{/employee/suggestion/submit}" class="nav-link">Suggestion</a>
                     </li>
 
+                    <li class="nav-item position-relative me-3 dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span th:if="${notifications != null && !notifications.isEmpty()}"
+                                class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                                style="font-size: 0.6rem;">
+                                <span th:text="${notifications.size()}"></span>
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-0"
+                            aria-labelledby="notificationDropdown"
+                            style="width: 320px; max-height: 400px; overflow-y: auto;">
+                            <li class="p-3 border-bottom bg-light">
+                                <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
+                            </li>
+                            <li th:if="${notifications == null || notifications.isEmpty()}"
+                                class="p-3 text-center text-secondary small">
+                                No new notifications
+                            </li>
+                            <li th:each="notif : ${notifications}"
+                                class="border-bottom position-relative notification-item">
+                                <div class="dropdown-item p-3" style="white-space: normal;">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="pe-2">
+                                            <a href="#" class="text-decoration-none text-dark"
+                                                th:onclick="'showMeetingDetails(' + ${notif.meetingId} + ', ' + ${notif.id} + ', this)'">
+                                                <p class="mb-1 small fw-medium" th:text="${notif.message}">Message</p>
+                                            </a>
+                                            <small class="text-muted" style="font-size: 0.75rem;"
+                                                th:text="${#temporals.format(notif.createdAt, 'MMM dd, HH:mm')}">Date</small>
+                                        </div>
+
+                                        <button class="btn btn-link btn-sm text-secondary p-0 align-self-start"
+                                            title="Mark as Read" th:onclick="'markAsRead(' + ${notif.id} + ', this)'">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="p-2 text-center border-top bg-light">
+                                <a th:href="@{/employee/notifications/history}"
+                                    class="text-decoration-none small fw-bold text-primary">
+                                    View All Notifications
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <li class="nav-item position-relative">
                         <a th:href="@{/employee/approvals}" class="nav-link">
                             Approvals
@@ -512,8 +561,7 @@
                 </div>
             </div>
 
-            <!-- Activity Summary Removed -->
-            <!-- My Badges -->
+
             <div class="col-md-6">
                 <div class="card h-100 shadow-sm">
                     <div class="card-header bg-white">
@@ -587,8 +635,42 @@
 
     </div>
 
+    <!-- Meeting Details Modal -->
+    <div class="modal fade" id="meetingDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">📅 Meeting Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 id="modalTitle" class="fw-bold mb-3">Meeting Title</h5>
+                    <div class="alert alert-light border">
+                        <p class="mb-1"><i class="fas fa-align-left me-2 text-secondary"></i> <span id="modalDesc"
+                                class="text-dark"></span></p>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="far fa-calendar me-2 text-primary"></i> <span id="modalDate"></span>
+                        </li>
+                        <li class="mb-2"><i class="far fa-clock me-2 text-primary"></i> <span id="modalTime"></span>
+                        </li>
+                        <li><i class="fas fa-tag me-2 text-primary"></i> <span id="modalType"
+                                class="badge bg-secondary">INTERNAL</span></li>
+                    </ul>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <!-- <button type="button" class="btn btn-primary" onclick="joinMeeting()" disabled>Join Video Call</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script th:inline="javascript">
+        // Global context path from Thymeleaf
+        const contextPath = /*[[@{/}]]*/ '/';
+
         // ... (Keeping the exact same script for camera/logic functionality) ...
         let checkInStream = null;
         let checkOutStream = null;
@@ -752,6 +834,80 @@
         }
 
 
+        function markAsRead(id, btnElement) {
+            // Optimistically remove from UI
+            const listItem = btnElement.closest('.notification-item');
+
+            // Construct URL using contextPath, ensuring no double slashes
+            const url = contextPath + 'employee/notification/read/' + id;
+
+            fetch(url, {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    if (listItem) {
+                        listItem.remove();
+                        // Update badge count
+                        const badge = document.querySelector('.badge.bg-danger.rounded-pill');
+                        if (badge) {
+                            let count = parseInt(badge.querySelector('span').innerText);
+                            if (count > 1) {
+                                badge.querySelector('span').innerText = count - 1;
+                            } else {
+                                badge.remove();
+                            }
+                        }
+                    }
+                } else {
+                    console.error("Failed to mark read");
+                }
+            });
+            // Stop propagation to prevent dropdown close
+            event.stopPropagation();
+        }
+        function showMeetingDetails(meetingId, notifId, linkElement) {
+            // First mark as read if notifId is provided
+            if (notifId && linkElement) {
+                // Find the closest list item and correct selector for the button or element
+                const btnElement = linkElement.closest('.notification-item').querySelector('button');
+                markAsRead(notifId, btnElement || linkElement);
+            }
+
+            if (!meetingId) return;
+
+            // Fetch details
+            const url = contextPath + 'employee/api/meetings/' + meetingId;
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Meeting not found');
+                })
+                .then(meeting => {
+                    // Populate Modal
+                    document.getElementById('modalTitle').textContent = meeting.title;
+                    document.getElementById('modalDesc').textContent = meeting.description || 'No description provided.';
+
+                    const date = new Date(meeting.startTime);
+                    document.getElementById('modalDate').textContent = date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                    let timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                    if (meeting.endTime) {
+                        const endDate = new Date(meeting.endTime);
+                        timeStr += ' - ' + endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                    }
+                    document.getElementById('modalTime').textContent = timeStr;
+                    document.getElementById('modalType').textContent = meeting.meetingType || 'MEETING';
+
+                    // Show Modal
+                    new bootstrap.Modal(document.getElementById('meetingDetailsModal')).show();
+                })
+                .catch(err => {
+                    console.error('Error fetching meeting:', err);
+                    alert('Could not load meeting details.');
+                });
+        }
     </script>
 </body>
 
