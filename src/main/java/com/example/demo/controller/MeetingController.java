@@ -113,6 +113,7 @@ public class MeetingController {
             @RequestParam(required = false) Long organizerId,
             @RequestParam(required = false) Long visitorId,
             @RequestParam(required = false, defaultValue = "false") boolean inviteEveryone,
+            @RequestParam(required = false) List<Long> attendeeIds,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         // Allow both admin and employee access
@@ -191,7 +192,7 @@ public class MeetingController {
                 redirectAttributes.addFlashAttribute("info", "Meeting notifications sent to all internal staff.");
             }
         } else {
-            // Specific visitor invitation
+            // Specific visitor invitation or Specific Employee Selection
             if (visitor != null) {
                 emailService.sendMeetingInvitation(
                         visitor.getEmail(),
@@ -202,6 +203,28 @@ public class MeetingController {
                         meeting.getEndTime(),
                         meeting.getLocation(),
                         meeting.getDescription());
+            }
+
+            // Handle manually selected internal attendees
+            if (attendeeIds != null && !attendeeIds.isEmpty()) {
+                List<Employee> selectedAttendees = employeeRepository.findAllById(attendeeIds);
+                meeting.setAttendees(selectedAttendees);
+                meetingRepository.save(meeting); // Save relationship
+
+                // Send emails to selected attendees
+                for (Employee attendee : selectedAttendees) {
+                    if (attendee.getEmail() != null && !attendee.getEmail().isEmpty()) {
+                        // Don't send to organizer again if they selected themselves
+                        if (meeting.getOrganizer() != null && attendee.getId().equals(meeting.getOrganizer().getId())) {
+                            continue;
+                        }
+
+                        emailService.sendInternalMeetingInvitation(
+                                attendee.getEmail(), attendee.getName(), meeting.getTitle(), organizerName,
+                                meeting.getStartTime(), meeting.getEndTime(), meeting.getLocation(),
+                                meeting.getDescription());
+                    }
+                }
             }
         }
 
