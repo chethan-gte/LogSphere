@@ -969,11 +969,16 @@
 
                         <div class="mb-3" id="employeeSelectDiv">
                             <label class="form-label text-secondary">Select Attendees</label>
-                            <select class="form-select" name="employeeIds" multiple size="5">
-                                <option th:each="emp : ${allEmployees}" th:value="${emp.id}"
-                                    th:text="${emp.name + ' (' + emp.department + ')'}"></option>
-                            </select>
-                            <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
+                            <div class="border rounded p-3"
+                                style="max-height: 200px; overflow-y: auto; background-color: #fff;">
+                                <div th:each="emp : ${allEmployees}" class="form-check mb-2">
+                                    <input class="form-check-input employee-checkbox" type="checkbox" name="employeeIds"
+                                        th:value="${emp.id}" th:id="'emp_' + ${emp.id}">
+                                    <label class="form-check-label" th:for="'emp_' + ${emp.id}"
+                                        th:text="${emp.name + ' (' + emp.department + ')'}"></label>
+                                </div>
+                            </div>
+                            <small class="text-muted">Select multiple employees by checking the boxes</small>
                         </div>
                     </div>
                     <div class="modal-footer border-0 pt-0">
@@ -999,12 +1004,13 @@
         function toggleEmployeeSelect() {
             const checkBox = document.getElementById('addEveryone');
             const selectDiv = document.getElementById('employeeSelectDiv');
+            const checkboxes = selectDiv.querySelectorAll('.employee-checkbox');
+
             if (checkBox.checked) {
                 selectDiv.style.opacity = '0.5';
                 selectDiv.style.pointerEvents = 'none';
-                // Deselect options visual cue
-                const selectElement = selectDiv.querySelector('select');
-                Array.from(selectElement.options).forEach(option => option.selected = false);
+                // Uncheck all employee checkboxes
+                checkboxes.forEach(cb => cb.checked = false);
             } else {
                 selectDiv.style.opacity = '1';
                 selectDiv.style.pointerEvents = 'auto';
