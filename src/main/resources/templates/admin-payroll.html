@@ -9,136 +9,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
     <style>
-        :root {
-            --primary-bg: #f3f7ff;
-            --sidebar-bg: #e3f2fd;
-            --card-bg: #ffffff;
-            --text-primary: #0f1b2d;
-            --text-secondary: #64748b;
-            --accent-blue: #0d6efd;
-            --border-color: #dcdfe6;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--primary-bg);
-            color: var(--text-primary);
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            min-height: 100vh;
-            background: var(--sidebar-bg);
-            color: var(--text-primary);
-            border-right: 1px solid var(--border-color);
-            width: 260px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding: 20px;
-            z-index: 1000;
-        }
-
-        .sidebar h3 {
-            color: var(--accent-blue);
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            padding-left: 10px;
-        }
-
-        .sidebar .nav-link {
-            color: #4a5568;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar .nav-link:hover {
-            background: rgba(13, 110, 253, 0.08);
-            color: var(--accent-blue);
-        }
-
-        .sidebar .nav-link.active {
-            background: #ffffff;
-            color: var(--accent-blue);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            font-weight: 600;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            padding: 2rem;
-        }
-
-        /* Cards */
-        .card {
-            border: none;
-            border-radius: 12px;
-            background: var(--card-bg);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
-            margin-bottom: 24px;
-        }
-
-        .stat-card.border-success {
-            border-left: 4px solid #198754 !important;
-        }
-
-        .card-header {
-            background: transparent;
-            border-bottom: 1px solid #f0f0f0;
-            padding: 1.25rem;
-        }
-
-        .card-header h5 {
-            color: var(--text-primary);
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin: 0;
-        }
-
-        /* Table */
-        .table {
-            color: var(--text-primary);
-            vertical-align: middle;
-            margin-bottom: 0;
-        }
-
-        .table thead th {
-            background-color: #f8f9fa;
-            color: #6c757d;
-            font-weight: 600;
-            border-bottom: 1px solid #dee2e6;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-        }
-
-        .text-success {
-            color: #198754 !important;
-        }
-
-        .badge {
-            font-weight: 500;
-        }
-
-        .btn-primary {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-        }
+        /* Specific overrides for Payroll page */
     </style>
+
 </head>
 
 <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <h3>LogSphere</h3>
         <ul class="nav flex-column">
             <li class="nav-item">
@@ -196,6 +79,13 @@
 
     <!-- Main Content -->
     <div class="main-content">
+        <!-- Header with Toggle -->
+        <div class="d-flex align-items-center mb-4">
+            <button class="sidebar-toggle-btn me-2" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h2 class="fw-bold text-dark mb-0">Payroll Management</h2>
+        </div>
 
         <!-- Processed Stats Card -->
         <div class="row mb-4">
@@ -470,6 +360,13 @@
                     });
             });
         });
+    </script>
+    <script>
+        // Toggle Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.querySelector('.sidebar-overlay').classList.toggle('show');
+        }
     </script>
 </body>
 
