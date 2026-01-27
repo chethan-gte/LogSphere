@@ -825,7 +825,7 @@ public class ManagerController {
         return ResponseEntity.badRequest().body("Meeting not found");
     }
 
-    @GetMapping("/notifications")
+    @GetMapping("/notifications/history")
     public String viewNotificationHistory(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"MANAGER".equals(user.getRole())) {

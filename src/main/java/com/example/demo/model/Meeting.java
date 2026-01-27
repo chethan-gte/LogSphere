@@ -86,6 +86,9 @@ public class Meeting {
     @Column(name = "reminder_15min_sent")
     private Boolean reminder15MinSent = false;
 
+    @Column(name = "invite_everyone")
+    private Boolean inviteEveryone = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -271,4 +274,14 @@ public class Meeting {
     public void setReminder15MinSent(Boolean reminder15MinSent) {
         this.reminder15MinSent = reminder15MinSent;
     }
+
+
+    public Boolean getInviteEveryone() {
+        return inviteEveryone;
+    }
+
+    public void setInviteEveryone(Boolean inviteEveryone) {
+        this.inviteEveryone = inviteEveryone;
+    }
+
 }

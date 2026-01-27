@@ -223,9 +223,37 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" th:href="@{/meetings/create}">
-                    <span>📅</span> Create Meeting
+                <a class="nav-link" href="#createMeetingSubmenu" data-bs-toggle="collapse" role="button"
+                    aria-expanded="false" aria-controls="createMeetingSubmenu">
+                    <span>📅</span> Create Meeting <i class="fas fa-chevron-down ms-auto" style="font-size: 0.8em;"></i>
                 </a>
+                <div class="collapse" id="createMeetingSubmenu">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link py-2" th:href="@{/meetings/create?type=VISITOR}"
+                                style="font-size: 0.9em;">
+                                <i class="fas fa-user-friends me-2"></i> Visitor Meeting
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-2" th:href="@{/meetings/create?type=EMPLOYEE}"
+                                style="font-size: 0.9em;">
+                                <i class="fas fa-users me-2"></i> Employee Meeting
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-2" th:href="@{/meetings/create?type=HR}" style="font-size: 0.9em;">
+                                <i class="fas fa-user-tie me-2"></i> HR Meeting
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-2" th:href="@{/meetings/create?type=MANAGER}"
+                                style="font-size: 0.9em;">
+                                <i class="fas fa-briefcase me-2"></i> Manager Meeting
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#manageEmployeesSubmenu" role="button"
@@ -473,7 +501,7 @@
                             <tr>
                                 <th class="ps-3">Title</th>
                                 <th>Organizer</th>
-                                <th>Visitor</th>
+                                <th>Participants</th>
                                 <th>Location</th>
                                 <th>Started</th>
                                 <th>Duration</th>
@@ -487,7 +515,16 @@
                             <tr th:each="meeting : ${ongoingMeetings}">
                                 <td class="ps-3 fw-medium" th:text="${meeting.title}"></td>
                                 <td th:text="${meeting.organizer != null ? meeting.organizer.name : 'N/A'}"></td>
-                                <td th:text="${meeting.visitorName != null ? meeting.visitorName : 'Internal'}"></td>
+                                <td>
+                                    <span th:if="${meeting.meetingType == 'HR'}">(All HRs)</span>
+                                    <span th:if="${meeting.meetingType == 'MANAGER'}">(All Managers)</span>
+                                    <span th:if="${meeting.meetingType == 'INTERNAL'}">(All Employees)</span>
+                                    <span th:if="${meeting.meetingType == 'VISITOR'}"
+                                        th:text="${meeting.visitorName}"></span>
+                                    <span
+                                        th:if="${meeting.meetingType != 'HR' and meeting.meetingType != 'MANAGER' and meeting.meetingType != 'INTERNAL' and meeting.meetingType != 'VISITOR'}"
+                                        th:text="${meeting.visitorName != null ? meeting.visitorName : 'Internal'}"></span>
+                                </td>
                                 <td th:text="${meeting.location != null ? meeting.location : 'N/A'}"></td>
                                 <td th:text="${#temporals.format(meeting.startTime, 'HH:mm')}"></td>
                                 <td>

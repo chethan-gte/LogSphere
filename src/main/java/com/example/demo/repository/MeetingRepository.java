@@ -25,9 +25,16 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     @Query("SELECT m FROM Meeting m WHERE m.status = 'SCHEDULED' AND m.startTime > :now ORDER BY m.startTime ASC")
     List<Meeting> findUpcomingMeetings(LocalDateTime now);
 
+
     List<Meeting> findByAttendeesContaining(Employee employee);
 
     List<Meeting> findByEmployeeParticipantsContaining(Employee employee);
 
     List<Meeting> findByTargetEmployee(Employee employee);
+
+    List<Meeting> findByInviteEveryoneTrueAndStatus(String status);
+
+    @Query("SELECT m FROM Meeting m WHERE ((m.inviteEveryone = true AND m.meetingType = 'INTERNAL') OR m.organizer = :employee) AND m.status = :status")
+    List<Meeting> findVisibleMeetingsForEmployee(Employee employee, String status);
+
 }
