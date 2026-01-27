@@ -6,18 +6,24 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
-    
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Configure static resource handling for external Tomcat deployment
-        registry.addResourceHandler("/static/**")
-                .addResourceLocations("classpath:/static/");
-        registry.addResourceHandler("/css/**")
-                .addResourceLocations("classpath:/static/css/");
-        registry.addResourceHandler("/js/**")
-                .addResourceLocations("classpath:/static/js/");
-        registry.addResourceHandler("/images/**")
-                .addResourceLocations("classpath:/static/images/");
-    }
-}
 
+        @org.springframework.beans.factory.annotation.Value("${file.upload-dir}")
+        private String uploadDir;
+
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+                // Configure static resource handling for external Tomcat deployment
+                registry.addResourceHandler("/static/**")
+                                .addResourceLocations("classpath:/static/");
+                registry.addResourceHandler("/css/**")
+                                .addResourceLocations("classpath:/static/css/");
+                registry.addResourceHandler("/js/**")
+                                .addResourceLocations("classpath:/static/js/");
+                registry.addResourceHandler("/images/**")
+                                .addResourceLocations("classpath:/static/images/");
+
+                // Serve uploaded files from external directory
+                registry.addResourceHandler("/uploads/**")
+                                .addResourceLocations("file:" + uploadDir + "/");
+        }
+}
