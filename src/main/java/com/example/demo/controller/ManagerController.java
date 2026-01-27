@@ -355,8 +355,6 @@ public class ManagerController {
         // Add task model for form
         model.addAttribute("task", new Task());
 
-
-
         return "manager-dashboard";
     }
 
@@ -598,9 +596,8 @@ public class ManagerController {
         if (!ruleOpt.isPresent()) {
             return "redirect:/manager/dashboard?tab=rules";
         }
-        
-        model.addAttribute("rule", ruleOpt.get()); 
 
+        model.addAttribute("rule", ruleOpt.get());
 
         model.addAttribute("rule", ruleOpt.get());
 
@@ -707,6 +704,19 @@ public class ManagerController {
 
     }
 
+    @RequestMapping(value = "/meetings/create", method = RequestMethod.GET)
+    public String showCreateMeetingForm(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return "redirect:/manager/login";
+        }
+
+        List<Employee> allEmployees = employeeRepository.findAll();
+        model.addAttribute("employees", allEmployees);
+
+        return "manager-create-meeting";
+    }
+
     @RequestMapping(value = "/meetings/create", method = RequestMethod.POST)
     public String createTeamMeeting(@RequestParam String title,
             @RequestParam(required = false) String description,
@@ -791,7 +801,8 @@ public class ManagerController {
         if (notifOpt.isPresent()) {
             Notification notification = notifOpt.get();
             // Ensure this notification belongs to the current user
-            if (notification.getUserRecipient() != null && notification.getUserRecipient().getId().equals(user.getId())) {
+            if (notification.getUserRecipient() != null
+                    && notification.getUserRecipient().getId().equals(user.getId())) {
                 notification.setIsRead(true);
                 notificationRepository.save(notification);
                 return ResponseEntity.ok("Marked as read");
@@ -820,11 +831,11 @@ public class ManagerController {
         if (user == null || !"MANAGER".equals(user.getRole())) {
             return "redirect:/login";
         }
-        
+
         List<Notification> notifications = notificationRepository.findByUserRecipientOrderByCreatedAtDesc(user);
         model.addAttribute("notifications", notifications);
         model.addAttribute("userName", user.getName());
-        
+
         return "manager-notifications";
     }
 }
