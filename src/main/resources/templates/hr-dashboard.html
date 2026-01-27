@@ -444,10 +444,38 @@
 
                 <div class="card">
                     <div class="card-header">
-                        Monthly Attendance Trends
+                        Daily Attendance Details
                     </div>
                     <div class="card-body">
-                        <canvas id="attendanceChart" style="max-height: 400px;"></canvas>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Employee ID</th>
+                                        <th>Name</th>
+                                        <th>Login</th>
+                                        <th>Logout</th>
+                                        <th>Work Mode</th>
+                                        <th>Total Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${attendanceReport.isEmpty()}">
+                                        <td colspan="6" class="text-center text-muted py-4">No attendance data available</td>
+                                    </tr>
+                                    <tr th:each="record : ${attendanceReport}">
+                                        <td class="small text-muted" th:text="${record.id}">ID</td>
+                                        <td class="fw-medium" th:text="${record.name}">Name</td>
+                                        <td th:text="${record.login}">-</td>
+                                        <td th:text="${record.logout}">-</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border" th:text="${record.workMode}">OFFICE</span>
+                                        </td>
+                                        <td class="fw-bold text-primary" th:text="${record.totalTime}">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -974,29 +1002,7 @@
             });
         }
 
-        // Attendance Chart
-        const attCtx = document.getElementById('attendanceChart');
-        if (attCtx) {
-            new Chart(attCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Present', 'Absent', 'Late', 'WFH'],
-                    datasets: [{
-                        label: 'Today',
-                        data: [
-                            /*[[${presentCount}]]*/ 0,
-                            /*[[${absentCount}]]*/ 0,
-                            /*[[${lateCount}]]*/ 0,
-                            /*[[${wfhRequests}]]*/ 0
-                        ],
-                        backgroundColor: ['#198754', '#dc3545', '#ffc107', '#0dcaf0'],
-                        borderRadius: 4,
-                        barThickness: 40
-                    }]
-                },
-                options: lightChartOptions
-            });
-        }
+
 
         function showRejectModal(leaveId) {
             const form = document.getElementById('rejectForm');
