@@ -403,7 +403,7 @@ public class ManagerController {
         // Handle file upload
         if (attachment != null && !attachment.isEmpty()) {
             try {
-                Path uploadPath = Paths.get(uploadDir + "/tasks/");
+                Path uploadPath = Paths.get(uploadDir).toAbsolutePath().resolve("tasks");
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
                 }

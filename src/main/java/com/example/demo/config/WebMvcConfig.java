@@ -22,8 +22,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 registry.addResourceHandler("/images/**")
                                 .addResourceLocations("classpath:/static/images/");
 
-                // Serve uploaded files from external directory
+                // Serve uploaded files from external directory using absolute path
+                String absoluteUploadPath = java.nio.file.Paths.get(uploadDir).toAbsolutePath().toUri().toString();
                 registry.addResourceHandler("/uploads/**")
-                                .addResourceLocations("file:" + uploadDir + "/");
+                                .addResourceLocations(absoluteUploadPath);
         }
 }
