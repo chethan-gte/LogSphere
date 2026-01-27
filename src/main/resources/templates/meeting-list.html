@@ -109,7 +109,7 @@
                             <tr>
                                 <th class="ps-4">Title</th>
                                 <th>Organizer</th>
-                                <th>Visitor</th>
+                                <th>Participants</th>
                                 <th>Location</th>
                                 <th>Started</th>
                                 <th class="text-end pe-4">Actions</th>
@@ -125,7 +125,16 @@
                             <tr th:each="meeting : ${ongoingMeetings}">
                                 <td class="ps-4 fw-medium" th:text="${meeting.title}"></td>
                                 <td th:text="${meeting.organizer != null ? meeting.organizer.name : 'N/A'}"></td>
-                                <td th:text="${meeting.visitorName != null ? meeting.visitorName : 'Internal'}"></td>
+                                <td>
+                                    <span th:if="${meeting.meetingType == 'HR'}">(All HRs)</span>
+                                    <span th:if="${meeting.meetingType == 'MANAGER'}">(All Managers)</span>
+                                    <span th:if="${meeting.meetingType == 'INTERNAL'}">(All Employees)</span>
+                                    <span th:if="${meeting.meetingType == 'VISITOR'}"
+                                        th:text="${meeting.visitorName}"></span>
+                                    <span
+                                        th:if="${meeting.meetingType != 'HR' and meeting.meetingType != 'MANAGER' and meeting.meetingType != 'INTERNAL' and meeting.meetingType != 'VISITOR'}"
+                                        th:text="${meeting.visitorName != null ? meeting.visitorName : 'Internal'}"></span>
+                                </td>
                                 <td class="text-secondary"
                                     th:text="${meeting.location != null ? meeting.location : 'N/A'}"></td>
                                 <td th:text="${#temporals.format(meeting.startTime, 'HH:mm')}"></td>
@@ -156,7 +165,7 @@
                             <tr>
                                 <th class="ps-4">Title</th>
                                 <th>Organizer</th>
-                                <th>Visitor</th>
+                                <th>Participants</th>
                                 <th>Start Time</th>
                                 <th>End Time</th>
                                 <th>Status</th>
@@ -169,7 +178,16 @@
                             <tr th:each="meeting : ${meetings}">
                                 <td class="ps-4 fw-medium" th:text="${meeting.title}"></td>
                                 <td th:text="${meeting.organizer != null ? meeting.organizer.name : 'N/A'}"></td>
-                                <td th:text="${meeting.visitorName != null ? meeting.visitorName : 'Internal'}"></td>
+                                <td>
+                                    <span th:if="${meeting.meetingType == 'HR'}">(All HRs)</span>
+                                    <span th:if="${meeting.meetingType == 'MANAGER'}">(All Managers)</span>
+                                    <span th:if="${meeting.meetingType == 'INTERNAL'}">(All Employees)</span>
+                                    <span th:if="${meeting.meetingType == 'VISITOR'}"
+                                        th:text="${meeting.visitorName}"></span>
+                                    <span
+                                        th:if="${meeting.meetingType != 'HR' and meeting.meetingType != 'MANAGER' and meeting.meetingType != 'INTERNAL' and meeting.meetingType != 'VISITOR'}"
+                                        th:text="${meeting.visitorName != null ? meeting.visitorName : 'Internal'}"></span>
+                                </td>
                                 <td class="text-secondary"
                                     th:text="${#temporals.format(meeting.startTime, 'MMM dd, HH:mm')}"></td>
                                 <td class="text-secondary"
@@ -193,4 +211,3 @@
 </body>
 
 </html>
-

@@ -1269,4 +1269,19 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+
+    public void sendMeetingInvitation(String recipientEmail, String recipientName, String meetingTitle,
+            String organizerName, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String location,
+            String description) {
+        sendMeetingNotificationToVisitor(recipientEmail, recipientName, meetingTitle, organizerName, startTime, endTime,
+                location, description);
+    }
+
+    public void sendInternalMeetingInvitation(String recipientEmail, String recipientName, String meetingTitle,
+            String organizerName, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, String location,
+            String description) {
+        sendMeetingNotificationToVisitor(recipientEmail, recipientName, meetingTitle, organizerName, startTime, endTime,
+                location, description);
+    }
+
 }

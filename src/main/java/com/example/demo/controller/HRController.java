@@ -64,6 +64,8 @@ public class HRController {
     @Autowired
     private com.example.demo.repository.NotificationRepository notificationRepository;
 
+
+
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showHRLoginForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -196,6 +198,10 @@ public class HRController {
         List<LeaveRequest> approvedLeaves = leaveRequestRepository.findByStatus("APPROVED");
         List<LeaveRequest> rejectedLeaves = leaveRequestRepository.findByStatus("REJECTED");
         List<LeaveRequest> monthlyLeaves = leaveRequestRepository.findLeavesInDateRange(startOfMonth, endOfMonth);
+
+        // Meetings
+        List<Meeting> upcomingMeetings = meetingRepository.findUpcomingMeetings(LocalDateTime.now());
+        model.addAttribute("meetings", upcomingMeetings);
 
         // 4. Task & Performance - Per Employee
         List<Task> allTasks = taskRepository.findAll();

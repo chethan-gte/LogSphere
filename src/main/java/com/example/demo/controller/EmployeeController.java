@@ -64,6 +64,7 @@ public class EmployeeController {
     private com.example.demo.repository.NotificationRepository notificationRepository;
 
     @Autowired
+
     private com.example.demo.repository.MeetingRepository meetingRepository;
 
     @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
@@ -153,6 +154,11 @@ public class EmployeeController {
         if (sessionClockOutStatus != null) {
             checkOutStatusDisplay = sessionClockOutStatus;
         }
+
+        // Get accessible meetings
+        List<com.example.demo.model.Meeting> meetings = meetingRepository.findVisibleMeetingsForEmployee(employee,
+                "SCHEDULED");
+        model.addAttribute("meetings", meetings);
 
         // Get attendance history
         List<Attendance> attendanceHistory = attendanceRepository.findByEmployee(employee);

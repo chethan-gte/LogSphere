@@ -250,113 +250,180 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row g-4">
-            <!-- Today's Status -->
-            <div class="col-lg-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-white">
-                        <h4 class="mb-0 text-primary"><i class="fas fa-user-clock me-2"></i>Today's Status</h4>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="text-center mb-4">
-                            <span th:if="${employee.status == 'IN'}"
-                                class="badge bg-success bg-opacity-10 text-success bg-opacity-25 status-badge border border-success">
-                                <i class="fas fa-check-circle me-1"></i> CLOCKED IN
-                            </span>
-                            <span th:if="${employee.status == 'OUT'}"
-                                class="badge bg-secondary bg-opacity-10 text-secondary status-badge border border-secondary">
-                                <i class="fas fa-circle me-1"></i> CLOCKED OUT
-                            </span>
-                        </div>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-sm-6">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <small class="text-secondary d-block">Employee ID</small>
-                                    <span class="fw-bold text-dark" th:text="${employee.employeeId}"></span>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="p-3 bg-light rounded text-center">
-                                    <small class="text-secondary d-block">Department</small>
-                                    <span class="fw-bold text-dark" th:text="${employee.department}"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Display Clock-In Status -->
-                        <div th:if="${checkInStatusDisplay != null}" class="alert alert-light border shadow-sm mb-3">
-                            <strong class="text-dark mb-2 d-block small text-uppercase">Clock-In Analysis</strong>
-                            <div class="d-flex align-items-center gap-2">
-                                <span th:if="${checkInStatusDisplay == 'Late Clock In'}"
-                                    class="badge bg-warning text-dark px-3 py-2"><i
-                                        class="fas fa-exclamation-triangle me-1"></i> Late</span>
-                                <span th:if="${checkInStatusDisplay == 'Early Clock In'}"
-                                    class="badge bg-info text-white px-3 py-2"><i class="fas fa-clock me-1"></i>
-                                    Early</span>
-                                <span th:if="${checkInStatusDisplay == 'On Time Clock In'}"
-                                    class="badge bg-success text-white px-3 py-2"><i class="fas fa-check me-1"></i> On
-                                    Time</span>
-                            </div>
-                            <p class="text-secondary mt-2 mb-0 small"
-                                th:if="${todayAttendance != null && todayAttendance.checkInTime != null}">
-                                Clocked in: <span class="fw-medium text-dark"
-                                    th:text="${#temporals.format(todayAttendance.checkInTime, 'HH:mm:ss')}"></span>
-                                <span th:if="${employee.scheduledStartTime != null}"> (Scheduled: <span
-                                        th:text="${employee.scheduledStartTime}"></span>)</span>
-                            </p>
-                        </div>
-
-                        <!-- Display Clock-Out Status -->
-                        <div th:if="${checkOutStatusDisplay != null}" class="alert alert-light border shadow-sm mb-3">
-                            <strong class="text-dark mb-2 d-block small text-uppercase">Clock-Out Analysis</strong>
-                            <div class="d-flex align-items-center gap-2">
-                                <span th:if="${checkOutStatusDisplay == 'Late Clock Out'}"
-                                    class="badge bg-warning text-dark px-3 py-2">Late</span>
-                                <span th:if="${checkOutStatusDisplay == 'Early Clock Out'}"
-                                    class="badge bg-danger text-white px-3 py-2">Early</span>
-                                <span th:if="${checkOutStatusDisplay == 'On Time Clock Out'}"
-                                    class="badge bg-success text-white px-3 py-2">On Time</span>
-                            </div>
-                            <p class="text-secondary mt-2 mb-0 small"
-                                th:if="${todayAttendance != null && todayAttendance.checkOutTime != null}">
-                                Clocked out: <span class="fw-medium text-dark"
-                                    th:text="${#temporals.format(todayAttendance.checkOutTime, 'HH:mm:ss')}"></span>
-                                <span th:if="${employee.scheduledEndTime != null}"> (Scheduled: <span
-                                        th:text="${employee.scheduledEndTime}"></span>)</span>
-                            </p>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-3">
-                            <span class="text-secondary fw-medium">Total Hours Today</span>
-                            <span class="badge bg-primary fs-6 px-3"
-                                th:if="${todayAttendance != null && todayAttendance.totalHours != null}"
-                                th:text="${#numbers.formatDecimal(todayAttendance.totalHours, 1, 1)} + ' hrs'"></span>
-                            <span class="text-muted small" th:if="${todayAttendance == null}">Not started</span>
-                        </div>
+    <!-- My Meetings Section -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 text-primary"><i class="fas fa-calendar-check me-2"></i>My Meetings</h4>
+                    <span class="badge bg-primary rounded-pill"
+                        th:text="${meetings != null ? meetings.size() : 0}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Title</th>
+                                    <th>Date & Time</th>
+                                    <th>Location</th>
+                                    <th>Organizer</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="meeting : ${meetings}" th:if="${!meetings.isEmpty()}">
+                                    <td class="ps-4 fw-medium" th:text="${meeting.title}">Project Meeting</td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-medium"
+                                                th:text="${#temporals.format(meeting.startTime, 'MMM dd, yyyy')}">Jan
+                                                01, 2024</span>
+                                            <span class="text-secondary small"
+                                                th:text="${#temporals.format(meeting.startTime, 'hh:mm a') + ' - ' + #temporals.format(meeting.endTime, 'hh:mm a')}">10:00
+                                                AM - 11:00 AM</span>
+                                        </div>
+                                    </td>
+                                    <td th:text="${meeting.location}">Room A</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2"
+                                                style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user text-secondary"></i>
+                                            </div>
+                                            <span
+                                                th:text="${meeting.organizer != null ? meeting.organizer.name : 'Management'}">John
+                                                Doe</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary"
+                                            th:text="${meeting.meetingType}">INTERNAL</span></td>
+                                    <td><span class="badge bg-success bg-opacity-10 text-success"
+                                            th:text="${meeting.status}">SCHEDULED</span></td>
+                                </tr>
+                                <tr th:if="${meetings == null || meetings.isEmpty()}">
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="fas fa-calendar-times fa-3x mb-3 text-light"></i>
+                                        <p class="mb-0">No upcoming meetings scheduled.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Clock In/Out Actions -->
-            <div class="col-lg-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-white">
-                        <h4 class="mb-0 text-primary"><i class="fas fa-stopwatch me-2"></i>Clock In/Out</h4>
+    <div class="row g-4">
+        <!-- Today's Status -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0 text-primary"><i class="fas fa-user-clock me-2"></i>Today's Status</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <span th:if="${employee.status == 'IN'}"
+                            class="badge bg-success bg-opacity-10 text-success bg-opacity-25 status-badge border border-success">
+                            <i class="fas fa-check-circle me-1"></i> CLOCKED IN
+                        </span>
+                        <span th:if="${employee.status == 'OUT'}"
+                            class="badge bg-secondary bg-opacity-10 text-secondary status-badge border border-secondary">
+                            <i class="fas fa-circle me-1"></i> CLOCKED OUT
+                        </span>
                     </div>
-                    <div class="card-body p-4">
-                        <div th:if="${employee.scheduledStartTime != null}" class="mb-4 text-center">
-                            <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
-                                <i class="far fa-calendar me-1"></i> Shift: <span class="text-dark fw-bold"
-                                    th:text="${employee.scheduledStartTime} + ' - ' + ${employee.scheduledEndTime}"></span>
-                            </span>
-                        </div>
 
-                        <div th:if="${employee.status == 'OUT'}">
-                            <!-- Face Recognition Status -->
-                            <!-- Face Recognition Status (HIDDEN) -->
-                            <!--/*
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <div class="p-3 bg-light rounded text-center">
+                                <small class="text-secondary d-block">Employee ID</small>
+                                <span class="fw-bold text-dark" th:text="${employee.employeeId}"></span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 bg-light rounded text-center">
+                                <small class="text-secondary d-block">Department</small>
+                                <span class="fw-bold text-dark" th:text="${employee.department}"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display Clock-In Status -->
+                    <div th:if="${checkInStatusDisplay != null}" class="alert alert-light border shadow-sm mb-3">
+                        <strong class="text-dark mb-2 d-block small text-uppercase">Clock-In Analysis</strong>
+                        <div class="d-flex align-items-center gap-2">
+                            <span th:if="${checkInStatusDisplay == 'Late Clock In'}"
+                                class="badge bg-warning text-dark px-3 py-2"><i
+                                    class="fas fa-exclamation-triangle me-1"></i> Late</span>
+                            <span th:if="${checkInStatusDisplay == 'Early Clock In'}"
+                                class="badge bg-info text-white px-3 py-2"><i class="fas fa-clock me-1"></i>
+                                Early</span>
+                            <span th:if="${checkInStatusDisplay == 'On Time Clock In'}"
+                                class="badge bg-success text-white px-3 py-2"><i class="fas fa-check me-1"></i> On
+                                Time</span>
+                        </div>
+                        <p class="text-secondary mt-2 mb-0 small"
+                            th:if="${todayAttendance != null && todayAttendance.checkInTime != null}">
+                            Clocked in: <span class="fw-medium text-dark"
+                                th:text="${#temporals.format(todayAttendance.checkInTime, 'HH:mm:ss')}"></span>
+                            <span th:if="${employee.scheduledStartTime != null}"> (Scheduled: <span
+                                    th:text="${employee.scheduledStartTime}"></span>)</span>
+                        </p>
+                    </div>
+
+                    <!-- Display Clock-Out Status -->
+                    <div th:if="${checkOutStatusDisplay != null}" class="alert alert-light border shadow-sm mb-3">
+                        <strong class="text-dark mb-2 d-block small text-uppercase">Clock-Out Analysis</strong>
+                        <div class="d-flex align-items-center gap-2">
+                            <span th:if="${checkOutStatusDisplay == 'Late Clock Out'}"
+                                class="badge bg-warning text-dark px-3 py-2">Late</span>
+                            <span th:if="${checkOutStatusDisplay == 'Early Clock Out'}"
+                                class="badge bg-danger text-white px-3 py-2">Early</span>
+                            <span th:if="${checkOutStatusDisplay == 'On Time Clock Out'}"
+                                class="badge bg-success text-white px-3 py-2">On Time</span>
+                        </div>
+                        <p class="text-secondary mt-2 mb-0 small"
+                            th:if="${todayAttendance != null && todayAttendance.checkOutTime != null}">
+                            Clocked out: <span class="fw-medium text-dark"
+                                th:text="${#temporals.format(todayAttendance.checkOutTime, 'HH:mm:ss')}"></span>
+                            <span th:if="${employee.scheduledEndTime != null}"> (Scheduled: <span
+                                    th:text="${employee.scheduledEndTime}"></span>)</span>
+                        </p>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-3">
+                        <span class="text-secondary fw-medium">Total Hours Today</span>
+                        <span class="badge bg-primary fs-6 px-3"
+                            th:if="${todayAttendance != null && todayAttendance.totalHours != null}"
+                            th:text="${#numbers.formatDecimal(todayAttendance.totalHours, 1, 1)} + ' hrs'"></span>
+                        <span class="text-muted small" th:if="${todayAttendance == null}">Not started</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clock In/Out Actions -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0 text-primary"><i class="fas fa-stopwatch me-2"></i>Clock In/Out</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div th:if="${employee.scheduledStartTime != null}" class="mb-4 text-center">
+                        <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
+                            <i class="far fa-calendar me-1"></i> Shift: <span class="text-dark fw-bold"
+                                th:text="${employee.scheduledStartTime} + ' - ' + ${employee.scheduledEndTime}"></span>
+                        </span>
+                    </div>
+
+                    <div th:if="${employee.status == 'OUT'}">
+                        <!-- Face Recognition Status -->
+                        <!-- Face Recognition Status (HIDDEN) -->
+                        <!--/*
                             <div th:if="${employee.faceImage != null && !employee.faceImage.isEmpty()}"
                                 class="alert alert-success d-flex align-items-center p-3 mb-4">
                                 <i class="fas fa-smile-beam fs-4 me-3"></i>
@@ -377,31 +444,31 @@
                             </div>
                             */-->
 
-                            <!-- Work Mode Selector -->
-                            <div class="mb-4">
-                                <label class="form-label text-secondary fw-bold small text-uppercase">Select Work
-                                    Mode</label>
-                                <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="workMode" id="office" value="OFFICE"
-                                        th:checked="${employee.workMode == 'OFFICE' || employee.workMode == null}">
-                                    <label class="btn btn-outline-primary" for="office"><i
-                                            class="fas fa-building me-1"></i> Office</label>
+                        <!-- Work Mode Selector -->
+                        <div class="mb-4">
+                            <label class="form-label text-secondary fw-bold small text-uppercase">Select Work
+                                Mode</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="workMode" id="office" value="OFFICE"
+                                    th:checked="${employee.workMode == 'OFFICE' || employee.workMode == null}">
+                                <label class="btn btn-outline-primary" for="office"><i class="fas fa-building me-1"></i>
+                                    Office</label>
 
-                                    <input type="radio" class="btn-check" name="workMode" id="wfh"
-                                        value="WORK_FROM_HOME" th:checked="${employee.workMode == 'WORK_FROM_HOME'}">
-                                    <label class="btn btn-outline-primary" for="wfh"><i class="fas fa-home me-1"></i>
-                                        WFH</label>
+                                <input type="radio" class="btn-check" name="workMode" id="wfh" value="WORK_FROM_HOME"
+                                    th:checked="${employee.workMode == 'WORK_FROM_HOME'}">
+                                <label class="btn btn-outline-primary" for="wfh"><i class="fas fa-home me-1"></i>
+                                    WFH</label>
 
-                                    <input type="radio" class="btn-check" name="workMode" id="onsite" value="ON_SITE"
-                                        th:checked="${employee.workMode == 'ON_SITE'}">
-                                    <label class="btn btn-outline-primary" for="onsite"><i class="fas fa-car me-1"></i>
-                                        On-Site</label>
-                                </div>
+                                <input type="radio" class="btn-check" name="workMode" id="onsite" value="ON_SITE"
+                                    th:checked="${employee.workMode == 'ON_SITE'}">
+                                <label class="btn btn-outline-primary" for="onsite"><i class="fas fa-car me-1"></i>
+                                    On-Site</label>
                             </div>
+                        </div>
 
-                            <!-- Face Recognition Camera Section (DISABLED) -->
-                            <!-- Face Recognition Camera Section (DISABLED) -->
-                            <!--/*
+                        <!-- Face Recognition Camera Section (DISABLED) -->
+                        <!-- Face Recognition Camera Section (DISABLED) -->
+                        <!--/*
                             <div class="mb-3" th:if="${employee.faceImage != null && !employee.faceImage.isEmpty()}">
                                 <div id="checkinInstructions" class="text-center mb-2">
                                     <p class="text-secondary small mb-0">Camera required for verification upon clock-in
@@ -429,25 +496,25 @@
                             </form>
                             */-->
 
-                            <!-- Direct Clock-In Form (Face Auth Bypassed) -->
-                            <form th:action="@{/employee/checkin}" method="post">
-                                <input type="hidden" name="workMode" id="workModeInput" value="OFFICE">
-                                <button type="submit" class="btn btn-success btn-lg w-100 mb-2 shadow-sm py-3">
-                                    <i class="fas fa-sign-in-alt me-2"></i> Clock In Now
-                                </button>
-                            </form>
+                        <!-- Direct Clock-In Form (Face Auth Bypassed) -->
+                        <form th:action="@{/employee/checkin}" method="post">
+                            <input type="hidden" name="workMode" id="workModeInput" value="OFFICE">
+                            <button type="submit" class="btn btn-success btn-lg w-100 mb-2 shadow-sm py-3">
+                                <i class="fas fa-sign-in-alt me-2"></i> Clock In Now
+                            </button>
+                        </form>
+                    </div>
+
+                    <div th:if="${employee.status == 'IN'}">
+                        <div class="mb-4 text-center">
+                            <span class="text-secondary small">Current Mode:</span>
+                            <span class="badge bg-info-subtle text-info-emphasis ms-2"
+                                th:text="${employee.workMode}"></span>
                         </div>
 
-                        <div th:if="${employee.status == 'IN'}">
-                            <div class="mb-4 text-center">
-                                <span class="text-secondary small">Current Mode:</span>
-                                <span class="badge bg-info-subtle text-info-emphasis ms-2"
-                                    th:text="${employee.workMode}"></span>
-                            </div>
-
-                            <!-- Face Recognition Checkout (DISABLED) -->
-                            <!-- Face Recognition Checkout (DISABLED) -->
-                            <!--/*
+                        <!-- Face Recognition Checkout (DISABLED) -->
+                        <!-- Face Recognition Checkout (DISABLED) -->
+                        <!--/*
                             <div class="mb-3">
                                 <video id="checkoutVideo" width="100%" height="240" autoplay
                                     style="display:none; border-radius: 8px;"></video>
@@ -464,103 +531,104 @@
                             </form>
                             */-->
 
-                            <!-- Direct Clock-Out Form (Face Auth Bypassed) -->
-                            <form th:action="@{/employee/checkout}" method="post">
-                                <button type="submit" class="btn btn-danger btn-lg w-100 mb-3 shadow-sm py-3">
-                                    <i class="fas fa-sign-out-alt me-2"></i> Clock Out Now
-                                </button>
-                            </form>
+                        <!-- Direct Clock-Out Form (Face Auth Bypassed) -->
+                        <form th:action="@{/employee/checkout}" method="post">
+                            <button type="submit" class="btn btn-danger btn-lg w-100 mb-3 shadow-sm py-3">
+                                <i class="fas fa-sign-out-alt me-2"></i> Clock Out Now
+                            </button>
+                        </form>
 
-                            <div class="text-center text-secondary small bg-light p-3 rounded">
-                                <div class="mb-1">Started at: <span class="fw-bold text-dark"
-                                        th:text="${employee.currentCheckIn != null ? #temporals.format(employee.currentCheckIn, 'HH:mm') : 'N/A'}"></span>
-                                </div>
-                                <div>Duration: <span class="fw-bold text-primary"
-                                        th:text="${employee.totalHoursToday != null ? #numbers.formatDecimal(employee.totalHoursToday, 1, 1) + 'h' : '0h'}"></span>
-                                </div>
+                        <div class="text-center text-secondary small bg-light p-3 rounded">
+                            <div class="mb-1">Started at: <span class="fw-bold text-dark"
+                                    th:text="${employee.currentCheckIn != null ? #temporals.format(employee.currentCheckIn, 'HH:mm') : 'N/A'}"></span>
+                            </div>
+                            <div>Duration: <span class="fw-bold text-primary"
+                                    th:text="${employee.totalHoursToday != null ? #numbers.formatDecimal(employee.totalHoursToday, 1, 1) + 'h' : '0h'}"></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Leave Requests and Activity Summary Row -->
-        <div class="row g-4 mt-2">
-            <!-- Leave Requests -->
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0 text-dark"><i class="fas fa-calendar-check me-2 text-primary"></i>My Leave
-                            Requests</h4>
-                        <a th:href="@{/employee/leave/apply}" class="btn btn-primary btn-sm rounded-pill px-3"><i
-                                class="fas fa-plus me-1"></i> Apply</a>
+    <!-- Leave Requests and Activity Summary Row -->
+    <div class="row g-4 mt-2">
+        <!-- Leave Requests -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 text-dark"><i class="fas fa-calendar-check me-2 text-primary"></i>My Leave
+                        Requests</h4>
+                    <a th:href="@{/employee/leave/apply}" class="btn btn-primary btn-sm rounded-pill px-3"><i
+                            class="fas fa-plus me-1"></i> Apply</a>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded text-center border">
+                                <h6 class="text-secondary small text-uppercase">Pending</h6>
+                                <h3 class="text-warning mb-0"
+                                    th:text="${pendingLeaves != null ? pendingLeaves.size() : 0}">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded text-center border">
+                                <h6 class="text-secondary small text-uppercase">Approved</h6>
+                                <h3 class="text-success mb-0"
+                                    th:text="${approvedLeaves != null ? approvedLeaves.size() : 0}">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded text-center border">
+                                <h6 class="text-secondary small text-uppercase">Balance</h6>
+                                <h3 class="text-primary mb-0" th:text="${leaveBalance != null ? leaveBalance : 0}">0
+                                </h3>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <div class="p-3 bg-light rounded text-center border">
-                                    <h6 class="text-secondary small text-uppercase">Pending</h6>
-                                    <h3 class="text-warning mb-0"
-                                        th:text="${pendingLeaves != null ? pendingLeaves.size() : 0}">0</h3>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="p-3 bg-light rounded text-center border">
-                                    <h6 class="text-secondary small text-uppercase">Approved</h6>
-                                    <h3 class="text-success mb-0"
-                                        th:text="${approvedLeaves != null ? approvedLeaves.size() : 0}">0</h3>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="p-3 bg-light rounded text-center border">
-                                    <h6 class="text-secondary small text-uppercase">Balance</h6>
-                                    <h3 class="text-primary mb-0" th:text="${leaveBalance != null ? leaveBalance : 0}">0
-                                    </h3>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Leave Type</th>
-                                        <th>Date Range</th>
-                                        <th>Days</th>
-                                        <th>Status</th>
-                                        <th>Reason</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:if="${leaveRequests == null || leaveRequests.isEmpty()}">
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            No recent leave requests
-                                        </td>
-                                    </tr>
-                                    <tr th:each="leave : ${leaveRequests}">
-                                        <td><span class="badge bg-light text-dark border"
-                                                th:text="${leave.leaveType}"></span></td>
-                                        <td>
-                                            <span th:text="${#temporals.format(leave.startDate, 'MMM dd')}"></span> -
-                                            <span th:text="${#temporals.format(leave.endDate, 'MMM dd')}"></span>
-                                        </td>
-                                        <td th:text="${leave.numberOfDays}"></td>
-                                        <td>
-                                            <span class="badge"
-                                                th:classappend="${leave.status == 'APPROVED' ? 'bg-success-subtle text-success' : (leave.status == 'REJECTED' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning-emphasis')}"
-                                                th:text="${leave.status}"></span>
-                                        </td>
-                                        <td class="text-secondary small"
-                                            th:text="${leave.reason != null ? leave.reason : '-'}"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Leave Type</th>
+                                    <th>Date Range</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${leaveRequests == null || leaveRequests.isEmpty()}">
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        No recent leave requests
+                                    </td>
+                                </tr>
+                                <tr th:each="leave : ${leaveRequests}">
+                                    <td><span class="badge bg-light text-dark border"
+                                            th:text="${leave.leaveType}"></span></td>
+                                    <td>
+                                        <span th:text="${#temporals.format(leave.startDate, 'MMM dd')}"></span> -
+                                        <span th:text="${#temporals.format(leave.endDate, 'MMM dd')}"></span>
+                                    </td>
+                                    <td th:text="${leave.numberOfDays}"></td>
+                                    <td>
+                                        <span class="badge"
+                                            th:classappend="${leave.status == 'APPROVED' ? 'bg-success-subtle text-success' : (leave.status == 'REJECTED' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning-emphasis')}"
+                                            th:text="${leave.status}"></span>
+                                    </td>
+                                    <td class="text-secondary small"
+                                        th:text="${leave.reason != null ? leave.reason : '-'}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+        </div>
 
+<<<<<<< HEAD
 
             <div class="col-md-6">
                 <div class="card h-100 shadow-sm">
@@ -582,55 +650,77 @@
                             </div>
                         </div>
                     </div>
+=======
+        <!-- Activity Summary Removed -->
+        <!-- My Badges -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0 text-dark"><i class="fas fa-trophy me-2 text-warning"></i>My Badges</h4>
+>>>>>>> c90802e (Merge conflict)
                 </div>
-            </div>
-
-            <!-- Team Rules -->
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-white">
-                        <h4 class="mb-0 text-dark"><i class="fas fa-gavel me-2 text-info"></i>Team Rules</h4>
+                <div class="card-body">
+                    <div th:if="${myBadges == null || myBadges.isEmpty()}" class="text-center text-secondary py-3">
+                        <p>No badges awarded yet. Keep up the good work!</p>
                     </div>
-                    <div class="card-body">
-                        <div th:if="${activeRules == null || activeRules.isEmpty()}"
-                            class="text-center text-secondary py-3">
-                            <p>No active team rules.</p>
-                        </div>
-                        <ul class="list-group list-group-flush"
-                            th:if="${activeRules != null && !activeRules.isEmpty()}">
-                            <li th:each="rule : ${activeRules}"
-                                class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent">
-                                <div class="d-flex">
-                                    <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
-                                    <div>
-                                        <strong class="text-dark d-block" th:text="${rule.ruleName}">Rule</strong>
-                                        <small class="text-secondary" th:text="${rule.description}">Desc</small>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Suggestion Box -->
-            <div class="col-md-12">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-white">
-                        <h4 class="mb-0 text-dark"><i class="fas fa-lightbulb me-2 text-warning"></i>Suggestion Box</h4>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column justify-content-center">
-                        <p class="text-secondary">Have an idea to improve the workplace? We'd love to hear it!</p>
-                        <div class="d-flex gap-2 justify-content-center">
-                            <a th:href="@{/employee/suggestion/submit}" class="btn btn-warning text-white"><i
-                                    class="fas fa-paper-plane me-1"></i> Submit</a>
-                            <a th:href="@{/employee/suggestion/my-suggestions}"
-                                class="btn btn-outline-secondary">History</a>
+                    <div class="d-flex flex-wrap gap-2" th:if="${myBadges != null && !myBadges.isEmpty()}">
+                        <div th:each="badge : ${myBadges}" class="border rounded p-3 text-center bg-light flex-fill">
+                            <div class="fs-1 mb-2">🏅</div>
+                            <h6 class="fw-bold text-dark mb-1" th:text="${badge.badgeName}">Badge</h6>
+                            <p class="small text-secondary mb-0" th:text="${badge.appreciationNote}">Note</p>
+                            <small class="text-muted d-block mt-1"
+                                th:text="${#temporals.format(badge.awardedDate, 'MMM dd')}"></small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Team Rules -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0 text-dark"><i class="fas fa-gavel me-2 text-info"></i>Team Rules</h4>
+                </div>
+                <div class="card-body">
+                    <div th:if="${activeRules == null || activeRules.isEmpty()}"
+                        class="text-center text-secondary py-3">
+                        <p>No active team rules.</p>
+                    </div>
+                    <ul class="list-group list-group-flush" th:if="${activeRules != null && !activeRules.isEmpty()}">
+                        <li th:each="rule : ${activeRules}"
+                            class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent">
+                            <div class="d-flex">
+                                <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
+                                <div>
+                                    <strong class="text-dark d-block" th:text="${rule.ruleName}">Rule</strong>
+                                    <small class="text-secondary" th:text="${rule.description}">Desc</small>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggestion Box -->
+        <div class="col-md-12">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0 text-dark"><i class="fas fa-lightbulb me-2 text-warning"></i>Suggestion Box</h4>
+                </div>
+                <div class="card-body text-center d-flex flex-column justify-content-center">
+                    <p class="text-secondary">Have an idea to improve the workplace? We'd love to hear it!</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a th:href="@{/employee/suggestion/submit}" class="btn btn-warning text-white"><i
+                                class="fas fa-paper-plane me-1"></i> Submit</a>
+                        <a th:href="@{/employee/suggestion/my-suggestions}"
+                            class="btn btn-outline-secondary">History</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     </div>
