@@ -348,6 +348,10 @@ public class HRController {
         // Notifications
         model.addAttribute("expiringContracts", expiringContracts);
 
+        List<Notification> notifications = notificationRepository
+                .findByUserRecipientAndIsReadFalseOrderByCreatedAtDesc(user);
+        model.addAttribute("notifications", notifications);
+
         // Visitor stats
         List<Visitor> allVisitors = visitorRepository.findAllOrderByCheckInTimeDesc();
         List<Visitor> checkedInVisitors = visitorRepository.findByStatus("Checked In");
@@ -1099,7 +1103,87 @@ public class HRController {
             }
         }
 
+        // Notify All HRs (Requirement: "notify all hrs if the meeting is created")
+        List<User> allHrs = userRepository.findByRole("HR");
+        for (User hr : allHrs) {
+            // Avoid duplicate notification if the HR created it (optional, but user said
+            // "all hrs")
+            // But usually the creator knows. However, distinct requirements say "notify all
+            // hrs".
+            // I'll skip the creator to be safe/clean, or just send to all.
+            // Let's send to all to be safe with "all hrs".
+            // Actually, if I am the creator, I don't need a notification.
+            if (hr.getId().equals(user.getId()))
+                continue;
+
+            Notification notification = new Notification();
+            notification.setUserRecipient(hr);
+            notification.setMessage("New HR Meeting Scheduled: " + savedMeeting.getTitle());
+            notification.setMeetingId(savedMeeting.getId());
+            notification.setCreatedAt(LocalDateTime.now());
+            notification.setIsRead(false);
+            notificationRepository.save(notification);
+        }
         redirectAttributes.addFlashAttribute("success", "Meeting scheduled successfully!");
         return "redirect:/hr/dashboard";
+    }
+
+    @RequestMapping(value = "/notification/read/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<String> markNotificationAsRead(@PathVariable Long id,
+            HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return org.springframework.http.ResponseEntity.badRequest().body("Unauthorized");
+        }
+
+        Optional<Notification> notifOpt = notificationRepository.findById(id);
+        if (notifOpt.isPresent()) {
+            Notification notification = notifOpt.get();
+            if (notification.getUserRecipient() != null
+                    && notification.getUserRecipient().getId().equals(user.getId())) {
+                notification.setIsRead(true);
+                notificationRepository.save(notification);
+                return org.springframework.http.ResponseEntity.ok("Marked as read");
+            }
+        }
+        return org.springframework.http.ResponseEntity.badRequest().body("Notification not found or unauthorized");
+    }
+
+    @RequestMapping(value = "/api/meetings/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> getMeetingDetails(@PathVariable Long id, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return org.springframework.http.ResponseEntity.badRequest().body("Unauthorized");
+        }
+        Optional<Meeting> meetingOpt = meetingRepository.findById(id);
+        if (meetingOpt.isPresent()) {
+            Meeting m = meetingOpt.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", m.getId());
+            response.put("title", m.getTitle());
+            response.put("description", m.getDescription());
+            response.put("startTime", m.getStartTime());
+            response.put("endTime", m.getEndTime());
+            response.put("meetingType", m.getMeetingType());
+            response.put("location", m.getLocation());
+            return org.springframework.http.ResponseEntity.ok(response);
+        }
+        return org.springframework.http.ResponseEntity.badRequest().body("Meeting not found");
+    }
+
+    @RequestMapping(value = "/notifications/history", method = RequestMethod.GET)
+    public String viewNotificationHistory(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+
+        List<Notification> notifications = notificationRepository.findByUserRecipientOrderByCreatedAtDesc(user);
+        model.addAttribute("notifications", notifications);
+        model.addAttribute("userName", user.getName());
+
+        return "hr-notifications";
     }
 }

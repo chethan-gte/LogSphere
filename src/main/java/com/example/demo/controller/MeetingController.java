@@ -7,6 +7,9 @@ import com.example.demo.repository.EmployeeRepository;
 import com.example.demo.repository.MeetingRepository;
 import com.example.demo.repository.VisitorRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.NotificationRepository;
+import com.example.demo.model.Notification;
 import com.example.demo.service.EmailService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,9 @@ public class MeetingController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @RequestMapping(value = "/create", method = RequestMethod.GET)
     public String showCreateForm(Model model, HttpSession session, @RequestParam(required = false) String type) {
@@ -224,6 +230,47 @@ public class MeetingController {
                                 meeting.getStartTime(), meeting.getEndTime(), meeting.getLocation(),
                                 meeting.getDescription());
                     }
+                }
+            }
+        }
+
+        // Create In-App Notifications
+        if (inviteEveryone) {
+            String notificationMsg = "New Meeting: " + meeting.getTitle();
+            Long meetingId = meeting.getId();
+
+            if ("HR".equals(meeting.getMeetingType())) {
+                List<com.example.demo.model.User> hrUsers = userRepository.findByRole("HR");
+                for (com.example.demo.model.User user : hrUsers) {
+                    Notification notification = new Notification(user, notificationMsg, meetingId);
+                    notificationRepository.save(notification);
+                }
+            } else if ("MANAGER".equals(meeting.getMeetingType())) {
+                List<com.example.demo.model.User> managerUsers = userRepository.findByRole("MANAGER");
+                for (com.example.demo.model.User user : managerUsers) {
+                    Notification notification = new Notification(user, notificationMsg, meetingId);
+                    notificationRepository.save(notification);
+                }
+            } else {
+                // Notify all employees
+                List<Employee> allEmployees = employeeRepository.findAll();
+                for (Employee emp : allEmployees) {
+                    if (meeting.getOrganizer() != null && emp.getId().equals(meeting.getOrganizer().getId()))
+                        continue;
+                    Notification notification = new Notification(emp, notificationMsg, meetingId);
+                    notificationRepository.save(notification);
+                }
+            }
+        } else {
+            // Specific attendees
+            if (attendeeIds != null && !attendeeIds.isEmpty()) {
+                List<Employee> selectedAttendees = employeeRepository.findAllById(attendeeIds);
+                for (Employee attendee : selectedAttendees) {
+                    if (meeting.getOrganizer() != null && attendee.getId().equals(meeting.getOrganizer().getId()))
+                        continue;
+                    Notification notification = new Notification(attendee, "New Meeting: " + meeting.getTitle(),
+                            meeting.getId());
+                    notificationRepository.save(notification);
                 }
             }
         }

@@ -9,6 +9,7 @@
     <link rel="stylesheet" th:href="@{/css/theme.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         body {
@@ -225,10 +226,7 @@
                     </ul>
                 </div>
             </li>
-            <li class="nav-item mb-1">
-                <button class="nav-link w-100 text-start" id="notifications-tab" data-bs-toggle="pill"
-                    data-bs-target="#notifications" type="button">🔔 Alerts</button>
-            </li>
+            <!-- Alerts Tab Removed -->
             <li class="nav-item mb-1">
                 <button class="nav-link w-100 text-start" id="suggestions-tab" data-bs-toggle="pill"
                     data-bs-target="#suggestions" type="button">
@@ -260,6 +258,54 @@
                         th:text="${userName}">HR Admin</span></p>
             </div>
             <div class="d-flex gap-2">
+                <div class="dropdown me-3">
+                    <a class="nav-link position-relative text-secondary p-2" href="#" id="notificationDropdown"
+                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bell fs-5"></i>
+                        <span th:if="${notifications != null && !notifications.isEmpty()}"
+                            class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                            style="font-size: 0.6rem;">
+                            <span th:text="${notifications.size()}"></span>
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-0"
+                        aria-labelledby="notificationDropdown"
+                        style="width: 320px; max-height: 400px; overflow-y: auto; border-radius: 8px;">
+                        <li class="p-3 border-bottom bg-white">
+                            <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
+                        </li>
+                        <li th:if="${notifications == null || notifications.isEmpty()}"
+                            class="p-4 text-center text-secondary small bg-white">
+                            No new notifications
+                        </li>
+                        <li th:each="notif : ${notifications}"
+                            class="border-bottom position-relative notification-item bg-white">
+                            <div class="dropdown-item p-3" style="white-space: normal;">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="pe-2">
+                                        <a href="#" class="text-decoration-none text-dark"
+                                            th:onclick="'showMeetingDetails(' + ${notif.meetingId} + ', ' + ${notif.id} + ', this)'">
+                                            <p class="mb-1 small fw-medium" th:text="${notif.message}">Message</p>
+                                        </a>
+                                        <small class="text-muted" style="font-size: 0.75rem;"
+                                            th:text="${#temporals.format(notif.createdAt, 'MMM dd, HH:mm')}">Date</small>
+                                    </div>
+
+                                    <button class="btn btn-link btn-sm text-secondary p-0 align-self-start"
+                                        title="Mark as Read" th:onclick="'markAsRead(' + ${notif.id} + ', this)'">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="p-3 text-center border-top bg-white">
+                            <a th:href="@{/hr/notifications/history}"
+                                class="text-decoration-none small fw-bold text-primary">
+                                View All Notifications
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 <a th:href="@{/}" class="btn btn-light border shadow-sm text-secondary fw-medium">Home</a>
                 <button onclick="location.reload()"
                     class="btn btn-light border shadow-sm text-secondary">Refresh</button>
@@ -1009,7 +1055,107 @@
             form.action = '/hr/leave/reject/' + leaveId;
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
+        const contextPath = /*[[@{/}]]*/ '/';
+
+        function markAsRead(id, btnElement) {
+            const listItem = btnElement.closest('.notification-item');
+            const url = contextPath + 'hr/notification/read/' + id;
+
+            fetch(url, {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    if (listItem) {
+                        listItem.remove();
+                        const badge = document.querySelector('#notificationDropdown .badge');
+                        if (badge) {
+                            let count = parseInt(badge.querySelector('span').innerText);
+                            if (count > 1) {
+                                badge.querySelector('span').innerText = count - 1;
+                            } else {
+                                badge.remove();
+                            }
+                        }
+                    }
+                } else {
+                    console.error("Failed to mark read");
+                }
+            });
+            event.stopPropagation();
+        }
+
+        function showMeetingDetails(meetingId, notifId, linkElement) {
+            if (notifId && linkElement) {
+                const btnElement = linkElement.closest('.notification-item').querySelector('button');
+                markAsRead(notifId, btnElement || linkElement);
+            }
+
+            if (!meetingId) return;
+
+            const url = contextPath + 'hr/api/meetings/' + meetingId;
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Meeting not found');
+                })
+                .then(meeting => {
+                    document.getElementById('modalTitle').textContent = meeting.title;
+                    document.getElementById('modalDesc').textContent = meeting.description || 'No description provided.';
+
+                    const date = new Date(meeting.startTime);
+                    document.getElementById('modalDate').textContent = date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                    let timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                    if (meeting.endTime) {
+                        const endDate = new Date(meeting.endTime);
+                        timeStr += ' - ' + endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                    }
+                    document.getElementById('modalTime').textContent = timeStr;
+                    document.getElementById('modalType').textContent = meeting.meetingType || 'MEETING';
+
+                    new bootstrap.Modal(document.getElementById('meetingDetailsModal')).show();
+                })
+                .catch(err => {
+                    console.error('Error fetching meeting:', err);
+                    alert('Could not load meeting details.');
+                });
+        }
     </script>
+
+    <!-- Meeting Details Modal -->
+    <div class="modal fade" id="meetingDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Meeting Title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <span class="badge bg-primary mb-2" id="modalType">MEETING</span>
+                        <h6 class="text-muted small">Description</h6>
+                        <p id="modalDesc">Meeting description goes here.</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <h6 class="text-muted small">Date</h6>
+                            <p id="modalDate" class="fw-bold">Date</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted small">Time</h6>
+                            <p id="modalTime" class="fw-bold">Time</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <!-- <a href="#" class="btn btn-primary" id="joinBtn" style="display:none;">Join Meeting</a> -->
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
