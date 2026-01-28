@@ -6,25 +6,20 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
-
-        @org.springframework.beans.factory.annotation.Value("${file.upload-dir}")
-        private String uploadDir;
-
-        @Override
-        public void addResourceHandlers(ResourceHandlerRegistry registry) {
-                // Configure static resource handling for external Tomcat deployment
-                registry.addResourceHandler("/static/**")
-                                .addResourceLocations("classpath:/static/");
-                registry.addResourceHandler("/css/**")
-                                .addResourceLocations("classpath:/static/css/");
-                registry.addResourceHandler("/js/**")
-                                .addResourceLocations("classpath:/static/js/");
-                registry.addResourceHandler("/images/**")
-                                .addResourceLocations("classpath:/static/images/");
-
-                // Serve uploaded files from external directory using absolute path
-                String absoluteUploadPath = java.nio.file.Paths.get(uploadDir).toAbsolutePath().toUri().toString();
-                registry.addResourceHandler("/uploads/**")
-                                .addResourceLocations(absoluteUploadPath);
-        }
+    
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Configure static resource handling for external Tomcat deployment
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/static/");
+        registry.addResourceHandler("/css/**")
+                .addResourceLocations("classpath:/static/css/");
+        registry.addResourceHandler("/js/**")
+                .addResourceLocations("classpath:/static/js/");
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("classpath:/static/images/");
+        // Add resource handler for uploaded task files
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("classpath:/static/uploads/");
+    }
 }

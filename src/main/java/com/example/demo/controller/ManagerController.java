@@ -358,9 +358,6 @@ public class ManagerController {
         return "manager-dashboard";
     }
 
-    @org.springframework.beans.factory.annotation.Value("${file.upload-dir}")
-    private String uploadDir;
-
     @RequestMapping(value = "/tasks/add", method = RequestMethod.POST)
     public String addTaskForEmployee(@RequestParam String title,
             @RequestParam(required = false) String description,
@@ -403,7 +400,9 @@ public class ManagerController {
         // Handle file upload
         if (attachment != null && !attachment.isEmpty()) {
             try {
-                Path uploadPath = Paths.get(uploadDir).toAbsolutePath().resolve("tasks");
+                // Get absolute path to the static uploads directory
+                String projectRoot = System.getProperty("user.dir");
+                Path uploadPath = Paths.get(projectRoot, "src", "main", "resources", "static", "uploads", "tasks");
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
                 }
