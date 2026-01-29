@@ -239,15 +239,17 @@
                                     <span th:text="${#temporals.format(payroll.payPeriodEnd, 'MMM d')}"></span>
                                 </td>
                                 <td class="fw-bold text-success"
-                                    th:text="${'₹' + #numbers.formatDecimal(payroll.netSalary, 0, 0)}"></td>
+                                    th:text="${'₹' + #numbers.formatDecimal(payroll.netPay, 0, 0)}"></td>
                                 <td>
-                                    <span th:if="${payroll.status == 'PROCESSED'}"
+                                    <span
+                                        th:if="${payroll.payrollStatus.name() == 'APPROVED' or payroll.payrollStatus.name() == 'PAID'}"
                                         class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">PROCESSED</span>
-                                    <span th:if="${payroll.status == 'PENDING'}"
+                                    <span th:if="${payroll.payrollStatus.name() == 'GENERATED'}"
                                         class="badge bg-light text-dark border px-2 py-1">PENDING</span>
-                                    <span th:if="${payroll.status != 'PROCESSED' and payroll.status != 'PENDING'}"
+                                    <span
+                                        th:if="${payroll.payrollStatus.name() != 'APPROVED' and payroll.payrollStatus.name() != 'PAID' and payroll.payrollStatus.name() != 'GENERATED'}"
                                         class="badge bg-light text-dark border px-2 py-1"
-                                        th:text="${payroll.status}"></span>
+                                        th:text="${payroll.payrollStatus}"></span>
                                 </td>
                                 <td>
                                     <a href="#" class="btn btn-outline-success btn-sm px-3"

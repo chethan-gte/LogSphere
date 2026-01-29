@@ -507,7 +507,8 @@
                                 </thead>
                                 <tbody>
                                     <tr th:if="${attendanceReport.isEmpty()}">
-                                        <td colspan="6" class="text-center text-muted py-4">No attendance data available</td>
+                                        <td colspan="6" class="text-center text-muted py-4">No attendance data available
+                                        </td>
                                     </tr>
                                     <tr th:each="record : ${attendanceReport}">
                                         <td class="small text-muted" th:text="${record.id}">ID</td>
@@ -515,7 +516,8 @@
                                         <td th:text="${record.login}">-</td>
                                         <td th:text="${record.logout}">-</td>
                                         <td>
-                                            <span class="badge bg-light text-dark border" th:text="${record.workMode}">OFFICE</span>
+                                            <span class="badge bg-light text-dark border"
+                                                th:text="${record.workMode}">OFFICE</span>
                                         </td>
                                         <td class="fw-bold text-primary" th:text="${record.totalTime}">-</td>
                                     </tr>
@@ -835,28 +837,38 @@
                                 <tr>
                                     <th>Employee</th>
                                     <th>Period</th>
-                                    <th>Net Salary</th>
+                                    <th>Gross</th>
+                                    <th>Deductions</th>
+                                    <th>Net Pay</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr th:if="${monthlyPayrolls.isEmpty()}">
-                                    <td colspan="5" class="text-center text-muted">No records</td>
+                                    <td colspan="6" class="text-center text-muted">No records</td>
                                 </tr>
                                 <tr th:each="payroll : ${monthlyPayrolls}">
                                     <td class="fw-medium" th:text="${payroll.employee.name}">Name</td>
                                     <td class="small text-muted">
-                                        <span th:text="${#temporals.format(payroll.payPeriodStart, 'MMM d')}"></span> -
-                                        <span th:text="${#temporals.format(payroll.payPeriodEnd, 'MMM d')}"></span>
+                                        <span th:text="${payroll.month}"></span>/<span th:text="${payroll.year}"></span>
                                     </td>
+                                    <td class="text-secondary"
+                                        th:text="${'₹' + #numbers.formatDecimal(payroll.grossSalary != null ? payroll.grossSalary : 0, 0, 0)}">
+                                        ₹0</td>
+                                    <td class="text-danger"
+                                        th:text="${'₹' + #numbers.formatDecimal(payroll.totalDeductions != null ? payroll.totalDeductions : 0, 0, 0)}">
+                                        ₹0</td>
                                     <td class="fw-bold text-success"
-                                        th:text="${'₹' + #numbers.formatDecimal(payroll.netSalary, 0, 0)}">₹0</td>
+                                        th:text="${'₹' + #numbers.formatDecimal(payroll.netPay != null ? payroll.netPay : 0, 0, 0)}">
+                                        ₹0</td>
                                     <td><span class="badge bg-light text-dark border"
-                                            th:text="${payroll.status}">Status</span></td>
+                                            th:text="${payroll.payrollStatus}">Status</span></td>
                                     <td>
-                                        <a th:href="@{/hr/payroll/payslip/{id}(id=${payroll.id})}"
-                                            class="btn btn-sm btn-outline-success">Payslip</a>
+                                        <a th:href="@{/hr/payroll/view/{id}(id=${payroll.id})}"
+                                            class="btn btn-sm btn-outline-info me-1"><i class="fas fa-eye"></i></a>
+                                        <!-- <a th:href="@{/hr/payroll/payslip/{id}(id=${payroll.id})}"
+                                            class="btn btn-sm btn-outline-success">Payslip</a> -->
                                     </td>
                                 </tr>
                             </tbody>

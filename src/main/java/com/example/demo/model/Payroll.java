@@ -1,8 +1,8 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import java.util.Date;
 
 @Entity
 @Table(name = "payroll")
@@ -16,69 +16,59 @@ public class Payroll {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    @Column(name = "pay_period_start", nullable = false)
-    private LocalDate payPeriodStart;
+    @Column(name = "month", nullable = false)
+    private Integer month;
 
-    @Column(name = "pay_period_end", nullable = false)
-    private LocalDate payPeriodEnd;
+    @Column(name = "year", nullable = false)
+    private Integer year;
 
-    @Column(name = "base_salary", nullable = false)
-    private Double baseSalary;
+    @Column(name = "base_salary")
+    private Double grossSalary;
 
-    @Column(name = "bonus")
-    private Double bonus = 0.0;
+    @Column(name = "lop_deduction")
+    private Double lopDeduction;
 
-    @Column(name = "incentive")
-    private Double incentive = 0.0;
+    @Column(name = "total_deductions")
+    private Double totalDeductions;
 
-    @Column(name = "overtime_pay")
-    private Double overtimePay = 0.0;
+    @Column(name = "net_salary")
+    private Double netPay;
 
-    @Column(name = "allowances")
-    private Double allowances = 0.0;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payroll_status")
+    private PayrollStatus payrollStatus = PayrollStatus.GENERATED;
 
-    @Column(name = "tax_deduction")
-    private Double taxDeduction = 0.0;
+    @Column(name = "generated_on")
+    @Temporal(TemporalType.DATE)
+    private Date generatedOn;
 
-    @Column(name = "other_deductions")
-    private Double otherDeductions = 0.0;
+    @Column(name = "approved_by")
+    private Long approvedBy;
 
-    @Column(name = "net_salary", nullable = false)
-    private Double netSalary;
+    @Column(name = "paid_on")
+    @Temporal(TemporalType.DATE)
+    private Date paidOn;
 
-    @Column(name = "status")
-    private String status = "PENDING"; // PENDING, PROCESSED, PAID
+    @Column(name = "pay_period_start")
+    private java.time.LocalDate payPeriodStart;
 
-    @Column(name = "payment_date")
-    private LocalDate paymentDate;
-
-    @Column(name = "payslip_generated")
-    private Boolean payslipGenerated = false;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "pay_period_end")
+    private java.time.LocalDate payPeriodEnd;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        calculateNetSalary();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        calculateNetSalary();
-    }
-
-    private void calculateNetSalary() {
-        if (baseSalary == null) {
-            return; // Don't calculate if baseSalary is not set yet
+        if (generatedOn == null) {
+            generatedOn = new Date();
         }
-        double gross = (baseSalary != null ? baseSalary : 0.0) + 
-                      (bonus != null ? bonus : 0.0) + 
-                      (incentive != null ? incentive : 0.0) + 
-                      (overtimePay != null ? overtimePay : 0.0) + 
-                      (allowances != null ? allowances : 0.0);
-        netSalary = gross - (taxDeduction != null ? taxDeduction : 0.0) - (otherDeductions != null ? otherDeductions : 0.0);
+        if (month != null && year != null) {
+            java.time.YearMonth ym = java.time.YearMonth.of(year, month);
+            this.payPeriodStart = ym.atDay(1);
+            this.payPeriodEnd = ym.atEndOfMonth();
+        }
+    }
+
+    public enum PayrollStatus {
+        GENERATED, APPROVED, PAID
     }
 
     // Constructors
@@ -102,116 +92,99 @@ public class Payroll {
         this.employee = employee;
     }
 
-    public LocalDate getPayPeriodStart() {
+    public Integer getMonth() {
+        return month;
+    }
+
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
+
+    public Integer getYear() {
+        return year;
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
+    public Double getGrossSalary() {
+        return grossSalary;
+    }
+
+    public void setGrossSalary(Double grossSalary) {
+        this.grossSalary = grossSalary;
+    }
+
+    public Double getLopDeduction() {
+        return lopDeduction;
+    }
+
+    public void setLopDeduction(Double lopDeduction) {
+        this.lopDeduction = lopDeduction;
+    }
+
+    public Double getTotalDeductions() {
+        return totalDeductions;
+    }
+
+    public void setTotalDeductions(Double totalDeductions) {
+        this.totalDeductions = totalDeductions;
+    }
+
+    public Double getNetPay() {
+        return netPay;
+    }
+
+    public void setNetPay(Double netPay) {
+        this.netPay = netPay;
+    }
+
+    public PayrollStatus getPayrollStatus() {
+        return payrollStatus;
+    }
+
+    public void setPayrollStatus(PayrollStatus payrollStatus) {
+        this.payrollStatus = payrollStatus;
+    }
+
+    public Date getGeneratedOn() {
+        return generatedOn;
+    }
+
+    public void setGeneratedOn(Date generatedOn) {
+        this.generatedOn = generatedOn;
+    }
+
+    public Long getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(Long approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public Date getPaidOn() {
+        return paidOn;
+    }
+
+    public void setPaidOn(Date paidOn) {
+        this.paidOn = paidOn;
+    }
+
+    public java.time.LocalDate getPayPeriodStart() {
         return payPeriodStart;
     }
 
-    public void setPayPeriodStart(LocalDate payPeriodStart) {
+    public void setPayPeriodStart(java.time.LocalDate payPeriodStart) {
         this.payPeriodStart = payPeriodStart;
     }
 
-    public LocalDate getPayPeriodEnd() {
+    public java.time.LocalDate getPayPeriodEnd() {
         return payPeriodEnd;
     }
 
-    public void setPayPeriodEnd(LocalDate payPeriodEnd) {
+    public void setPayPeriodEnd(java.time.LocalDate payPeriodEnd) {
         this.payPeriodEnd = payPeriodEnd;
     }
-
-    public Double getBaseSalary() {
-        return baseSalary;
-    }
-
-    public void setBaseSalary(Double baseSalary) {
-        this.baseSalary = baseSalary;
-    }
-
-    public Double getBonus() {
-        return bonus;
-    }
-
-    public void setBonus(Double bonus) {
-        this.bonus = bonus;
-    }
-
-    public Double getIncentive() {
-        return incentive;
-    }
-
-    public void setIncentive(Double incentive) {
-        this.incentive = incentive;
-    }
-
-    public Double getOvertimePay() {
-        return overtimePay;
-    }
-
-    public void setOvertimePay(Double overtimePay) {
-        this.overtimePay = overtimePay;
-    }
-
-    public Double getAllowances() {
-        return allowances;
-    }
-
-    public void setAllowances(Double allowances) {
-        this.allowances = allowances;
-    }
-
-    public Double getTaxDeduction() {
-        return taxDeduction;
-    }
-
-    public void setTaxDeduction(Double taxDeduction) {
-        this.taxDeduction = taxDeduction;
-    }
-
-    public Double getOtherDeductions() {
-        return otherDeductions;
-    }
-
-    public void setOtherDeductions(Double otherDeductions) {
-        this.otherDeductions = otherDeductions;
-    }
-
-    public Double getNetSalary() {
-        return netSalary;
-    }
-
-    public void setNetSalary(Double netSalary) {
-        this.netSalary = netSalary;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDate getPaymentDate() {
-        return paymentDate;
-    }
-
-    public void setPaymentDate(LocalDate paymentDate) {
-        this.paymentDate = paymentDate;
-    }
-
-    public Boolean getPayslipGenerated() {
-        return payslipGenerated;
-    }
-
-    public void setPayslipGenerated(Boolean payslipGenerated) {
-        this.payslipGenerated = payslipGenerated;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 }
-

@@ -279,13 +279,8 @@ public class HRController {
         List<Candidate> interviewedCandidates = candidateRepository.findByStatus("INTERVIEWED");
 
         // 6. Payroll & Compensation
-        List<Payroll> pendingPayrolls = payrollRepository.findByStatus("PENDING");
-        List<Payroll> processedPayrolls = payrollRepository.findByStatus("PROCESSED");
-        // Show all payrolls in the HR dashboard so HR can always see newly added
-        // records,
-        // regardless of the current month filter. This avoids confusion where a saved
-        // payroll is not visible because its pay period falls outside the current
-        // month.
+        List<Payroll> pendingPayrolls = payrollRepository.findByPayrollStatus(Payroll.PayrollStatus.GENERATED);
+        List<Payroll> processedPayrolls = payrollRepository.findByPayrollStatus(Payroll.PayrollStatus.APPROVED);
         List<Payroll> monthlyPayrolls = payrollRepository.findAll();
 
         // 7. Notifications & Alerts
@@ -749,16 +744,10 @@ public class HRController {
 
     @RequestMapping(value = "/payroll/add", method = RequestMethod.POST)
     public String addPayroll(@RequestParam Long employeeId,
-            @RequestParam String payPeriodStart,
-            @RequestParam String payPeriodEnd,
+            @RequestParam Integer month,
+            @RequestParam Integer year,
             @RequestParam Double baseSalary,
-            @RequestParam(required = false) Double bonus,
-            @RequestParam(required = false) Double incentive,
-            @RequestParam(required = false) Double overtimePay,
-            @RequestParam(required = false) Double allowances,
-            @RequestParam(required = false) Double taxDeduction,
-            @RequestParam(required = false) Double otherDeductions,
-            @RequestParam(required = false) String paymentDate,
+            @RequestParam(required = false) Double lopDeduction,
             @RequestParam(required = false) String status,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
@@ -774,34 +763,51 @@ public class HRController {
                 return "redirect:/hr/payroll/add";
             }
 
-            Payroll payroll = new Payroll();
-            payroll.setEmployee(employeeOpt.get());
-            payroll.setPayPeriodStart(LocalDate.parse(payPeriodStart));
-            payroll.setPayPeriodEnd(LocalDate.parse(payPeriodEnd));
-            payroll.setBaseSalary(baseSalary);
-            payroll.setBonus(bonus != null ? bonus : 0.0);
-            payroll.setIncentive(incentive != null ? incentive : 0.0);
-            payroll.setOvertimePay(overtimePay != null ? overtimePay : 0.0);
-            payroll.setAllowances(allowances != null ? allowances : 0.0);
-            payroll.setTaxDeduction(taxDeduction != null ? taxDeduction : 0.0);
-            payroll.setOtherDeductions(otherDeductions != null ? otherDeductions : 0.0);
-            payroll.setStatus(status != null ? status : "PENDING");
-
-            if (paymentDate != null && !paymentDate.isEmpty()) {
-                payroll.setPaymentDate(LocalDate.parse(paymentDate));
+            // Check if payroll already exists for this month/year
+            List<Payroll> existing = payrollRepository.findByMonthAndYear(month, year);
+            boolean alreadyExists = existing.stream().anyMatch(p -> p.getEmployee().getId().equals(employeeId));
+            if (alreadyExists) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Payroll already exists for this employee for " + month + "/" + year);
+                return "redirect:/hr/payroll/add";
             }
 
-            // Calculate net salary manually to ensure it's set
-            double gross = payroll.getBaseSalary() + payroll.getBonus() + payroll.getIncentive() +
-                    payroll.getOvertimePay() + payroll.getAllowances();
-            double net = gross - payroll.getTaxDeduction() - payroll.getOtherDeductions();
-            payroll.setNetSalary(net);
+            Payroll payroll = new Payroll();
+            payroll.setEmployee(employeeOpt.get());
+            payroll.setMonth(month);
+            payroll.setYear(year);
+            // Gross Salary matches Base Salary for now as per simple requirement, unless
+            // user adds components.
+            // Image has gross_salary separate, but typically Gross = Base + Allowances.
+            // HR Add form only asks for Base Salary (and others removed as per plan).
+            // We will set Gross Salary = Base Salary.
+            payroll.setGrossSalary(baseSalary);
+
+            double lop = lopDeduction != null ? lopDeduction : 0.0;
+            payroll.setLopDeduction(lop);
+
+            // Fixed deductions? Image says "PF + Tax + LOP".
+            // We'll calculate a simple 10% tax for demo or 0 if not provided.
+            // For now, let's assume total_deductions = LOP as user only mentioned LOP in
+            // request "i need base salary feature... with lop_deduction".
+            // But image says total_deductions = PF + Tax + LOP.
+            double pf = 0.0; // Placeholder
+            double tax = 0.0; // Placeholder
+            double totalDeductions = pf + tax + lop;
+
+            payroll.setTotalDeductions(totalDeductions);
+
+            double net = baseSalary - totalDeductions;
+            payroll.setNetPay(net);
+
+            payroll.setPayrollStatus(Payroll.PayrollStatus.GENERATED);
+            payroll.setGeneratedOn(new java.util.Date());
 
             Payroll savedPayroll = payrollRepository.save(payroll);
             System.out.println("Payroll saved with ID: " + savedPayroll.getId());
 
             redirectAttributes.addFlashAttribute("success",
-                    "Payroll added successfully! Net Salary: $" + String.format("%.2f", net));
+                    "Payroll added successfully! Net Pay: $" + String.format("%.2f", net));
             return "redirect:/hr/dashboard";
         } catch (Exception e) {
             System.err.println("Error adding payroll: " + e.getMessage());
@@ -812,7 +818,7 @@ public class HRController {
     }
 
     @RequestMapping(value = "/payroll/view/{id}", method = RequestMethod.GET)
-    public String viewPayroll(@PathVariable Long id, Model model, HttpSession session) {
+    public String viewPayroll(@PathVariable long id, Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
             return "redirect:/hr/login";
@@ -850,9 +856,6 @@ public class HRController {
                 return "redirect:/hr/dashboard";
             }
 
-            payroll.setPayslipGenerated(true);
-            payrollRepository.save(payroll);
-
             model.addAttribute("payroll", payroll);
             return "hr-payslip";
         } catch (Exception e) {
@@ -865,7 +868,7 @@ public class HRController {
 
     @RequestMapping(value = "/api/payroll/base-salary/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public Map<String, Object> getEmployeeBaseSalary(@PathVariable Long id, HttpSession session) {
+    public Map<String, Object> getEmployeeBaseSalary(@PathVariable long id, HttpSession session) {
         System.out.println("DEBUG: Fetching base salary for Employee ID: " + id);
         User user = (User) session.getAttribute("user");
         Map<String, Object> response = new HashMap<>();
@@ -890,21 +893,14 @@ public class HRController {
                     return response;
                 }
 
-                // 2. Fallback: Fetch by ID to be safe
+                // 2. Fallback: Fetch by History (Previous Payroll)
                 System.out.println("DEBUG: Fetching payrolls for Employee ID: " + id);
-                List<Payroll> payrolls = payrollRepository.findByEmployee_Id(id);
+                List<Payroll> payrolls = payrollRepository.findByEmployeeOrderByYearDescMonthDesc(emp);
                 System.out
                         .println("DEBUG: Found " + (payrolls != null ? payrolls.size() : "null") + " payroll records.");
 
                 if (payrolls != null && !payrolls.isEmpty()) {
-                    // Sort by PayPeriodEnd descending (latest first)
-                    payrolls.sort((p1, p2) -> {
-                        if (p2.getPayPeriodEnd() == null || p1.getPayPeriodEnd() == null)
-                            return 0;
-                        return p2.getPayPeriodEnd().compareTo(p1.getPayPeriodEnd());
-                    });
-
-                    Double latestBaseSalary = payrolls.get(0).getBaseSalary();
+                    Double latestBaseSalary = payrolls.get(0).getGrossSalary(); // Assuming Gross was Base
                     System.out.println("DEBUG: Latest base salary from payroll: " + latestBaseSalary);
 
                     response.put("success", true);
@@ -936,8 +932,9 @@ public class HRController {
             return "redirect:/hr/login";
         }
 
-        List<Payroll> pendingPayrolls = payrollRepository.findByStatus("PENDING");
+        List<Payroll> pendingPayrolls = payrollRepository.findByPayrollStatus(Payroll.PayrollStatus.GENERATED);
         for (Payroll payroll : pendingPayrolls) {
+            payroll.setPayrollStatus(Payroll.PayrollStatus.APPROVED); // Example flow
             payrollRepository.save(payroll);
         }
         redirectAttributes.addFlashAttribute("success", "All pending payslips generated successfully!");
@@ -946,7 +943,7 @@ public class HRController {
 
     @RequestMapping(value = "/api/employees/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public Employee getEmployeeDetails(@PathVariable Long id, HttpSession session) {
+    public Employee getEmployeeDetails(@PathVariable long id, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
             return null;
@@ -961,7 +958,7 @@ public class HRController {
     }
 
     @RequestMapping(value = "/suggestion/respond/{id}", method = RequestMethod.POST)
-    public String respondToSuggestion(@PathVariable Long id,
+    public String respondToSuggestion(@PathVariable long id,
             @RequestParam String response,
             @RequestParam String status,
             HttpSession session,
@@ -1130,7 +1127,7 @@ public class HRController {
 
     @RequestMapping(value = "/notification/read/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public org.springframework.http.ResponseEntity<String> markNotificationAsRead(@PathVariable Long id,
+    public org.springframework.http.ResponseEntity<String> markNotificationAsRead(@PathVariable long id,
             HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
@@ -1152,7 +1149,7 @@ public class HRController {
 
     @RequestMapping(value = "/api/meetings/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> getMeetingDetails(@PathVariable Long id, HttpSession session) {
+    public org.springframework.http.ResponseEntity<?> getMeetingDetails(@PathVariable long id, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
             return org.springframework.http.ResponseEntity.badRequest().body("Unauthorized");

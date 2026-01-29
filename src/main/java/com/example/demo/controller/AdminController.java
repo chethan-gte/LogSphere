@@ -97,7 +97,8 @@ public class AdminController {
         }
 
         List<com.example.demo.model.Payroll> allPayrolls = payrollRepository.findAll();
-        List<com.example.demo.model.Payroll> processedPayrolls = payrollRepository.findByStatus("PROCESSED");
+        List<com.example.demo.model.Payroll> processedPayrolls = payrollRepository
+                .findByPayrollStatus(com.example.demo.model.Payroll.PayrollStatus.APPROVED);
 
         model.addAttribute("userName", session.getAttribute("userName"));
         model.addAttribute("payrolls", allPayrolls); // Using allPayrolls for the list as per typical admin view, but
@@ -160,14 +161,13 @@ public class AdminController {
 
             // Fallback: use the most recent payroll record if available
             List<com.example.demo.model.Payroll> payrolls = payrollRepository
-                    .findByEmployeeOrderByPayPeriodEndDesc(employee);
+                    .findByEmployeeOrderByYearDescMonthDesc(employee);
 
             if (payrolls != null && !payrolls.isEmpty()) {
-                // Get the most recent payroll (first in the list since it's ordered by
-                // PayPeriodEnd DESC)
+                // Get the most recent payroll
                 com.example.demo.model.Payroll latestPayroll = payrolls.get(0);
                 response.put("success", true);
-                response.put("baseSalary", latestPayroll.getBaseSalary());
+                response.put("baseSalary", latestPayroll.getGrossSalary()); // Using Gross as Base for now
                 response.put("employeeName", employee.getName());
                 response.put("employeeId", employee.getEmployeeId());
             } else {
@@ -206,15 +206,17 @@ public class AdminController {
 
             com.example.demo.model.Payroll payroll = new com.example.demo.model.Payroll();
             payroll.setEmployee(employee);
-            payroll.setBaseSalary(baseSalary);
+            payroll.setGrossSalary(baseSalary);
+            payroll.setNetPay(baseSalary); // Initially net = gross
+            payroll.setTotalDeductions(0.0);
+            payroll.setLopDeduction(0.0);
 
             // Set default pay period (Current Month)
             java.time.LocalDate now = java.time.LocalDate.now();
-            payroll.setPayPeriodStart(now.withDayOfMonth(1));
-            payroll.setPayPeriodEnd(now.withDayOfMonth(now.lengthOfMonth()));
+            payroll.setMonth(now.getMonthValue());
+            payroll.setYear(now.getYear());
 
-            payroll.setStatus("PENDING");
-            payroll.setPayslipGenerated(false);
+            payroll.setPayrollStatus(com.example.demo.model.Payroll.PayrollStatus.GENERATED);
 
             payrollRepository.save(payroll);
 

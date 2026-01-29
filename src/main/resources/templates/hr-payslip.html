@@ -119,7 +119,7 @@
         <div class="payslip-header text-center">
             <h1 class="mb-2">LogSphere</h1>
             <h4 class="text-secondary fw-bold">PAYSLIP</h4>
-            <p class="mb-0 text-muted" th:text="${#temporals.format(payroll.payPeriodStart, 'MMMM yyyy')}"></p>
+            <p class="mb-0 text-muted" th:text="${payroll.month} + ' / ' + ${payroll.year}"></p>
         </div>
 
         <div class="payslip-section">
@@ -133,16 +133,16 @@
                             th:text="${payroll.employee.department}"></span></p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p class="mb-1"><strong class="text-secondary">Pay Period:</strong>
+                    <p class="mb-1"><strong class="text-secondary">Generated On:</strong>
                         <span
-                            th:text="${#temporals.format(payroll.payPeriodStart, 'dd MMM yyyy')} + ' to ' + ${#temporals.format(payroll.payPeriodEnd, 'dd MMM yyyy')}"></span>
+                            th:text="${payroll.generatedOn != null ? #dates.format(payroll.generatedOn, 'dd MMM yyyy') : 'Pending'}"></span>
                     </p>
-                    <p class="mb-1"><strong class="text-secondary">Payment Date:</strong>
+                    <p class="mb-1"><strong class="text-secondary">Paid On:</strong>
                         <span
-                            th:text="${payroll.paymentDate != null ? #temporals.format(payroll.paymentDate, 'dd MMM yyyy') : 'Pending'}"></span>
+                            th:text="${payroll.paidOn != null ? #dates.format(payroll.paidOn, 'dd MMM yyyy') : 'Pending'}"></span>
                     </p>
                     <p class="mb-1"><strong class="text-secondary">Status:</strong> <span class="badge bg-success"
-                            th:text="${payroll.status}"></span></p>
+                            th:text="${payroll.payrollStatus}"></span></p>
                 </div>
             </div>
         </div>
@@ -158,31 +158,14 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Base Salary</td>
-                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.baseSalary, 0, 2)}"></td>
-                    </tr>
-                    <tr th:if="${payroll.bonus > 0}">
-                        <td>Bonus</td>
-                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.bonus, 0, 2)}"></td>
-                    </tr>
-                    <tr th:if="${payroll.incentive > 0}">
-                        <td>Incentive</td>
-                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.incentive, 0, 2)}"></td>
-                    </tr>
-                    <tr th:if="${payroll.overtimePay > 0}">
-                        <td>Overtime Pay</td>
-                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.overtimePay, 0, 2)}">
+                        <td>Gross Salary</td>
+                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.grossSalary, 0, 2)}">
                         </td>
-                    </tr>
-                    <tr th:if="${payroll.allowances > 0}">
-                        <td>Allowances</td>
-                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.allowances, 0, 2)}"></td>
                     </tr>
                     <tr class="total-row">
                         <td>Total Earnings</td>
                         <td class="text-right">
-                            <span
-                                th:text="'₹' + ${#numbers.formatDecimal(payroll.baseSalary + payroll.bonus + payroll.incentive + payroll.overtimePay + payroll.allowances, 0, 2)}"></span>
+                            <span th:text="'₹' + ${#numbers.formatDecimal(payroll.grossSalary, 0, 2)}"></span>
                         </td>
                     </tr>
                 </tbody>
@@ -199,24 +182,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:if="${payroll.taxDeduction > 0}">
-                        <td>Tax Deduction</td>
-                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.taxDeduction, 0, 2)}">
+                    <tr th:if="${payroll.lopDeduction > 0}">
+                        <td>LOP Deduction</td>
+                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.lopDeduction, 0, 2)}">
                         </td>
                     </tr>
-                    <tr th:if="${payroll.otherDeductions > 0}">
-                        <td>Other Deductions</td>
-                        <td class="text-right" th:text="'₹' + ${#numbers.formatDecimal(payroll.otherDeductions, 0, 2)}">
-                        </td>
-                    </tr>
-                    <tr th:if="${payroll.taxDeduction == 0 && payroll.otherDeductions == 0}">
+                    <tr th:if="${payroll.lopDeduction == 0}">
                         <td colspan="2" class="text-center text-muted">No deductions</td>
                     </tr>
                     <tr class="total-row">
                         <td>Total Deductions</td>
                         <td class="text-right">
-                            <span
-                                th:text="'₹' + ${#numbers.formatDecimal(payroll.taxDeduction + payroll.otherDeductions, 0, 2)}"></span>
+                            <span th:text="'₹' + ${#numbers.formatDecimal(payroll.totalDeductions, 0, 2)}"></span>
                         </td>
                     </tr>
                 </tbody>
@@ -230,8 +207,8 @@
                     <small class="text-muted">Total Payable Amount</small>
                 </div>
                 <div class="col-md-6 text-right">
-                    <h2 class="mb-0 text-dark fw-bold"
-                        th:text="'₹' + ${#numbers.formatDecimal(payroll.netSalary, 0, 2)}"></h2>
+                    <h2 class="mb-0 text-dark fw-bold" th:text="'₹' + ${#numbers.formatDecimal(payroll.netPay, 0, 2)}">
+                    </h2>
                 </div>
             </div>
         </div>
@@ -248,4 +225,3 @@
 </body>
 
 </html>
-
