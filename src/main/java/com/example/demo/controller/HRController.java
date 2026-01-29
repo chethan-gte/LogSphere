@@ -450,10 +450,7 @@ public class HRController {
         String leaveType = leaveRequest.getLeaveType();
         int daysToDeduct = leaveRequest.getNumberOfDays();
 
-        if ("PAID".equals(leaveType)) {
-            int current = employee.getPaidLeave() != null ? employee.getPaidLeave() : 0;
-            employee.setPaidLeave(Math.max(0, current - daysToDeduct));
-        } else if ("SICK".equals(leaveType)) {
+        if ("SICK".equals(leaveType)) {
             int current = employee.getSickLeave() != null ? employee.getSickLeave() : 0;
             employee.setSickLeave(Math.max(0, current - daysToDeduct));
         } else if ("CASUAL".equals(leaveType)) {
@@ -755,6 +752,67 @@ public class HRController {
             redirectAttributes.addFlashAttribute("error", "Error creating job opening: " + e.getMessage());
             return "redirect:/hr/recruitment/job/create";
         }
+    }
+
+    @RequestMapping(value = "/api/payroll/lop-calc", method = RequestMethod.GET)
+    @ResponseBody
+    public Map<String, Object> calculateLOP(
+            @RequestParam Long employeeId,
+            @RequestParam Integer month,
+            @RequestParam Integer year) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<Employee> empOpt = employeeRepository.findById(employeeId);
+            if (!empOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "Employee not found");
+                return response;
+            }
+            Employee employee = empOpt.get();
+
+            // 1. Get Monthly Quota (assigned leaves) from paidLeave field
+            int allowedLeaves = employee.getPaidLeave() != null ? employee.getPaidLeave() : 0;
+
+            // 2. Calculate Taken Leaves (PAID type only)
+            LocalDate startOfMonth = LocalDate.of(year, month, 1);
+            LocalDate endOfMonth = java.time.YearMonth.of(year, month).atEndOfMonth();
+
+            // Fetch all approved leaves for employee
+            List<LeaveRequest> allApprovedLeaves = leaveRequestRepository.findByEmployeeAndStatus(employee, "APPROVED");
+
+            double takenLeaves = allApprovedLeaves.stream()
+                    .filter(l -> "PAID".equals(l.getLeaveType()))
+                    .mapToDouble(l -> {
+                        LocalDate start = l.getStartDate().isBefore(startOfMonth) ? startOfMonth : l.getStartDate();
+                        LocalDate end = l.getEndDate().isAfter(endOfMonth) ? endOfMonth : l.getEndDate();
+
+                        if (start.isAfter(end))
+                            return 0;
+                        return java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
+                    })
+                    .sum();
+
+            // 3. Calculate LOP
+            double lopDays = Math.max(0, takenLeaves - allowedLeaves);
+
+            // 4. Calculate Amount
+            Double baseSalary = employee.getSalary() != null ? employee.getSalary() : 0.0;
+            int daysInMonth = java.time.YearMonth.of(year, month).lengthOfMonth();
+            double lopAmount = (baseSalary / daysInMonth) * lopDays;
+
+            response.put("success", true);
+            response.put("baseSalary", baseSalary);
+            response.put("allowedLeaves", allowedLeaves);
+            response.put("takenLeaves", takenLeaves);
+            response.put("lopDays", lopDays);
+            response.put("lopAmount", Math.round(lopAmount * 100.0) / 100.0);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return response;
     }
 
     @RequestMapping(value = "/payroll/add", method = RequestMethod.GET)
@@ -1221,7 +1279,7 @@ public class HRController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getAttendanceHistory(@PathVariable Long employeeId) {
         Map<String, Object> response = new HashMap<>();
-        
+
         Optional<Employee> employeeOpt = employeeRepository.findById(employeeId);
         if (!employeeOpt.isPresent()) {
             response.put("error", "Employee not found");
@@ -1235,80 +1293,87 @@ public class HRController {
 
         try {
             // Fetch Data
-            List<Attendance> monthlyAttendance = attendanceRepository.findByEmployeeAndDateRange(employee, startOfMonth, endOfMonth);
+            List<Attendance> monthlyAttendance = attendanceRepository.findByEmployeeAndDateRange(employee, startOfMonth,
+                    endOfMonth);
             List<LeaveRequest> monthlyLeaves = leaveRequestRepository.findLeavesInDateRange(startOfMonth, endOfMonth);
-            
+
             // Calculate Approved Leaves safely
             long approvedLeavesCount = monthlyLeaves.stream()
-                    .filter(l -> l != null 
-                            && l.getEmployee() != null 
+                    .filter(l -> l != null
+                            && l.getEmployee() != null
                             && l.getEmployee().getId() != null
-                            && l.getEmployee().getId().equals(employee.getId()) 
+                            && l.getEmployee().getId().equals(employee.getId())
                             && "APPROVED".equalsIgnoreCase(l.getStatus())
                             && l.getNumberOfDays() != null)
                     .mapToLong(LeaveRequest::getNumberOfDays)
                     .sum();
 
+            // Calculate Metrics
+            int totalDaysInMonth = today.lengthOfMonth();
+            // Simple logic for working days: Days passed excluding Sundays.
+            // For accurate 'Total Working Days', we might assume standard 22 or calculate
+            // excluding weekends.
+            // Let's calculate working days excluding Sundays for the whole month.
+            long totalWorkingDays = startOfMonth.datesUntil(endOfMonth.plusDays(1))
+                    .filter(d -> d.getDayOfWeek() != java.time.DayOfWeek.SUNDAY)
+                    .count();
 
-        // Calculate Metrics
-        int totalDaysInMonth = today.lengthOfMonth();
-        // Simple logic for working days: Days passed excluding Sundays. 
-        // For accurate 'Total Working Days', we might assume standard 22 or calculate excluding weekends.
-        // Let's calculate working days excluding Sundays for the whole month.
-        long totalWorkingDays = startOfMonth.datesUntil(endOfMonth.plusDays(1))
-                .filter(d -> d.getDayOfWeek() != java.time.DayOfWeek.SUNDAY)
-                .count();
+            long daysPresent = monthlyAttendance.size();
+            long leaves = approvedLeavesCount;
+            long overtimeDays = monthlyAttendance.stream()
+                    .filter(a -> a.getTotalHours() != null && a.getTotalHours() > 9).count();
 
-        long daysPresent = monthlyAttendance.size();
-        long leaves = approvedLeavesCount;
-        long overtimeDays = monthlyAttendance.stream().filter(a -> a.getTotalHours() != null && a.getTotalHours() > 9).count();
-        
-        // LOP = Total Working Days Passed - Present - Leaves
-        // We calculate LOP based on days *passed* so far, or for the whole month?
-        // Usually LOP is calculated for payroll. For history view, let's show LOP for days passed.
-        long workingDaysPassed = startOfMonth.datesUntil(today.plusDays(1))
-                .filter(d -> d.getDayOfWeek() != java.time.DayOfWeek.SUNDAY)
-                .count();
-        long lopDays = Math.max(0, workingDaysPassed - daysPresent - leaves);
+            // LOP = Total Working Days Passed - Present - Leaves
+            // We calculate LOP based on days *passed* so far, or for the whole month?
+            // Usually LOP is calculated for payroll. For history view, let's show LOP for
+            // days passed.
+            long workingDaysPassed = startOfMonth.datesUntil(today.plusDays(1))
+                    .filter(d -> d.getDayOfWeek() != java.time.DayOfWeek.SUNDAY)
+                    .count();
+            long lopDays = Math.max(0, workingDaysPassed - daysPresent - leaves);
 
+            // Construct Daily Records
+            List<Map<String, Object>> records = monthlyAttendance.stream().map(att -> {
+                Map<String, Object> record = new HashMap<>();
+                record.put("date", att.getAttendanceDate().toString());
+                record.put("login",
+                        att.getCheckInTime() != null ? att.getCheckInTime().toLocalTime().toString().substring(0, 5)
+                                : "-");
+                record.put("logout",
+                        att.getCheckOutTime() != null ? att.getCheckOutTime().toLocalTime().toString().substring(0, 5)
+                                : "-");
 
-        // Construct Daily Records
-        List<Map<String, Object>> records = monthlyAttendance.stream().map(att -> {
-            Map<String, Object> record = new HashMap<>();
-            record.put("date", att.getAttendanceDate().toString());
-            record.put("login", att.getCheckInTime() != null ? att.getCheckInTime().toLocalTime().toString().substring(0, 5) : "-");
-            record.put("logout", att.getCheckOutTime() != null ? att.getCheckOutTime().toLocalTime().toString().substring(0, 5) : "-");
-            
-            String totalTime = "-";
-            if (att.getCheckInTime() != null && att.getCheckOutTime() != null) {
-                 java.time.Duration duration = java.time.Duration.between(att.getCheckInTime(), att.getCheckOutTime());
-                 long hours = duration.toHours();
-                 long minutes = duration.toMinutesPart();
-                 totalTime = String.format("%dh %dm", hours, minutes);
-            }
-            record.put("totalTime", totalTime);
-            record.put("status", att.getStatus());
-            record.put("workMode", att.getWorkMode() != null ? att.getWorkMode() : "OFFICE");
-            return record;
-        }).collect(Collectors.toList());
-        records.sort((m1, m2) -> ((String)m2.get("date")).compareTo((String)m1.get("date")));
+                String totalTime = "-";
+                if (att.getCheckInTime() != null && att.getCheckOutTime() != null) {
+                    java.time.Duration duration = java.time.Duration.between(att.getCheckInTime(),
+                            att.getCheckOutTime());
+                    long hours = duration.toHours();
+                    long minutes = duration.toMinutesPart();
+                    totalTime = String.format("%dh %dm", hours, minutes);
+                }
+                record.put("totalTime", totalTime);
+                record.put("status", att.getStatus());
+                record.put("workMode", att.getWorkMode() != null ? att.getWorkMode() : "OFFICE");
+                return record;
+            }).collect(Collectors.toList());
+            records.sort((m1, m2) -> ((String) m2.get("date")).compareTo((String) m1.get("date")));
 
-        // Summary Object
-        Map<String, Object> summary = new HashMap<>();
-        summary.put("id", 1); // Mock ID as per image
-        summary.put("employee_id", employee.getId());
-        summary.put("employee_name", employee.getName());
-        summary.put("month", today.getMonthValue());
-        summary.put("year", today.getYear());
-        summary.put("total_working_days", totalWorkingDays);
-        summary.put("days_present", daysPresent);
-        summary.put("leaves", leaves);
-        summary.put("lop_days", lopDays);
-        summary.put("overtime_days", overtimeDays);
+            // Summary Object
+            Map<String, Object> summary = new HashMap<>();
+            summary.put("id", 1); // Mock ID as per image
+            summary.put("employee_id", employee.getId());
+            summary.put("employee_name", employee.getName());
+            summary.put("month", today.getMonthValue());
+            summary.put("year", today.getYear());
+            summary.put("total_working_days", totalWorkingDays);
+            summary.put("days_present", daysPresent);
+            summary.put("leaves", leaves);
+            summary.put("lop_days", lopDays);
+            summary.put("overtime_days", overtimeDays);
 
             response.put("summary", summary);
             response.put("records", records);
-    
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
@@ -1316,10 +1381,12 @@ public class HRController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
     @GetMapping("/attendance/export")
     public void exportAllAttendance(jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
         response.setContentType("text/csv");
-        response.setHeader("Content-Disposition", "attachment; filename=\"Attendance_Summary_" + LocalDate.now() + ".csv\"");
+        response.setHeader("Content-Disposition",
+                "attachment; filename=\"Attendance_Summary_" + LocalDate.now() + ".csv\"");
 
         try (java.io.PrintWriter writer = response.getWriter()) {
             // Header
@@ -1334,7 +1401,7 @@ public class HRController {
             long workingDaysPassed = startOfMonth.datesUntil(today.plusDays(1))
                     .filter(d -> d.getDayOfWeek() != java.time.DayOfWeek.SUNDAY)
                     .count();
-            
+
             // Calculate total working days in month (excluding Sundays)
             long totalWorkingDaysMonth = startOfMonth.datesUntil(endOfMonth.plusDays(1))
                     .filter(d -> d.getDayOfWeek() != java.time.DayOfWeek.SUNDAY)
@@ -1344,13 +1411,15 @@ public class HRController {
 
             for (Employee emp : allEmployees) {
                 try {
-                     List<Attendance> monthlyAttendance = attendanceRepository.findByEmployeeAndDateRange(emp, startOfMonth, endOfMonth);
-                     List<LeaveRequest> monthlyLeaves = leaveRequestRepository.findLeavesInDateRange(startOfMonth, endOfMonth);
+                    List<Attendance> monthlyAttendance = attendanceRepository.findByEmployeeAndDateRange(emp,
+                            startOfMonth, endOfMonth);
+                    List<LeaveRequest> monthlyLeaves = leaveRequestRepository.findLeavesInDateRange(startOfMonth,
+                            endOfMonth);
 
-                     // Approved Leaves
-                     long leaves = monthlyLeaves.stream()
+                    // Approved Leaves
+                    long leaves = monthlyLeaves.stream()
                             .filter(l -> l != null
-                                    && l.getEmployee() != null 
+                                    && l.getEmployee() != null
                                     && l.getEmployee().getId() != null
                                     && l.getEmployee().getId().equals(emp.getId())
                                     && "APPROVED".equalsIgnoreCase(l.getStatus())
@@ -1358,29 +1427,29 @@ public class HRController {
                             .mapToLong(LeaveRequest::getNumberOfDays)
                             .sum();
 
-                     long daysPresent = monthlyAttendance.size();
-                     long overtimeDays = monthlyAttendance.stream().filter(a -> a.getTotalHours() != null && a.getTotalHours() > 9).count();
-                     long lopDays = Math.max(0, workingDaysPassed - daysPresent - leaves);
+                    long daysPresent = monthlyAttendance.size();
+                    long overtimeDays = monthlyAttendance.stream()
+                            .filter(a -> a.getTotalHours() != null && a.getTotalHours() > 9).count();
+                    long lopDays = Math.max(0, workingDaysPassed - daysPresent - leaves);
 
-                     // Write CSV Row
-                     writer.printf("%s,\"%s\",%d,%d,%d,%d,%d,%d,%d%n",
-                             emp.getEmployeeId(),
-                             emp.getName(),
-                             today.getMonthValue(),
-                             today.getYear(),
-                             totalWorkingDaysMonth,
-                             daysPresent,
-                             leaves,
-                             lopDays,
-                             overtimeDays
-                     );
+                    // Write CSV Row
+                    writer.printf("%s,\"%s\",%d,%d,%d,%d,%d,%d,%d%n",
+                            emp.getEmployeeId(),
+                            emp.getName(),
+                            today.getMonthValue(),
+                            today.getYear(),
+                            totalWorkingDaysMonth,
+                            daysPresent,
+                            leaves,
+                            lopDays,
+                            overtimeDays);
                 } catch (Exception e) {
                     // Log error for this employee but continue
-                    System.err.println("Error exporting attendance for employee: " + emp.getName() + " - " + e.getMessage());
+                    System.err.println(
+                            "Error exporting attendance for employee: " + emp.getName() + " - " + e.getMessage());
                     writer.printf("%s,\"%s (Error)\",,,,,,,%n", emp.getEmployeeId(), emp.getName());
                 }
             }
         }
     }
 }
-
