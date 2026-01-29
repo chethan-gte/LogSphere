@@ -69,6 +69,9 @@ public class ManagerController {
     @Autowired
     private EmployeeActivityRepository employeeActivityRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${file.upload-dir:uploads}")
+    private String uploadDir;
+
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showManagerLoginForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -400,9 +403,8 @@ public class ManagerController {
         // Handle file upload
         if (attachment != null && !attachment.isEmpty()) {
             try {
-                // Get absolute path to the static uploads directory
-                String projectRoot = System.getProperty("user.dir");
-                Path uploadPath = Paths.get(projectRoot, "src", "main", "resources", "static", "uploads", "tasks");
+                // Use external uploads directory
+                Path uploadPath = Paths.get(uploadDir, "tasks");
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
                 }

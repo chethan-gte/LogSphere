@@ -292,16 +292,19 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
         function updateProgress(taskId) {
             const form = document.getElementById('progressForm');
-            form.action = '/employee/tasks/update/' + taskId;
+            const contextPath = /*[[@{/}]]*/ '/';
+            form.action = contextPath + 'employee/tasks/update/' + taskId;
             const modal = new bootstrap.Modal(document.getElementById('progressModal'));
             modal.show();
             // Set current progress value if available - logic would actally need data attribute or fetch, assume 0 for now or enhance
             document.getElementById('progressRange').value = 0;
             document.getElementById('progressValue').textContent = '0%';
         }
+        /*]]>*/
 
         function updateProgressValue(value) {
             document.getElementById('progressValue').textContent = value + '%';
