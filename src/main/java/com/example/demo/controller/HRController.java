@@ -450,12 +450,32 @@ public class HRController {
         leaveRequestRepository.save(leaveRequest);
 
         // Update employee leave balance (deduct approved days)
+        // Update employee leave balance (deduct approved days)
         Employee employee = leaveRequest.getEmployee();
-        Integer currentBalance = employee.getLeaveBalance() != null ? employee.getLeaveBalance() : 0;
-        Integer newBalance = currentBalance - leaveRequest.getNumberOfDays();
-        if (newBalance < 0)
-            newBalance = 0; // Prevent negative balance
-        employee.setLeaveBalance(newBalance);
+        String leaveType = leaveRequest.getLeaveType();
+        int daysToDeduct = leaveRequest.getNumberOfDays();
+
+        if ("PAID".equals(leaveType)) {
+            int current = employee.getPaidLeave() != null ? employee.getPaidLeave() : 0;
+            employee.setPaidLeave(Math.max(0, current - daysToDeduct));
+        } else if ("SICK".equals(leaveType)) {
+            int current = employee.getSickLeave() != null ? employee.getSickLeave() : 0;
+            employee.setSickLeave(Math.max(0, current - daysToDeduct));
+        } else if ("CASUAL".equals(leaveType)) {
+            int current = employee.getCasualLeave() != null ? employee.getCasualLeave() : 0;
+            employee.setCasualLeave(Math.max(0, current - daysToDeduct));
+        } else if (employee.getCustomLeaves() != null && employee.getCustomLeaves().containsKey(leaveType)) {
+            int current = employee.getCustomLeaves().get(leaveType);
+            employee.getCustomLeaves().put(leaveType, Math.max(0, current - daysToDeduct));
+        }
+
+        // Also update the total leave balance for backward compatibility or display
+        // purposes if needed
+        // Assuming 'leaveBalance' field might still be used for a total aggregate or
+        // legacy reasons
+        Integer currentTotal = employee.getLeaveBalance() != null ? employee.getLeaveBalance() : 0;
+        employee.setLeaveBalance(Math.max(0, currentTotal - daysToDeduct));
+
         employeeRepository.save(employee);
 
         // Send email notification

@@ -236,9 +236,35 @@
                 <div class="card stat-card h-100 border-top border-4 border-info">
                     <div class="card-body text-center p-4">
                         <div class="mb-2 text-info fs-4"><i class="fas fa-calendar-alt"></i></div>
-                        <h5 class="text-secondary small text-uppercase fw-bold">Leave Balance</h5>
-                        <h2 class="text-dark fw-bold mb-1" th:text="${leaveBalance != null ? leaveBalance : 0}">0</h2>
-                        <small class="text-secondary">Days Remaining</small>
+                        <h5 class="text-secondary small text-uppercase fw-bold mb-3">Leave Balance</h5>
+
+                        <div class="d-flex justify-content-center gap-3 mb-3">
+                            <div class="text-center px-2">
+                                <h4 class="text-dark fw-bold mb-0"
+                                    th:text="${employee.paidLeave != null ? employee.paidLeave : 0}">0</h4>
+                                <small class="text-muted" style="font-size: 0.7rem;">Paid<br>(Monthly)</small>
+                            </div>
+                            <div class="vr"></div>
+                            <div class="text-center px-2">
+                                <h4 class="text-dark fw-bold mb-0"
+                                    th:text="${employee.sickLeave != null ? employee.sickLeave : 0}">0</h4>
+                                <small class="text-muted" style="font-size: 0.7rem;">Sick<br>(Yearly)</small>
+                            </div>
+                            <div class="vr"></div>
+                            <div class="text-center px-2">
+                                <h4 class="text-dark fw-bold mb-0"
+                                    th:text="${employee.casualLeave != null ? employee.casualLeave : 0}">0</h4>
+                                <small class="text-muted" style="font-size: 0.7rem;">Casual<br>(Yearly)</small>
+                            </div>
+                            <th:block th:each="entry : ${employee.customLeaves}">
+                                <div class="vr"></div>
+                                <div class="text-center px-2">
+                                    <h4 class="text-dark fw-bold mb-0" th:text="${entry.value}">0</h4>
+                                    <small class="text-muted" style="font-size: 0.7rem;"
+                                        th:utext="${entry.key} + '<br>(Total)'"></small>
+                                </div>
+                            </th:block>
+                        </div>
                         <div class="mt-3 d-flex gap-2 justify-content-center">
 
                             <a th:href="@{/employee/leave/apply}"
@@ -630,34 +656,10 @@
 
 
 
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-white">
-                        <h4 class="mb-0 text-dark"><i class="fas fa-trophy me-2 text-warning"></i>My Badges</h4>
-                    </div>
-                    <div class="card-body">
-                        <div th:if="${myBadges == null || myBadges.isEmpty()}" class="text-center text-secondary py-3">
-                            <p>No badges awarded yet. Keep up the good work!</p>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2" th:if="${myBadges != null && !myBadges.isEmpty()}">
-                            <div th:each="badge : ${myBadges}"
-                                class="border rounded p-3 text-center bg-light flex-fill">
-                                <div class="fs-1 mb-2">🏅</div>
-                                <h6 class="fw-bold text-dark mb-1" th:text="${badge.badgeName}">Badge</h6>
-                                <p class="small text-secondary mb-0" th:text="${badge.appreciationNote}">Note</p>
-                                <small class="text-muted d-block mt-1"
-                                    th:text="${#temporals.format(badge.awardedDate, 'MMM dd')}"></small>
-                            </div>
-                        </div>
-                    </div>
-
-        <!-- Activity Summary Removed -->
-        <!-- My Badges -->
         <div class="col-md-6">
             <div class="card h-100 shadow-sm">
                 <div class="card-header bg-white">
                     <h4 class="mb-0 text-dark"><i class="fas fa-trophy me-2 text-warning"></i>My Badges</h4>
-
                 </div>
                 <div class="card-body">
                     <div th:if="${myBadges == null || myBadges.isEmpty()}" class="text-center text-secondary py-3">
@@ -673,332 +675,360 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Team Rules -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0 text-dark"><i class="fas fa-gavel me-2 text-info"></i>Team Rules</h4>
-                </div>
-                <div class="card-body">
-                    <div th:if="${activeRules == null || activeRules.isEmpty()}"
-                        class="text-center text-secondary py-3">
-                        <p>No active team rules.</p>
-                    </div>
-                    <ul class="list-group list-group-flush" th:if="${activeRules != null && !activeRules.isEmpty()}">
-                        <li th:each="rule : ${activeRules}"
-                            class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent">
-                            <div class="d-flex">
-                                <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
-                                <div>
-                                    <strong class="text-dark d-block" th:text="${rule.ruleName}">Rule</strong>
-                                    <small class="text-secondary" th:text="${rule.description}">Desc</small>
+                <!-- Activity Summary Removed -->
+                <!-- My Badges -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h4 class="mb-0 text-dark"><i class="fas fa-trophy me-2 text-warning"></i>My Badges</h4>
+
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${myBadges == null || myBadges.isEmpty()}"
+                                class="text-center text-secondary py-3">
+                                <p>No badges awarded yet. Keep up the good work!</p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2" th:if="${myBadges != null && !myBadges.isEmpty()}">
+                                <div th:each="badge : ${myBadges}"
+                                    class="border rounded p-3 text-center bg-light flex-fill">
+                                    <div class="fs-1 mb-2">🏅</div>
+                                    <h6 class="fw-bold text-dark mb-1" th:text="${badge.badgeName}">Badge</h6>
+                                    <p class="small text-secondary mb-0" th:text="${badge.appreciationNote}">Note</p>
+                                    <small class="text-muted d-block mt-1"
+                                        th:text="${#temporals.format(badge.awardedDate, 'MMM dd')}"></small>
                                 </div>
                             </div>
-                        </li>
-                    </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Rules -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h4 class="mb-0 text-dark"><i class="fas fa-gavel me-2 text-info"></i>Team Rules</h4>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${activeRules == null || activeRules.isEmpty()}"
+                                class="text-center text-secondary py-3">
+                                <p>No active team rules.</p>
+                            </div>
+                            <ul class="list-group list-group-flush"
+                                th:if="${activeRules != null && !activeRules.isEmpty()}">
+                                <li th:each="rule : ${activeRules}"
+                                    class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent">
+                                    <div class="d-flex">
+                                        <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
+                                        <div>
+                                            <strong class="text-dark d-block" th:text="${rule.ruleName}">Rule</strong>
+                                            <small class="text-secondary" th:text="${rule.description}">Desc</small>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggestion Box -->
+                <div class="col-md-12">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h4 class="mb-0 text-dark"><i class="fas fa-lightbulb me-2 text-warning"></i>Suggestion Box
+                            </h4>
+                        </div>
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <p class="text-secondary">Have an idea to improve the workplace? We'd love to hear it!</p>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a th:href="@{/employee/suggestion/submit}" class="btn btn-warning text-white"><i
+                                        class="fas fa-paper-plane me-1"></i> Submit</a>
+                                <a th:href="@{/employee/suggestion/my-suggestions}"
+                                    class="btn btn-outline-secondary">History</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+
         </div>
 
-        <!-- Suggestion Box -->
-        <div class="col-md-12">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0 text-dark"><i class="fas fa-lightbulb me-2 text-warning"></i>Suggestion Box</h4>
-                </div>
-                <div class="card-body text-center d-flex flex-column justify-content-center">
-                    <p class="text-secondary">Have an idea to improve the workplace? We'd love to hear it!</p>
-                    <div class="d-flex gap-2 justify-content-center">
-                        <a th:href="@{/employee/suggestion/submit}" class="btn btn-warning text-white"><i
-                                class="fas fa-paper-plane me-1"></i> Submit</a>
-                        <a th:href="@{/employee/suggestion/my-suggestions}"
-                            class="btn btn-outline-secondary">History</a>
+        <!-- Meeting Details Modal -->
+        <div class="modal fade" id="meetingDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">📅 Meeting Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h5 id="modalTitle" class="fw-bold mb-3">Meeting Title</h5>
+                        <div class="alert alert-light border">
+                            <p class="mb-1"><i class="fas fa-align-left me-2 text-secondary"></i> <span id="modalDesc"
+                                    class="text-dark"></span></p>
+                        </div>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="far fa-calendar me-2 text-primary"></i> <span
+                                    id="modalDate"></span>
+                            </li>
+                            <li class="mb-2"><i class="far fa-clock me-2 text-primary"></i> <span id="modalTime"></span>
+                            </li>
+                            <li><i class="fas fa-tag me-2 text-primary"></i> <span id="modalType"
+                                    class="badge bg-secondary">INTERNAL</span></li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <!-- <button type="button" class="btn btn-primary" onclick="joinMeeting()" disabled>Join Video Call</button> -->
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script th:inline="javascript">
+            // Global context path from Thymeleaf
+            const contextPath = /*[[@{/}]]*/ '/';
 
-    </div>
+            // ... (Keeping the exact same script for camera/logic functionality) ...
+            let checkInStream = null;
+            let checkOutStream = null;
 
-    <!-- Meeting Details Modal -->
-    <div class="modal fade" id="meetingDetailsModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">📅 Meeting Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <h5 id="modalTitle" class="fw-bold mb-3">Meeting Title</h5>
-                    <div class="alert alert-light border">
-                        <p class="mb-1"><i class="fas fa-align-left me-2 text-secondary"></i> <span id="modalDesc"
-                                class="text-dark"></span></p>
-                    </div>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><i class="far fa-calendar me-2 text-primary"></i> <span id="modalDate"></span>
-                        </li>
-                        <li class="mb-2"><i class="far fa-clock me-2 text-primary"></i> <span id="modalTime"></span>
-                        </li>
-                        <li><i class="fas fa-tag me-2 text-primary"></i> <span id="modalType"
-                                class="badge bg-secondary">INTERNAL</span></li>
-                    </ul>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <!-- <button type="button" class="btn btn-primary" onclick="joinMeeting()" disabled>Join Video Call</button> -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:inline="javascript">
-        // Global context path from Thymeleaf
-        const contextPath = /*[[@{/}]]*/ '/';
-
-        // ... (Keeping the exact same script for camera/logic functionality) ...
-        let checkInStream = null;
-        let checkOutStream = null;
-
-        // Update work mode input when radio button changes
-        document.querySelectorAll('input[name="workMode"]').forEach(radio => {
-            radio.addEventListener('change', function () {
-                const workModeInput = document.getElementById('workModeInput');
-                if (workModeInput) {
-                    workModeInput.value = this.value;
-                }
-            });
-        });
-
-        function startFaceCheckIn() {
-            const video = document.getElementById('checkinVideo');
-            const instructions = document.getElementById('checkinInstructions');
-            const startBtn = document.getElementById('startCameraBtn');
-            const captureBtn = document.getElementById('captureFaceBtn');
-            const statusDiv = document.getElementById('checkinStatus');
-
-            navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480, facingMode: 'user' }
-            }).then(stream => {
-                checkInStream = stream;
-                video.srcObject = stream;
-                video.style.display = 'block';
-
-                if (instructions) instructions.style.display = 'none';
-                if (startBtn) startBtn.style.display = 'none';
-                if (captureBtn) captureBtn.style.display = 'block';
-                if (statusDiv) {
-                    statusDiv.innerHTML = '<div class="alert alert-info py-2 small mb-0">Camera Active. Position face and capture.</div>';
-                }
-            }).catch(err => {
-                alert('Error accessing camera: ' + err.message);
-                console.error('Camera error:', err);
-            });
-        }
-
-        function captureAndCheckIn() {
-            const video = document.getElementById('checkinVideo');
-            const canvas = document.getElementById('checkinCanvas');
-            const statusDiv = document.getElementById('checkinStatus');
-            const faceInput = document.getElementById('checkinFaceImage');
-            const workMode = document.getElementById('workModeInput').value;
-            const captureBtn = document.getElementById('captureFaceBtn');
-
-            if (!checkInStream) {
-                alert('Please start the camera first');
-                return;
-            }
-
-            // Capture image
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, 640, 480);
-            const imageData = canvas.toDataURL('image/jpeg', 0.9);
-            faceInput.value = imageData;
-
-            // Stop camera
-            checkInStream.getTracks().forEach(track => track.stop());
-            checkInStream = null;
-            video.style.display = 'none';
-            if (captureBtn) captureBtn.style.display = 'none';
-
-            // Show processing status
-            if (statusDiv) {
-                statusDiv.innerHTML = '<div class="alert alert-warning py-2 mb-0"><i class="fas fa-spinner fa-spin me-2"></i>Verifying & Clocking In...</div>';
-            }
-
-            // Submit to server
-            fetch(/*[[@{/employee/checkin-face}]]*/ '/employee/checkin-face', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `faceImage=${encodeURIComponent(imageData)}&workMode=${workMode}`
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response.text().then(data => {
-                            let statusClass = 'alert-success';
-                            let statusText = 'Success!';
-
-                            if (data.includes('Late clock in')) {
-                                statusClass = 'alert-warning';
-                                statusText = 'Clocked In (Late)';
-                            } else if (data.includes('Early clock in')) {
-                                statusClass = 'alert-info';
-                                statusText = 'Clocked In (Early)';
-                            }
-
-                            if (statusDiv) {
-                                statusDiv.innerHTML = `<div class="alert ${statusClass} py-2 mb-0"><strong>${statusText}</strong><br>${data}</div>`;
-                            }
-                            setTimeout(() => {
-                                location.reload();
-                            }, 2000);
-                        });
-                    } else {
-                        return response.text().then(data => {
-                            if (statusDiv) {
-                                statusDiv.innerHTML = '<div class="alert alert-danger py-2 mb-0"><strong>Failed</strong><br>' + data + '</div>';
-                            } else {
-                                alert('Error: ' + data);
-                            }
-                            const startBtn = document.getElementById('startCameraBtn');
-                            if (startBtn) startBtn.style.display = 'block';
-                        });
+            // Update work mode input when radio button changes
+            document.querySelectorAll('input[name="workMode"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const workModeInput = document.getElementById('workModeInput');
+                    if (workModeInput) {
+                        workModeInput.value = this.value;
                     }
-                })
-                .catch(error => {
-                    if (statusDiv) {
-                        statusDiv.innerHTML = '<div class="alert alert-danger py-2 mb-0"><strong>Error</strong><br>' + error + '</div>';
-                    }
-                    const startBtn = document.getElementById('startCameraBtn');
-                    if (startBtn) startBtn.style.display = 'block';
                 });
-        }
-
-        function startFaceCheckOut() {
-            const video = document.getElementById('checkoutVideo');
-            const canvas = document.getElementById('checkoutCanvas');
-            const faceInput = document.getElementById('checkoutFaceImage');
-
-            navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480, facingMode: 'user' }
-            }).then(stream => {
-                checkOutStream = stream;
-                video.srcObject = stream;
-                video.style.display = 'block';
-
-                setTimeout(() => {
-                    const context = canvas.getContext('2d');
-                    context.drawImage(video, 0, 0, 640, 480);
-                    const imageData = canvas.toDataURL('image/jpeg', 0.9);
-                    faceInput.value = imageData;
-
-                    stream.getTracks().forEach(track => track.stop());
-                    video.style.display = 'none';
-
-                    fetch(/*[[@{/employee/checkout-face}]]*/ '/employee/checkout-face', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `faceImage=${encodeURIComponent(imageData)}`
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                location.reload();
-                            } else {
-                                return response.text().then(data => alert('Error: ' + data));
-                            }
-                        })
-                        .catch(error => alert('Error: ' + error));
-                }, 2000);
-            }).catch(err => {
-                alert('Error accessing camera: ' + err.message);
             });
-        }
+
+            function startFaceCheckIn() {
+                const video = document.getElementById('checkinVideo');
+                const instructions = document.getElementById('checkinInstructions');
+                const startBtn = document.getElementById('startCameraBtn');
+                const captureBtn = document.getElementById('captureFaceBtn');
+                const statusDiv = document.getElementById('checkinStatus');
+
+                navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480, facingMode: 'user' }
+                }).then(stream => {
+                    checkInStream = stream;
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+
+                    if (instructions) instructions.style.display = 'none';
+                    if (startBtn) startBtn.style.display = 'none';
+                    if (captureBtn) captureBtn.style.display = 'block';
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<div class="alert alert-info py-2 small mb-0">Camera Active. Position face and capture.</div>';
+                    }
+                }).catch(err => {
+                    alert('Error accessing camera: ' + err.message);
+                    console.error('Camera error:', err);
+                });
+            }
+
+            function captureAndCheckIn() {
+                const video = document.getElementById('checkinVideo');
+                const canvas = document.getElementById('checkinCanvas');
+                const statusDiv = document.getElementById('checkinStatus');
+                const faceInput = document.getElementById('checkinFaceImage');
+                const workMode = document.getElementById('workModeInput').value;
+                const captureBtn = document.getElementById('captureFaceBtn');
+
+                if (!checkInStream) {
+                    alert('Please start the camera first');
+                    return;
+                }
+
+                // Capture image
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, 640, 480);
+                const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                faceInput.value = imageData;
+
+                // Stop camera
+                checkInStream.getTracks().forEach(track => track.stop());
+                checkInStream = null;
+                video.style.display = 'none';
+                if (captureBtn) captureBtn.style.display = 'none';
+
+                // Show processing status
+                if (statusDiv) {
+                    statusDiv.innerHTML = '<div class="alert alert-warning py-2 mb-0"><i class="fas fa-spinner fa-spin me-2"></i>Verifying & Clocking In...</div>';
+                }
+
+                // Submit to server
+                fetch(/*[[@{/employee/checkin-face}]]*/ '/employee/checkin-face', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `faceImage=${encodeURIComponent(imageData)}&workMode=${workMode}`
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.text().then(data => {
+                                let statusClass = 'alert-success';
+                                let statusText = 'Success!';
+
+                                if (data.includes('Late clock in')) {
+                                    statusClass = 'alert-warning';
+                                    statusText = 'Clocked In (Late)';
+                                } else if (data.includes('Early clock in')) {
+                                    statusClass = 'alert-info';
+                                    statusText = 'Clocked In (Early)';
+                                }
+
+                                if (statusDiv) {
+                                    statusDiv.innerHTML = `<div class="alert ${statusClass} py-2 mb-0"><strong>${statusText}</strong><br>${data}</div>`;
+                                }
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 2000);
+                            });
+                        } else {
+                            return response.text().then(data => {
+                                if (statusDiv) {
+                                    statusDiv.innerHTML = '<div class="alert alert-danger py-2 mb-0"><strong>Failed</strong><br>' + data + '</div>';
+                                } else {
+                                    alert('Error: ' + data);
+                                }
+                                const startBtn = document.getElementById('startCameraBtn');
+                                if (startBtn) startBtn.style.display = 'block';
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        if (statusDiv) {
+                            statusDiv.innerHTML = '<div class="alert alert-danger py-2 mb-0"><strong>Error</strong><br>' + error + '</div>';
+                        }
+                        const startBtn = document.getElementById('startCameraBtn');
+                        if (startBtn) startBtn.style.display = 'block';
+                    });
+            }
+
+            function startFaceCheckOut() {
+                const video = document.getElementById('checkoutVideo');
+                const canvas = document.getElementById('checkoutCanvas');
+                const faceInput = document.getElementById('checkoutFaceImage');
+
+                navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480, facingMode: 'user' }
+                }).then(stream => {
+                    checkOutStream = stream;
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+
+                    setTimeout(() => {
+                        const context = canvas.getContext('2d');
+                        context.drawImage(video, 0, 0, 640, 480);
+                        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                        faceInput.value = imageData;
+
+                        stream.getTracks().forEach(track => track.stop());
+                        video.style.display = 'none';
+
+                        fetch(/*[[@{/employee/checkout-face}]]*/ '/employee/checkout-face', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `faceImage=${encodeURIComponent(imageData)}`
+                        })
+                            .then(response => {
+                                if (response.ok) {
+                                    location.reload();
+                                } else {
+                                    return response.text().then(data => alert('Error: ' + data));
+                                }
+                            })
+                            .catch(error => alert('Error: ' + error));
+                    }, 2000);
+                }).catch(err => {
+                    alert('Error accessing camera: ' + err.message);
+                });
+            }
 
 
-        function markAsRead(id, btnElement) {
-            // Optimistically remove from UI
-            const listItem = btnElement.closest('.notification-item');
+            function markAsRead(id, btnElement) {
+                // Optimistically remove from UI
+                const listItem = btnElement.closest('.notification-item');
 
-            // Construct URL using contextPath, ensuring no double slashes
-            const url = contextPath + 'employee/notification/read/' + id;
+                // Construct URL using contextPath, ensuring no double slashes
+                const url = contextPath + 'employee/notification/read/' + id;
 
-            fetch(url, {
-                method: 'POST'
-            }).then(response => {
-                if (response.ok) {
-                    if (listItem) {
-                        listItem.remove();
-                        // Update badge count
-                        const badge = document.querySelector('.badge.bg-danger.rounded-pill');
-                        if (badge) {
-                            let count = parseInt(badge.querySelector('span').innerText);
-                            if (count > 1) {
-                                badge.querySelector('span').innerText = count - 1;
-                            } else {
-                                badge.remove();
+                fetch(url, {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        if (listItem) {
+                            listItem.remove();
+                            // Update badge count
+                            const badge = document.querySelector('.badge.bg-danger.rounded-pill');
+                            if (badge) {
+                                let count = parseInt(badge.querySelector('span').innerText);
+                                if (count > 1) {
+                                    badge.querySelector('span').innerText = count - 1;
+                                } else {
+                                    badge.remove();
+                                }
                             }
                         }
+                    } else {
+                        console.error("Failed to mark read");
                     }
-                } else {
-                    console.error("Failed to mark read");
-                }
-            });
-            // Stop propagation to prevent dropdown close
-            event.stopPropagation();
-        }
-        function showMeetingDetails(meetingId, notifId, linkElement) {
-            // First mark as read if notifId is provided
-            if (notifId && linkElement) {
-                // Find the closest list item and correct selector for the button or element
-                const btnElement = linkElement.closest('.notification-item').querySelector('button');
-                markAsRead(notifId, btnElement || linkElement);
-            }
-
-            if (!meetingId) return;
-
-            // Fetch details
-            const url = contextPath + 'employee/api/meetings/' + meetingId;
-            fetch(url)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error('Meeting not found');
-                })
-                .then(meeting => {
-                    // Populate Modal
-                    document.getElementById('modalTitle').textContent = meeting.title;
-                    document.getElementById('modalDesc').textContent = meeting.description || 'No description provided.';
-
-                    const date = new Date(meeting.startTime);
-                    document.getElementById('modalDate').textContent = date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-                    let timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-                    if (meeting.endTime) {
-                        const endDate = new Date(meeting.endTime);
-                        timeStr += ' - ' + endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-                    }
-                    document.getElementById('modalTime').textContent = timeStr;
-                    document.getElementById('modalType').textContent = meeting.meetingType || 'MEETING';
-
-                    // Show Modal
-                    new bootstrap.Modal(document.getElementById('meetingDetailsModal')).show();
-                })
-                .catch(err => {
-                    console.error('Error fetching meeting:', err);
-                    alert('Could not load meeting details.');
                 });
-        }
-    </script>
+                // Stop propagation to prevent dropdown close
+                event.stopPropagation();
+            }
+            function showMeetingDetails(meetingId, notifId, linkElement) {
+                // First mark as read if notifId is provided
+                if (notifId && linkElement) {
+                    // Find the closest list item and correct selector for the button or element
+                    const btnElement = linkElement.closest('.notification-item').querySelector('button');
+                    markAsRead(notifId, btnElement || linkElement);
+                }
+
+                if (!meetingId) return;
+
+                // Fetch details
+                const url = contextPath + 'employee/api/meetings/' + meetingId;
+                fetch(url)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Meeting not found');
+                    })
+                    .then(meeting => {
+                        // Populate Modal
+                        document.getElementById('modalTitle').textContent = meeting.title;
+                        document.getElementById('modalDesc').textContent = meeting.description || 'No description provided.';
+
+                        const date = new Date(meeting.startTime);
+                        document.getElementById('modalDate').textContent = date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                        let timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        if (meeting.endTime) {
+                            const endDate = new Date(meeting.endTime);
+                            timeStr += ' - ' + endDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        }
+                        document.getElementById('modalTime').textContent = timeStr;
+                        document.getElementById('modalType').textContent = meeting.meetingType || 'MEETING';
+
+                        // Show Modal
+                        new bootstrap.Modal(document.getElementById('meetingDetailsModal')).show();
+                    })
+                    .catch(err => {
+                        console.error('Error fetching meeting:', err);
+                        alert('Could not load meeting details.');
+                    });
+            }
+        </script>
 </body>
 
 </html>

@@ -100,10 +100,34 @@
                         <div
                             class="p-3 bg-light rounded text-center border h-100 d-flex flex-column justify-content-center">
                             <div class="mb-2 text-primary fs-4"><i class="fas fa-calendar-check"></i></div>
-                            <h6 class="text-secondary small text-uppercase fw-bold">Leave Balance</h6>
-                            <h2 class="text-dark fw-bold mb-1" th:text="${leaveBalance != null ? leaveBalance : 0}">0
-                            </h2>
-                            <small class="text-muted">Days Available</small>
+                            <h6 class="text-secondary small text-uppercase fw-bold mb-3">Leave Balance</h6>
+                            <div class="d-flex justify-content-center gap-3">
+                                <div class="text-center px-2">
+                                    <h4 class="text-dark fw-bold mb-0"
+                                        th:text="${employee.paidLeave != null ? employee.paidLeave : 0}">0</h4>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Paid<br>(Monthly)</small>
+                                </div>
+                                <div class="vr"></div>
+                                <div class="text-center px-2">
+                                    <h4 class="text-dark fw-bold mb-0"
+                                        th:text="${employee.sickLeave != null ? employee.sickLeave : 0}">0</h4>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Sick<br>(Yearly)</small>
+                                </div>
+                                <div class="vr"></div>
+                                <div class="text-center px-2">
+                                    <h4 class="text-dark fw-bold mb-0"
+                                        th:text="${employee.casualLeave != null ? employee.casualLeave : 0}">0</h4>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Casual<br>(Yearly)</small>
+                                </div>
+                                <th:block th:each="entry : ${employee.customLeaves}">
+                                    <div class="vr"></div>
+                                    <div class="text-center px-2">
+                                        <h4 class="text-dark fw-bold mb-0" th:text="${entry.value}">0</h4>
+                                        <small class="text-muted" style="font-size: 0.7rem;"
+                                            th:utext="${entry.key} + '<br>(Total)'"></small>
+                                    </div>
+                                </th:block>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -153,7 +177,8 @@
                                 <td colspan="7" class="text-center text-muted py-5">
                                     <i class="far fa-folder-open fs-4 d-block mb-2 text-secondary"></i>
                                     No leave history found.
-                                    <a th:href="@{/employee/leave/apply}" class="fw-bold text-decoration-none ms-1">Apply
+                                    <a th:href="@{/employee/leave/apply}"
+                                        class="fw-bold text-decoration-none ms-1">Apply
                                         now</a>
                                 </td>
                             </tr>
@@ -185,4 +210,3 @@
 </body>
 
 </html>
-

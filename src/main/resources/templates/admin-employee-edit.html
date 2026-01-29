@@ -230,6 +230,99 @@
                                     </div>
                                 </div>
 
+                                <!-- Leaves Section -->
+                                <div class="mb-4">
+                                    <label class="form-label">Leaves Balance</label>
+                                    <div class="form-control d-flex justify-content-between align-items-center"
+                                        data-bs-toggle="collapse" href="#leaveCollapse" role="button"
+                                        aria-expanded="false" aria-controls="leaveCollapse" style="cursor: pointer;">
+                                        <span class="text-muted">Manage employee leaves</span>
+                                        <i class="fas fa-chevron-down small text-muted"></i>
+                                    </div>
+                                    <div class="collapse" id="leaveCollapse">
+                                        <div class="card card-body bg-light border py-3">
+                                            <div class="row">
+                                                <!-- Paid Leave -->
+                                                <div class="col-md-4 mb-3 mb-md-0">
+                                                    <label class="small text-muted mb-1 d-block text-center">Paid
+                                                        (Monthly)</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <button class="btn btn-outline-secondary bg-white" type="button"
+                                                            onclick="adjustLeave('paidLeave', -1)">-</button>
+                                                        <input type="number" class="form-control text-center"
+                                                            th:field="*{paidLeave}" id="paidLeave" value="0" min="0">
+                                                        <button class="btn btn-outline-secondary bg-white" type="button"
+                                                            onclick="adjustLeave('paidLeave', 1)">+</button>
+                                                    </div>
+                                                </div>
+                                                <!-- Sick Leave -->
+                                                <div class="col-md-4 mb-3 mb-md-0">
+                                                    <label class="small text-muted mb-1 d-block text-center">Sick
+                                                        (Yearly)</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <button class="btn btn-outline-secondary bg-white" type="button"
+                                                            onclick="adjustLeave('sickLeave', -1)">-</button>
+                                                        <input type="number" class="form-control text-center"
+                                                            th:field="*{sickLeave}" id="sickLeave" value="0" min="0">
+                                                        <button class="btn btn-outline-secondary bg-white" type="button"
+                                                            onclick="adjustLeave('sickLeave', 1)">+</button>
+                                                    </div>
+                                                </div>
+                                                <!-- Casual Leave -->
+                                                <div class="col-md-4">
+                                                    <label class="small text-muted mb-1 d-block text-center">Casual
+                                                        (Yearly)</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <button class="btn btn-outline-secondary bg-white" type="button"
+                                                            onclick="adjustLeave('casualLeave', -1)">-</button>
+                                                        <input type="number" class="form-control text-center"
+                                                            th:field="*{casualLeave}" id="casualLeave" value="0"
+                                                            min="0">
+                                                        <button class="btn btn-outline-secondary bg-white" type="button"
+                                                            onclick="adjustLeave('casualLeave', 1)">+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Leaves Section -->
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0">Custom Leaves</label>
+                                        <button type="button" class="btn btn-sm btn-link text-decoration-none"
+                                            onclick="addCustomLeaveField()">
+                                            <i class="fas fa-plus-circle me-1"></i>Add Leave Type
+                                        </button>
+                                    </div>
+                                    <div id="customLeavesContainer" class="bg-light p-3 rounded border">
+                                        <p th:if="${employee.customLeaves == null || employee.customLeaves.isEmpty()}"
+                                            id="noCustomLeavesMsg" class="text-muted small text-center mb-0">No custom
+                                            leaves assigned</p>
+
+                                        <div th:each="entry : ${employee.customLeaves}"
+                                            class="row mb-2 custom-leave-row">
+                                            <div class="col">
+                                                <input type="text" name="customLeaveNames"
+                                                    class="form-control form-control-sm" th:value="${entry.key}"
+                                                    placeholder="Leave Name">
+                                            </div>
+                                            <div class="col">
+                                                <input type="number" name="customLeaveDays"
+                                                    class="form-control form-control-sm" th:value="${entry.value}"
+                                                    placeholder="Days">
+                                            </div>
+                                            <div class="col-auto">
+                                                <button class="btn btn-outline-danger btn-sm" type="button"
+                                                    onclick="this.closest('.row').remove()">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="mb-4">
                                     <label class="form-label">Base Salary</label>
                                     <div class="input-group">
@@ -274,6 +367,37 @@
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('show');
             document.querySelector('.sidebar-overlay').classList.toggle('show');
+        }
+
+        function adjustLeave(fieldId, amount) {
+            const input = document.getElementById(fieldId);
+            let val = parseInt(input.value) || 0;
+            val += amount;
+            if (val < 0) val = 0;
+            input.value = val;
+        }
+
+        function addCustomLeaveField() {
+            const container = document.getElementById('customLeavesContainer');
+            const noMsg = document.getElementById('noCustomLeavesMsg');
+            if (noMsg) noMsg.style.display = 'none';
+
+            const row = document.createElement('div');
+            row.className = 'row mb-2 custom-leave-row';
+            row.innerHTML = `
+                <div class="col">
+                    <input type="text" name="customLeaveNames" class="form-control form-control-sm" placeholder="Leave Name (e.g. Paternity)">
+                </div>
+                <div class="col">
+                    <input type="number" name="customLeaveDays" class="form-control form-control-sm" placeholder="Days">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-danger btn-sm" type="button" onclick="this.closest('.row').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(row);
         }
     </script>
 </body>
