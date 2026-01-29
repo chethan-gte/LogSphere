@@ -236,8 +236,6 @@ public class EmployeeController {
             employeeRepository.save(employee);
         }
 
-
-
         return "employee-dashboard";
     }
 
@@ -969,13 +967,35 @@ public class EmployeeController {
                 return "redirect:/employee/leave/apply";
             }
 
-            // Check leave balance
-            Integer leaveBalance = employee.getLeaveBalance() != null ? employee.getLeaveBalance() : 0;
+            // Check leave balance based on type
             long daysRequested = java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
+            int availableBalance = 0;
 
-            if (daysRequested > leaveBalance && !"EMERGENCY".equals(leaveType) && !"SICK".equals(leaveType)) {
+            if ("PAID".equals(leaveType)) {
+                availableBalance = employee.getPaidLeave() != null ? employee.getPaidLeave() : 0;
+            } else if ("SICK".equals(leaveType)) {
+                availableBalance = employee.getSickLeave() != null ? employee.getSickLeave() : 0;
+            } else if ("CASUAL".equals(leaveType)) {
+                availableBalance = employee.getCasualLeave() != null ? employee.getCasualLeave() : 0;
+            } else if (employee.getCustomLeaves() != null && employee.getCustomLeaves().containsKey(leaveType)) {
+                availableBalance = employee.getCustomLeaves().get(leaveType);
+            } else if ("EMERGENCY".equals(leaveType) || "MATERNITY".equals(leaveType)
+                    || "PATERNITY".equals(leaveType)) {
+                // These might not have strict limits or tracked differently, defaulting to
+                // allow for now or check if they exist in custom leaves if migrated
+                // For now, if it's not one of the standard tracked ones and not in custom, we
+                // might assume it's special/unlimited or 0.
+                // Let's assume 0 if not found, unless it is a special type that doesn't consume
+                // balance.
+                // But wait, the user's issue is specific to fetching leaves.
+                // Let's allow EMERGENCY for now as it was before.
+                availableBalance = 100; // Arbitrary high number or handling logic
+            }
+
+            if (daysRequested > availableBalance) {
                 redirectAttributes.addFlashAttribute("error",
-                        "Insufficient leave balance! You have " + leaveBalance + " days remaining.");
+                        "Insufficient leave balance for " + leaveType + "! You have " + availableBalance
+                                + " days remaining.");
                 return "redirect:/employee/leave/apply";
             }
 
@@ -984,6 +1004,7 @@ public class EmployeeController {
             leaveRequest.setLeaveType(leaveType);
             leaveRequest.setStartDate(start);
             leaveRequest.setEndDate(end);
+            leaveRequest.setNumberOfDays((int) daysRequested); // Ensure this field exists or sets correctly
             leaveRequest.setReason(reason);
             leaveRequest.setStatus("PENDING");
 

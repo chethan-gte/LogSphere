@@ -141,12 +141,18 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-select" id="leaveType" name="leaveType" required>
                                     <option value="">Select Leave Type</option>
-                                    <option value="CASUAL">Casual Leave</option>
-                                    <option value="SICK">Sick Leave</option>
-                                    <option value="EARNED">Earned Leave</option>
-                                    <option value="EMERGENCY">Emergency Leave</option>
-                                    <option value="MATERNITY">Maternity Leave</option>
-                                    <option value="PATERNITY">Paternity Leave</option>
+                                    <option value="PAID"
+                                        th:data-balance="${employee.paidLeave != null ? employee.paidLeave : 0}">Paid
+                                        Leave</option>
+                                    <option value="SICK"
+                                        th:data-balance="${employee.sickLeave != null ? employee.sickLeave : 0}">Sick
+                                        Leave</option>
+                                    <option value="CASUAL"
+                                        th:data-balance="${employee.casualLeave != null ? employee.casualLeave : 0}">
+                                        Casual Leave</option>
+                                    <!-- Custom Leaves -->
+                                    <option th:each="entry : ${employee.customLeaves}" th:value="${entry.key}"
+                                        th:text="${entry.key}" th:data-balance="${entry.value}"></option>
                                 </select>
                             </div>
 
@@ -244,8 +250,16 @@
         document.getElementById('startDate').addEventListener('change', function () {
             document.getElementById('endDate').setAttribute('min', this.value);
         });
+
+        const leaveTypeSelect = document.getElementById('leaveType');
+        const balanceSpan = document.querySelector('.alert-primary span');
+
+        leaveTypeSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const bal = selectedOption.getAttribute('data-balance');
+            balanceSpan.innerText = bal ? bal : 0;
+        });
     </script>
 </body>
 
 </html>
-

@@ -3,6 +3,8 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "employees")
@@ -98,6 +100,21 @@ public class Employee {
 
     @Column(name = "leave_balance")
     private Integer leaveBalance = 0; // Leave balance
+
+    @Column(name = "paid_leave")
+    private Integer paidLeave = 0;
+
+    @Column(name = "sick_leave")
+    private Integer sickLeave = 0;
+
+    @Column(name = "casual_leave")
+    private Integer casualLeave = 0;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "employee_custom_leaves", joinColumns = @JoinColumn(name = "employee_id"))
+    @MapKeyColumn(name = "leave_type")
+    @Column(name = "days")
+    private Map<String, Integer> customLeaves = new HashMap<>();
 
     @Column(name = "salary")
     private Double salary; // Base salary
@@ -368,6 +385,38 @@ public class Employee {
 
     public void setLeaveBalance(Integer leaveBalance) {
         this.leaveBalance = leaveBalance;
+    }
+
+    public Integer getPaidLeave() {
+        return paidLeave;
+    }
+
+    public void setPaidLeave(Integer paidLeave) {
+        this.paidLeave = paidLeave;
+    }
+
+    public Integer getSickLeave() {
+        return sickLeave;
+    }
+
+    public void setSickLeave(Integer sickLeave) {
+        this.sickLeave = sickLeave;
+    }
+
+    public Integer getCasualLeave() {
+        return casualLeave;
+    }
+
+    public void setCasualLeave(Integer casualLeave) {
+        this.casualLeave = casualLeave;
+    }
+
+    public Map<String, Integer> getCustomLeaves() {
+        return customLeaves;
+    }
+
+    public void setCustomLeaves(Map<String, Integer> customLeaves) {
+        this.customLeaves = customLeaves;
     }
 
     public Double getSalary() {

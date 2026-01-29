@@ -32,3 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 uploads/
+src/main/resources/application.properties
+
+=======
+.DS_Store

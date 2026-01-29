@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -150,7 +152,10 @@ public class EmployeeManagementController {
     }
 
     @RequestMapping(value = "/add", method = RequestMethod.POST)
-    public String addEmployee(@ModelAttribute Employee employee, RedirectAttributes redirectAttributes,
+    public String addEmployee(@ModelAttribute Employee employee,
+            @RequestParam(required = false) List<String> customLeaveNames,
+            @RequestParam(required = false) List<Integer> customLeaveDays,
+            RedirectAttributes redirectAttributes,
             HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -190,6 +195,20 @@ public class EmployeeManagementController {
         // Generate QR code token for new employee
         String qrToken = qrCodeService.generateQRCodeToken();
         employee.setQrCodeToken(qrToken);
+
+        // Process Custom Leaves
+        if (customLeaveNames != null && customLeaveDays != null && customLeaveNames.size() == customLeaveDays.size()) {
+            Map<String, Integer> customLeaves = new HashMap<>();
+            for (int i = 0; i < customLeaveNames.size(); i++) {
+                String name = customLeaveNames.get(i);
+                Integer days = customLeaveDays.get(i);
+                if (name != null && !name.trim().isEmpty() && days != null) {
+                    customLeaves.put(name.trim(), days);
+                }
+            }
+            employee.setCustomLeaves(customLeaves);
+        }
+
         employeeRepository.save(employee);
         redirectAttributes.addFlashAttribute("success",
                 "Employee added successfully! Employee can now login with email, password and Employee ID.");
@@ -217,6 +236,8 @@ public class EmployeeManagementController {
     public String updateEmployee(@PathVariable Long id,
             @ModelAttribute Employee employee,
             @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) List<String> customLeaveNames,
+            @RequestParam(required = false) List<Integer> customLeaveDays,
             RedirectAttributes redirectAttributes, HttpSession session) {
         if (session.getAttribute("user") == null) {
             return "redirect:/login";
@@ -235,6 +256,9 @@ public class EmployeeManagementController {
         emp.setDesignation(employee.getDesignation());
         emp.setPhone(employee.getPhone());
         emp.setSalary(employee.getSalary());
+        emp.setPaidLeave(employee.getPaidLeave());
+        emp.setSickLeave(employee.getSickLeave());
+        emp.setCasualLeave(employee.getCasualLeave());
         // Update password only if a new one was provided
         if (newPassword != null && !newPassword.trim().isEmpty()) {
             emp.setPassword(newPassword);
@@ -256,6 +280,20 @@ public class EmployeeManagementController {
         } else if (emp.getScheduledStartTime() == null || emp.getScheduledStartTime().isEmpty()) {
             emp.setScheduledStartTime("09:00");
         }
+
+        // Process Custom Leaves
+        Map<String, Integer> customLeaves = new HashMap<>();
+        if (customLeaveNames != null && customLeaveDays != null && customLeaveNames.size() == customLeaveDays.size()) {
+            for (int i = 0; i < customLeaveNames.size(); i++) {
+                String name = customLeaveNames.get(i);
+                Integer days = customLeaveDays.get(i);
+                if (name != null && !name.trim().isEmpty() && days != null) {
+                    customLeaves.put(name.trim(), days);
+                }
+            }
+        }
+        // Always set the map, even if empty (handling removal of all custom leaves)
+        emp.setCustomLeaves(customLeaves);
 
         if (employee.getScheduledEndTime() != null && !employee.getScheduledEndTime().isEmpty()) {
             emp.setScheduledEndTime(employee.getScheduledEndTime());
@@ -427,6 +465,52 @@ public class EmployeeManagementController {
             System.err.println("Error deleting employee: " + e.getMessage());
             e.printStackTrace();
         }
+
+        return "redirect:/admin/employees";
+    }
+
+    @RequestMapping(value = "/grant-leaves", method = RequestMethod.POST)
+    public String grantLeaves(@RequestParam Long employeeId,
+            @RequestParam String leaveType,
+            @RequestParam int days,
+            RedirectAttributes redirectAttributes,
+            HttpSession session) {
+
+        if (session.getAttribute("user") == null) {
+            return "redirect:/login";
+        }
+
+        Optional<Employee> employeeOpt = employeeRepository.findById(employeeId);
+        if (employeeOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Employee not found!");
+            return "redirect:/admin/employees";
+        }
+
+        Employee employee = employeeOpt.get();
+        if (days <= 0) {
+            redirectAttributes.addFlashAttribute("error", "Days must be greater than 0!");
+            return "redirect:/admin/employees";
+        }
+
+        switch (leaveType) {
+            case "PAID":
+                employee.setPaidLeave((employee.getPaidLeave() != null ? employee.getPaidLeave() : 0) + days);
+                break;
+            case "SICK":
+                employee.setSickLeave((employee.getSickLeave() != null ? employee.getSickLeave() : 0) + days);
+                break;
+            case "CASUAL":
+                employee.setCasualLeave((employee.getCasualLeave() != null ? employee.getCasualLeave() : 0) + days);
+                break;
+            default:
+                redirectAttributes.addFlashAttribute("error", "Invalid leave type!");
+                return "redirect:/admin/employees";
+        }
+
+        employeeRepository.save(employee);
+        redirectAttributes.addFlashAttribute("success",
+                "Successfully granted " + days + " extra " + leaveType.toLowerCase() + " leave(s) to "
+                        + employee.getName());
 
         return "redirect:/admin/employees";
     }
