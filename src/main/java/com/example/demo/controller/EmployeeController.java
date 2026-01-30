@@ -60,12 +60,13 @@ public class EmployeeController {
     private com.example.demo.repository.TeamRuleRepository teamRuleRepository;
 
     @Autowired
-
     private com.example.demo.repository.NotificationRepository notificationRepository;
 
     @Autowired
-
     private com.example.demo.repository.MeetingRepository meetingRepository;
+
+    @Autowired
+    private com.example.demo.repository.PayrollRepository payrollRepository;
 
     @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
 
@@ -502,6 +503,53 @@ public class EmployeeController {
         model.addAttribute("totalHours", totalHours);
 
         return "employee-attendance-history";
+    }
+
+    @RequestMapping(value = "/payroll/history", method = RequestMethod.GET)
+    public String payrollHistory(Model model, HttpSession session) {
+        Employee employee = (Employee) session.getAttribute("employee");
+        if (employee == null) {
+            return "redirect:/employee/login";
+        }
+
+        List<com.example.demo.model.Payroll> payrolls = payrollRepository
+                .findByEmployee(employee).stream()
+                .filter(p -> p.getPayrollStatus() == com.example.demo.model.Payroll.PayrollStatus.SENT)
+                .sorted((p1, p2) -> p2.getPayPeriodStart().compareTo(p1.getPayPeriodStart()))
+                .collect(java.util.stream.Collectors.toList());
+
+        model.addAttribute("employee", employee);
+        model.addAttribute("payrolls", payrolls);
+        model.addAttribute("notifications",
+                notificationRepository.findByRecipientAndIsReadFalseOrderByCreatedAtDesc(employee));
+
+        return "employee-payroll-history";
+    }
+
+    @RequestMapping(value = "/payroll/view/{id}", method = RequestMethod.GET)
+    public String viewPayslip(@PathVariable Long id, Model model, HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        Employee employee = (Employee) session.getAttribute("employee");
+        if (employee == null) {
+            return "redirect:/employee/login";
+        }
+
+        Optional<com.example.demo.model.Payroll> payrollOpt = payrollRepository.findById(id);
+        if (payrollOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Payslip not found.");
+            return "redirect:/employee/payroll/history";
+        }
+
+        com.example.demo.model.Payroll payroll = payrollOpt.get();
+
+        if (!payroll.getEmployee().getId().equals(employee.getId())
+                || payroll.getPayrollStatus() != com.example.demo.model.Payroll.PayrollStatus.SENT) {
+            redirectAttributes.addFlashAttribute("error", "Unauthorized access to payslip.");
+            return "redirect:/employee/payroll/history";
+        }
+
+        model.addAttribute("payroll", payroll);
+        return "employee-payslip-view";
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)

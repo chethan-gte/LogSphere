@@ -796,23 +796,48 @@ public class HRController {
             double lopDays = Math.max(0, takenLeaves - allowedLeaves);
 
             // 4. Calculate Amount
+            // 4. Calculate Amount
             Double baseSalary = employee.getSalary() != null ? employee.getSalary() : 0.0;
             int daysInMonth = java.time.YearMonth.of(year, month).lengthOfMonth();
-            double lopAmount = (baseSalary / daysInMonth) * lopDays;
+
+            // Simple calculation
+            double perDay = baseSalary / daysInMonth; // Assuming 30 days or actual month days? Using actual.
+            double lopAmount = perDay * lopDays;
 
             response.put("success", true);
-            response.put("baseSalary", baseSalary);
-            response.put("allowedLeaves", allowedLeaves);
-            response.put("takenLeaves", takenLeaves);
             response.put("lopDays", lopDays);
             response.put("lopAmount", Math.round(lopAmount * 100.0) / 100.0);
+            response.put("daysInMonth", daysInMonth);
 
+            return response;
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error: " + e.getMessage());
-            e.printStackTrace();
+            response.put("message", "Error calculating LOP: " + e.getMessage());
+            return response;
         }
-        return response;
+    }
+
+    @RequestMapping(value = "/payroll/send/{id}", method = RequestMethod.POST)
+    public String sendPayslip(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+
+        Optional<Payroll> payrollOpt = payrollRepository.findById(id);
+        if (payrollOpt.isPresent()) {
+            Payroll payroll = payrollOpt.get();
+            payroll.setPayrollStatus(Payroll.PayrollStatus.SENT);
+            payrollRepository.save(payroll);
+
+            // Optional: Send email notification here
+            // emailService.sendPayslipNotification(payroll.getEmployee().getEmail(), ...);
+
+            redirectAttributes.addFlashAttribute("success", "Payslip sent to employee successfully!");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Payroll record not found.");
+        }
+        return "redirect:/hr/dashboard";
     }
 
     @RequestMapping(value = "/payroll/add", method = RequestMethod.GET)
@@ -909,19 +934,53 @@ public class HRController {
     }
 
     @RequestMapping(value = "/payroll/view/{id}", method = RequestMethod.GET)
-    public String viewPayroll(@PathVariable long id, Model model, HttpSession session) {
+    public String viewPayroll(@PathVariable Long id, Model model, HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        return generatePayslip(id, model, session, redirectAttributes);
+    }
+
+    @RequestMapping(value = "/payroll/edit/{id}", method = RequestMethod.GET)
+    public String editPayroll(@PathVariable Long id, Model model, HttpSession session,
+            RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+        Optional<Payroll> payrollOpt = payrollRepository.findById(id);
+        if (payrollOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Payroll not found.");
+            return "redirect:/hr/dashboard";
+        }
+        model.addAttribute("payroll", payrollOpt.get());
+        return "hr-edit-payroll";
+    }
+
+    @RequestMapping(value = "/payroll/update", method = RequestMethod.POST)
+    public String updatePayroll(@RequestParam Long id,
+            @RequestParam Double grossSalary,
+            @RequestParam Double lopDeduction,
+            @RequestParam Double totalDeductions,
+            @RequestParam Double netPay,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
         if (user == null || !"HR".equals(user.getRole())) {
             return "redirect:/hr/login";
         }
 
         Optional<Payroll> payrollOpt = payrollRepository.findById(id);
-        if (!payrollOpt.isPresent()) {
-            return "redirect:/hr/dashboard";
+        if (payrollOpt.isPresent()) {
+            Payroll payroll = payrollOpt.get();
+            payroll.setGrossSalary(grossSalary);
+            payroll.setLopDeduction(lopDeduction);
+            payroll.setTotalDeductions(totalDeductions);
+            payroll.setNetPay(netPay);
+            payrollRepository.save(payroll);
+            redirectAttributes.addFlashAttribute("success", "Payroll updated successfully.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Payroll record not found.");
         }
-
-        model.addAttribute("payroll", payrollOpt.get());
-        return "hr-view-payroll";
+        return "redirect:/hr/dashboard";
     }
 
     @RequestMapping(value = "/payroll/payslip/{id}", method = RequestMethod.GET)

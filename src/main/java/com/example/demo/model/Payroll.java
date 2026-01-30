@@ -68,7 +68,7 @@ public class Payroll {
     }
 
     public enum PayrollStatus {
-        GENERATED, APPROVED, PAID
+        GENERATED, APPROVED, PAID, SENT
     }
 
     // Constructors

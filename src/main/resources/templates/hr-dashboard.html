@@ -529,7 +529,7 @@
                                         <td colspan="6" class="text-center text-muted py-4">No attendance data available
 
                                         <td colspan="7" class="text-center text-muted py-4">No attendance data available
->>>>>>> 9c3a4a5417c352bdd067f1ec0e3522a01955a4ec
+                                            >>>>>>> 9c3a4a5417c352bdd067f1ec0e3522a01955a4ec
                                         </td>
                                     </tr>
                                     <tr th:each="record : ${attendanceReport}">
@@ -894,10 +894,28 @@
                                     <td><span class="badge bg-light text-dark border"
                                             th:text="${payroll.payrollStatus}">Status</span></td>
                                     <td>
-                                        <a th:href="@{/hr/payroll/view/{id}(id=${payroll.id})}"
-                                            class="btn btn-sm btn-outline-info me-1"><i class="fas fa-eye"></i></a>
-                                        <!-- <a th:href="@{/hr/payroll/payslip/{id}(id=${payroll.id})}"
-                                            class="btn btn-sm btn-outline-success">Payslip</a> -->
+                                        <div class="d-flex gap-1">
+                                            <a th:href="@{/hr/payroll/view/{id}(id=${payroll.id})}"
+                                                class="btn btn-sm btn-outline-info" title="View"><i
+                                                    class="fas fa-eye"></i></a>
+                                            <a th:href="@{/hr/payroll/edit/{id}(id=${payroll.id})}"
+                                                class="btn btn-sm btn-outline-primary" title="Edit"><i
+                                                    class="fas fa-edit"></i></a>
+
+                                            <form th:action="@{/hr/payroll/send/{id}(id=${payroll.id})}" method="post"
+                                                class="d-inline"
+                                                th:if="${payroll.payrollStatus != T(com.example.demo.model.Payroll.PayrollStatus).SENT}">
+                                                <button type="submit" class="btn btn-sm btn-outline-success"
+                                                    title="Send to Employee">
+                                                    <i class="fas fa-paper-plane"></i>
+                                                </button>
+                                            </form>
+                                            <span
+                                                th:if="${payroll.payrollStatus == T(com.example.demo.model.Payroll.PayrollStatus).SENT}"
+                                                class="btn btn-sm btn-success disabled">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
