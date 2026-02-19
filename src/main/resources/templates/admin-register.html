@@ -59,9 +59,10 @@
             </form>
 
             <div class="mt-3 text-center">
-                <a th:href="@{/login}" class="text-muted text-decoration-none small">Back to Login</a>
-                <span class="mx-2 text-muted">|</span>
-                <a th:href="@{/forgot-password}" class="text-muted text-decoration-none small">Forgot Password?</a>
+                <p class="text-muted small mb-2">After registration, you'll be redirected to login page</p>
+                <a th:href="@{/admin/login}" class="text-muted text-decoration-none small me-3">Login</a>
+                <span class="text-muted">|</span>
+                <a th:href="@{/}" class="text-muted text-decoration-none small ms-3">← Back to Home</a>
             </div>
         </div>
     </div>

@@ -39,7 +39,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
 
-            <form th:action="@{/login}" method="post">
+            <form th:action="@{/admin/login}" method="post">
                 <div class="mb-3">
                     <label for="email" class="form-label text-secondary">Email</label>
                     <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email"
@@ -57,6 +57,10 @@
                 <div class="d-flex justify-content-between">
                     <a th:href="@{/forgot-password}" class="text-muted text-decoration-none small">Forgot Password?</a>
                     <a th:href="@{/}" class="text-muted text-decoration-none small">Back to Home</a>
+                </div>
+                <div class="mt-3 pt-2 border-top text-center">
+                    <p class="text-muted small mb-2">Need to register as admin?</p>
+                    <a th:href="@{/register/admin}" class="btn btn-outline-primary btn-sm">Admin Registration</a>
                 </div>
             </div>
         </div>

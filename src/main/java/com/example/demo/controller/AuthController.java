@@ -21,7 +21,7 @@ public class AuthController {
     @Autowired
     private com.example.demo.service.EmailService emailService;
 
-    @RequestMapping(value = "/login", method = RequestMethod.GET)
+    @RequestMapping(value = "/admin/login", method = RequestMethod.GET)
     public String showLoginForm(Model model, HttpSession session) {
         // If already logged in, redirect to dashboard
         // If already logged in, redirect to dashboard
@@ -31,7 +31,7 @@ public class AuthController {
         return "login";
     }
 
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    @RequestMapping(value = "/admin/login", method = RequestMethod.POST)
     public String login(@RequestParam String email,
             @RequestParam String password,
             HttpSession session,
@@ -60,16 +60,23 @@ public class AuthController {
                 }
             } else {
                 redirectAttributes.addFlashAttribute("error", "Invalid email or password!");
-                return "redirect:/login";
+                return "redirect:/admin/login";
             }
         } else {
             redirectAttributes.addFlashAttribute("error", "Invalid email or password!");
-            return "redirect:/login";
+            return "redirect:/admin/login";
         }
     }
 
     @RequestMapping(value = "/register/admin", method = RequestMethod.GET)
-    public String showRegisterForm(Model model) {
+    public String showRegisterForm(Model model, RedirectAttributes redirectAttributes) {
+        // Check if any admin already exists
+        boolean adminExists = userRepository.findByRole("ADMIN").stream().findFirst().isPresent();
+        
+        if (adminExists) {
+            return "admin-register-disabled";
+        }
+        
         return "admin-register";
     }
 
@@ -79,6 +86,14 @@ public class AuthController {
             @RequestParam String password,
             RedirectAttributes redirectAttributes) {
 
+        // Check if any admin already exists
+        boolean adminExists = userRepository.findByRole("ADMIN").stream().findFirst().isPresent();
+        
+        if (adminExists) {
+            redirectAttributes.addFlashAttribute("error", "Admin registration is disabled. Admin already exists.");
+            return "redirect:/admin/login";
+        }
+
         if (userRepository.findByEmail(email).isPresent()) {
             redirectAttributes.addFlashAttribute("error", "Email already registered!");
             return "redirect:/register/admin";
@@ -87,8 +102,8 @@ public class AuthController {
         User user = new User(email, password, name, "ADMIN");
         userRepository.save(user);
 
-        redirectAttributes.addFlashAttribute("message", "Registration successful! Please login.");
-        return "redirect:/login";
+        redirectAttributes.addFlashAttribute("message", "Registration successful! Please login with your credentials.");
+        return "redirect:/admin/login";
     }
 
     @RequestMapping(value = "/api/check-email", method = RequestMethod.GET)
@@ -133,7 +148,7 @@ public class AuthController {
                     "If an account exists for that email, we have sent a password reset link.");
         }
 
-        return "redirect:/login";
+        return "redirect:/admin/login";
     }
 
     @RequestMapping(value = "/reset-password", method = RequestMethod.GET)
@@ -168,7 +183,7 @@ public class AuthController {
             return "reset-password";
         } else {
             redirectAttributes.addFlashAttribute("error", "Invalid or expired reset token!");
-            return "redirect:/login";
+            return "redirect:/admin/login";
         }
     }
 
@@ -190,17 +205,17 @@ public class AuthController {
                 userRepository.save(user);
 
                 redirectAttributes.addFlashAttribute("message", "You have successfully reset your password.");
-                return "redirect:/login";
+                return "redirect:/admin/login";
             }
         }
 
         redirectAttributes.addFlashAttribute("error", "Invalid or expired reset token!");
-        return "redirect:/login";
+        return "redirect:/admin/login";
     }
 
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
     public String logout(HttpSession session) {
         session.invalidate();
-        return "redirect:/login";
+        return "redirect:/admin/login";
     }
 }
