@@ -25,11 +25,11 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--primary-bg);
             color: var(--text-primary);
+            overflow-x: hidden;
         }
 
-        /* Sidebar Styling (Matching HR Dashboard) */
+        /* Responsive Sidebar */
         .sidebar {
-            min-height: 100vh;
             background: var(--sidebar-bg);
             color: var(--text-primary);
             border-right: 1px solid var(--border-color);
@@ -37,8 +37,15 @@
             position: fixed;
             top: 0;
             left: 0;
+            height: 100vh;
             padding: 20px;
             z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        /* Mobile sidebar toggle */
+        .sidebar.collapsed {
+            transform: translateX(-100%);
         }
 
         .sidebar h3 {
@@ -73,10 +80,52 @@
             font-weight: 600;
         }
 
-        /* Main Content */
+        /* Main Content - Responsive */
         .main-content {
             margin-left: 260px;
             padding: 2rem;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                display: none;
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .main-content {
+                padding: 0.5rem;
+            }
+            
+            .card-body {
+                padding: 1rem !important;
+            }
         }
 
         /* Cards */
@@ -118,7 +167,6 @@
             border-left-color: #dc3545 !important;
         }
 
-
         .card-header {
             background: transparent;
             border-bottom: 1px solid #f0f0f0;
@@ -132,7 +180,7 @@
             margin: 0;
         }
 
-        /* Tables (Clean Light Theme) */
+        /* Tables - Responsive */
         .table {
             color: var(--text-primary);
             vertical-align: middle;
@@ -158,6 +206,31 @@
             background-color: rgba(13, 110, 253, 0.04);
         }
 
+        /* Responsive table wrapper */
+        .table-responsive {
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        /* Stats Cards - Mobile responsive */
+        .stat-card .card-body {
+            padding: 1.25rem;
+        }
+
+        @media (max-width: 575.98px) {
+            .stat-card .card-body {
+                padding: 1rem;
+            }
+            
+            .stat-card h2 {
+                font-size: 1.5rem !important;
+            }
+            
+            .stat-card h6 {
+                font-size: 0.75rem !important;
+            }
+        }
+
         /* Misc */
         .refresh-indicator {
             font-size: 0.8rem;
@@ -169,12 +242,10 @@
         }
 
         @keyframes pulse {
-
             0%,
             100% {
                 opacity: 1;
             }
-
             50% {
                 opacity: 0.5;
             }
@@ -185,6 +256,33 @@
             font-weight: 500;
         }
 
+        /* Header responsiveness */
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        /* Action buttons responsiveness */
+        .action-buttons {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 575.98px) {
+            .btn {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+            }
+        }
+
         /* Override Bootstrap dark text colors if used */
         .text-warning {
             color: #f59e0b !important;
@@ -193,8 +291,18 @@
 </head>
 
 <body>
+    <!-- Mobile sidebar toggle button -->
+    <button class="btn btn-primary d-lg-none position-fixed" 
+            style="top: 10px; left: 10px; z-index: 1001; border-radius: 50%; padding: 10px;"
+            id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <h3>LogSphere</h3>
         <ul class="nav flex-column">
             <li class="nav-item">
@@ -312,29 +420,32 @@
             <span th:text="${error}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+        
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-5">
+        <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
             <div>
                 <h2 class="fw-bold text-primary mb-1">Admin Dashboard <span class="live-badge small ms-2">🟢 LIVE</span>
                 </h2>
                 <div class="d-flex align-items-center gap-2">
                     <p class="text-secondary mb-0">Welcome, <span class="fw-semibold text-dark"
                             th:text="${userName}">Admin</span></p>
-                    <span class="text-muted">•</span>
+                    <span class="text-muted d-none d-sm-inline">•</span>
                     <p class="refresh-indicator mb-0">Auto-refreshing every 30s</p>
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="action-buttons d-flex gap-2">
                 <button onclick="location.reload()" class="btn btn-outline-primary shadow-sm bg-white">
-                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                    <i class="fas fa-sync-alt me-1"></i> <span class="d-none d-sm-inline">Refresh</span>
                 </button>
-                <a th:href="@{/logout}" class="btn btn-outline-danger shadow-sm bg-white">Logout</a>
+                <a th:href="@{/logout}" class="btn btn-outline-danger shadow-sm bg-white">
+                    <i class="fas fa-sign-out-alt me-1"></i> <span class="d-none d-sm-inline">Logout</span>
+                </a>
             </div>
         </div>
 
         <!-- Real-Time Statistics Cards -->
         <div class="row g-4 mb-4">
-            <div class="col-md-3">
+            <div class="col-lg-3 col-md-6 col-sm-12">
                 <div class="card stat-card shadow-sm h-100 border-success">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -350,7 +461,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-3 col-md-6 col-sm-12">
                 <div class="card stat-card shadow-sm h-100 border-warning">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -366,7 +477,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-3 col-md-6 col-sm-12">
                 <div class="card stat-card shadow-sm h-100 border-info">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -382,7 +493,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-3 col-md-6 col-sm-12">
                 <div class="card stat-card shadow-sm h-100 border-secondary">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -404,7 +515,7 @@
 
         <div class="row g-4">
             <!-- Employees Currently Present -->
-            <div class="col-md-6">
+            <div class="col-lg-6 col-12">
                 <div class="card shadow-sm h-100">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">👨‍💼 Employees Present</h4>
@@ -418,9 +529,9 @@
                                 <thead class="table-light sticky-top">
                                     <tr>
                                         <th class="ps-3">Name</th>
-                                        <th>Department</th>
-                                        <th>Check-In</th>
-                                        <th>Hours</th>
+                                        <th class="d-none d-md-table-cell">Department</th>
+                                        <th class="d-none d-lg-table-cell">Check-In</th>
+                                        <th class="d-none d-xl-table-cell">Hours</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -430,12 +541,12 @@
                                     </tr>
                                     <tr th:each="emp : ${presentEmployees}">
                                         <td class="ps-3 fw-medium" th:text="${emp.name}"></td>
-                                        <td><span class="badge bg-light text-dark border"
+                                        <td class="d-none d-md-table-cell"><span class="badge bg-light text-dark border"
                                                 th:text="${emp.department}"></span></td>
-                                        <td class="text-muted"
+                                        <td class="d-none d-lg-table-cell text-muted"
                                             th:text="${emp.currentCheckIn != null ? #temporals.format(emp.currentCheckIn, 'HH:mm') : 'N/A'}">
                                         </td>
-                                        <td>
+                                        <td class="d-none d-xl-table-cell">
                                             <span class="badge bg-info-subtle text-info-emphasis"
                                                 th:text="${emp.totalHoursToday != null ? #numbers.formatDecimal(emp.totalHoursToday, 1, 1) + 'h' : '0h'}"></span>
                                         </td>
@@ -448,7 +559,7 @@
             </div>
 
             <!-- Visitors Currently Inside -->
-            <div class="col-md-6">
+            <div class="col-lg-6 col-12">
                 <div class="card shadow-sm h-100">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">👥 Visitors Inside</h4>
@@ -462,9 +573,9 @@
                                 <thead class="table-light sticky-top">
                                     <tr>
                                         <th class="ps-3">Name</th>
-                                        <th>Company</th>
-                                        <th>Meeting</th>
-                                        <th>Check-In</th>
+                                        <th class="d-none d-md-table-cell">Company</th>
+                                        <th class="d-none d-lg-table-cell">Meeting</th>
+                                        <th class="d-none d-xl-table-cell">Check-In</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -474,9 +585,9 @@
                                     </tr>
                                     <tr th:each="visitor : ${checkedInVisitors}">
                                         <td class="ps-3 fw-medium" th:text="${visitor.name}"></td>
-                                        <td th:text="${visitor.company}"></td>
-                                        <td th:text="${visitor.personToMeet}"></td>
-                                        <td class="text-muted"
+                                        <td class="d-none d-md-table-cell" th:text="${visitor.company}"></td>
+                                        <td class="d-none d-lg-table-cell" th:text="${visitor.personToMeet}"></td>
+                                        <td class="d-none d-xl-table-cell text-muted"
                                             th:text="${#temporals.format(visitor.checkInTime, 'HH:mm')}"></td>
                                     </tr>
                                 </tbody>
@@ -727,9 +838,40 @@
                     `
                 });
             }
+            
+            // Mobile sidebar functionality
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebarToggle && sidebar && sidebarOverlay) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.add('show');
+                    sidebarOverlay.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                });
+                
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                });
+                
+                // Close sidebar when clicking on nav links on mobile
+                const navLinks = sidebar.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth < 992) {
+                            sidebar.classList.remove('show');
+                            sidebarOverlay.classList.remove('show');
+                            document.body.style.overflow = '';
+                        }
+                    });
+                });
+            }
         });
         /*]]>*/
-
+        
         // Auto-refresh every 30 seconds
         setInterval(function () {
             location.reload();
