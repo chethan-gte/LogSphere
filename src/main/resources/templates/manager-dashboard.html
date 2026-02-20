@@ -23,6 +23,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f7ff;
             color: #333;
+            overflow-x: hidden;
         }
 
         .stat-card {
@@ -45,6 +46,8 @@
             border-right: 1px solid #e0e0e0;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
             z-index: 1000;
+            transform: translateX(0);
+            transition: transform 0.3s ease-in-out;
         }
 
         .sidebar .nav-link {
@@ -83,9 +86,64 @@
             background: #f3f7ff;
             min-height: 100vh;
             padding: 2rem;
+            transition: margin-left 0.3s ease-in-out;
         }
 
-        @media (min-width: 768px) {
+        /* Mobile Sidebar Toggle */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #1a8cf0;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                position: fixed;
+                width: 280px;
+                transform: translateX(-100%);
+                box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .sidebar-toggle {
+                display: block;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            
+            .overlay.show {
+                display: block;
+            }
+        }
+
+        @media (min-width: 992px) {
             .sidebar {
                 position: fixed;
                 width: 260px;
@@ -249,8 +307,16 @@
 </head>
 
 <body class="bg-light text-dark">
+    <!-- Mobile Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay"></div>
+
     <!-- Sidebar -->
-    <div class="sidebar p-3">
+    <div class="sidebar p-3" id="sidebar">
         <div class="sidebar-brand">LogSphere</div>
         <ul class="nav flex-column">
             <li class="nav-item mb-2">
@@ -316,16 +382,16 @@
     <!-- Main Content -->
     <div class="main-content">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <div class="text-center text-md-start">
                 <h2 class="fw-bold text-dark">Manager Dashboard <span
-                        class="badge bg-success bg-opacity-10 text-success fs-6 align-middle ms-2 live-badge">🟢
+                        class="badge bg-success bg-opacity-10 text-success fs-6 align-middle ms-2 live-badge d-inline-block">🟢
                         LIVE</span></h2>
                 <p class="text-secondary mb-0">Welcome back, <span class="fw-semibold text-primary"
                         th:text="${userName}">Manager</span></p>
             </div>
-            <div class="d-flex gap-2">
-                <div class="dropdown me-2">
+            <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-end">
+                <div class="dropdown">
                     <a class="btn btn-light border shadow-sm position-relative" href="#" id="notificationDropdown"
                         role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-bell text-secondary"></i>
@@ -383,7 +449,7 @@
         <div class="row mb-4" th:if="${idleCount > 0}">
             <div class="col-12">
                 <div class="card shadow-sm border-danger border-opacity-25">
-                    <div class="card-header bg-danger bg-opacity-10">
+                    <div class="card-header bg-danger bg-opacity-10 text-center text-md-start">
                         <h5 class="text-danger mb-0">⚠️ Idle Employees Alert</h5>
                         <small class="text-danger text-opacity-75">Employees inactive for 1+ minutes</small>
                     </div>
@@ -450,9 +516,9 @@
                     </button>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="kanban-column bg-light border">
+                <div class="row g-4">
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                        <div class="kanban-column bg-light border h-100">
                             <h6
                                 class="text-secondary text-uppercase fw-bold mb-3 ps-2 border-start border-4 border-warning">
                                 Pending</h6>
@@ -474,8 +540,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="kanban-column bg-light border">
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                        <div class="kanban-column bg-light border h-100">
                             <h6
                                 class="text-secondary text-uppercase fw-bold mb-3 ps-2 border-start border-4 border-primary">
                                 In Progress</h6>
@@ -495,8 +561,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="kanban-column bg-light border">
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                        <div class="kanban-column bg-light border h-100">
                             <h6
                                 class="text-secondary text-uppercase fw-bold mb-3 ps-2 border-start border-4 border-success">
                                 Completed</h6>
@@ -516,6 +582,31 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-3 col-md-6 col-sm-12">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0 text-dark">📊 Quick Stats</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-secondary">Total Tasks</span>
+                                    <span class="fw-bold text-dark" th:text="${totalTasks}">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-secondary">Pending</span>
+                                    <span class="fw-bold text-warning" th:text="${pendingTasks.size()}">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-secondary">In Progress</span>
+                                    <span class="fw-bold text-primary" th:text="${inProgressTasks.size()}">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-secondary">Completed</span>
+                                    <span class="fw-bold text-success" th:text="${completedTasks.size()}">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -523,7 +614,7 @@
             <div class="tab-pane fade" th:classappend="${activeTab == 'feedback' ? 'show active' : ''}" id="feedback"
                 role="tabpanel">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-2">
                         <h5 class="text-dark fw-bold mb-0">🗣️ Feedback Console</h5>
                         <a th:href="@{/manager/feedback/add}" class="btn btn-primary btn-sm">+ Add Feedback</a>
                     </div>
@@ -572,7 +663,7 @@
                 id="availability" role="tabpanel">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white py-3">
-                        <h5 class="text-dark fw-bold mb-0">📅 Team Availability Planner</h5>
+                        <h5 class="text-dark fw-bold mb-0 text-center text-md-start">📅 Team Availability Planner</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -611,14 +702,14 @@
             <div class="tab-pane fade" th:classappend="${activeTab == 'recognition' ? 'show active' : ''}"
                 id="recognition" role="tabpanel">
                 <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-2">
                         <h5 class="text-dark fw-bold mb-0">🏆 Recognition & Badges</h5>
                         <a th:href="@{/manager/badge/award}" class="btn btn-warning text-white btn-sm shadow-sm">Award
                             Badge</a>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div th:each="badge : ${recentBadges}" class="col-md-4">
+                            <div th:each="badge : ${recentBadges}" class="col-lg-4 col-md-6 col-sm-12">
                                 <div class="card bg-light border-0 h-100">
                                     <div class="card-body text-center p-4">
                                         <div class="fs-1 mb-2">🏅</div>
@@ -642,7 +733,7 @@
             <div class="tab-pane fade" th:classappend="${activeTab == 'rules' ? 'show active' : ''}" id="rules"
                 role="tabpanel">
                 <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-2">
                         <h5 class="text-dark fw-bold mb-0">🔧 Custom Team Rules</h5>
                         <a th:href="@{/manager/rule/create}" class="btn btn-primary btn-sm">Create Rule</a>
                     </div>
@@ -694,10 +785,10 @@
             <div class="tab-pane fade" th:classappend="${activeTab == 'suggestions' ? 'show active' : ''}"
                 id="suggestions" role="tabpanel">
                 <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-2">
                         <h5 class="text-dark fw-bold mb-0">💡 Employee Suggestions</h5>
-                        <div>
-                            <span class="badge bg-warning text-dark me-2"
+                        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-end">
+                            <span class="badge bg-warning text-dark"
                                 th:text="${pendingSuggestions.size()} + ' Pending'"></span>
                             <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25"
                                 th:text="${managerSuggestions.size()} + ' Manager Related'"></span>
@@ -712,7 +803,7 @@
                         <div th:if="${pendingSuggestions != null && !pendingSuggestions.isEmpty()}">
                             <div th:each="suggestion : ${pendingSuggestions}" class="card bg-light border mb-3">
                                 <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start mb-2 gap-2">
                                         <div>
                                             <h5 class="text-dark fw-bold mb-1" th:text="${suggestion.title}">Title</h5>
                                             <p class="text-secondary small mb-0">
@@ -725,7 +816,7 @@
                                                     th:text="${#temporals.format(suggestion.createdAt, 'MMM dd, yyyy HH:mm')}"></span>
                                             </p>
                                         </div>
-                                        <span class="badge bg-warning text-dark"
+                                        <span class="badge bg-warning text-dark align-self-md-end"
                                             th:text="${suggestion.status}">PENDING</span>
                                     </div>
                                     <p class="text-dark mt-3" th:text="${suggestion.description}">Description</p>
@@ -758,7 +849,7 @@
                 <!-- All Suggestions -->
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white py-3">
-                        <h5 class="text-dark fw-bold mb-0">All Suggestions</h5>
+                        <h5 class="text-dark fw-bold mb-0 text-center text-md-start">All Suggestions</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -810,6 +901,46 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script th:inline="javascript">
+        // Mobile Sidebar Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const overlay = document.getElementById('overlay');
+            
+            function toggleSidebar() {
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+            }
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+            
+            if (overlay) {
+                overlay.addEventListener('click', toggleSidebar);
+            }
+            
+            // Close sidebar when clicking nav links on mobile
+            const navLinks = sidebar.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        toggleSidebar();
+                    }
+                });
+            });
+            
+            // Close sidebar when resizing to desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 992) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+        
         // Workload Chart
 
 

@@ -22,6 +22,7 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--primary-bg);
             color: var(--text-primary);
+            overflow-x: hidden;
         }
 
         .navbar {
@@ -49,6 +50,12 @@
             background: var(--card-bg);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
             margin-bottom: 24px;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
         }
 
         .card-header {
@@ -102,6 +109,97 @@
             padding: 8px 16px;
             border-radius: 50px;
         }
+        
+        /* Consistent card styling */
+        .card.equal-height {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .card.equal-height .card-body {
+            flex: 1 1 auto;
+        }
+        
+        /* Hover effects */
+        .card.equal-height:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        /* Responsive Grid Improvements */
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Badge styling improvements */
+        .badge-item {
+            min-width: 120px;
+            transition: all 0.2s;
+        }
+
+        .badge-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Rule item styling */
+        .rule-item {
+            transition: background-color 0.2s;
+        }
+
+        .rule-item:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 767.98px) {
+            .container-fluid {
+                padding: 0 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .card-header {
+                padding: 1rem;
+            }
+            
+            .badge-item {
+                min-width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .status-badge {
+                font-size: 0.9rem;
+                padding: 6px 12px;
+            }
+            
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 575.98px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .card-header h4 {
+                font-size: 1rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+            }
+        }
     </style>
 </head>
 
@@ -114,19 +212,18 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-
                     <li class="nav-item"><a th:href="@{/employee/tasks}" class="nav-link"><i
-                                class="fas fa-tasks me-1"></i> My
+                                class="fas fa-tasks me-1"></i> <span class="d-none d-md-inline">My</span>
                             Tasks</a></li>
                     <li class="nav-item"><a th:href="@{/employee/qrcode}" class="nav-link"><i
                                 class="fas fa-qrcode me-1"></i>
-                            My QR</a></li>
-                    <li class="nav-item"><a th:href="@{/employee/attendance/history}" class="nav-link">Attendance</a>
+                            <span class="d-none d-md-inline">My</span> QR</a></li>
+                    <li class="nav-item"><a th:href="@{/employee/attendance/history}" class="nav-link"><span class="d-none d-md-inline">Attendance</span><span class="d-md-none">Att.</span></a>
                     </li>
-                    <li class="nav-item"><a th:href="@{/employee/payroll/history}" class="nav-link">Payslip</a></li>
-                    <li class="nav-item"><a th:href="@{/employee/leave/apply}" class="nav-link">Apply Leave</a></li>
-                    <li class="nav-item"><a th:href="@{/employee/leave/history}" class="nav-link">Leave History</a></li>
-                    <li class="nav-item"><a th:href="@{/meetings/create}" class="nav-link">Create Meeting</a></li>
+                    <li class="nav-item"><a th:href="@{/employee/payroll/history}" class="nav-link"><span class="d-none d-md-inline">Payslip</span><span class="d-md-none">Pay</span></a></li>
+                    <li class="nav-item"><a th:href="@{/employee/leave/apply}" class="nav-link"><span class="d-none d-md-inline">Apply</span> Leave</a></li>
+                    <li class="nav-item"><a th:href="@{/employee/leave/history}" class="nav-link"><span class="d-none d-md-inline">Leave</span> History</a></li>
+                    <li class="nav-item"><a th:href="@{/meetings/create}" class="nav-link"><span class="d-none d-md-inline">Create</span> Meeting</a></li>
                     <li class="nav-item"><a th:href="@{/employee/suggestion/submit}" class="nav-link">Suggestion</a>
                     </li>
 
@@ -195,9 +292,26 @@
         </div>
     </nav>
 
-    <div class="container py-4">
-        <h2 class="fw-bold mb-4 text-dark">Welcome, <span th:text="${employee.name}"
-                class="text-primary">Employee</span></h2>
+    <div class="container-fluid px-4 py-4">
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div class="text-center text-md-start">
+                        <h2 class="fw-bold text-dark mb-1">Welcome, <span class="text-primary"
+                                th:text="${employee.name}">Employee</span>!</h2>
+                        <p class="text-secondary mb-0">Here's your dashboard overview</p>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center justify-content-md-end">
+                        <button onclick="location.reload()" class="btn btn-outline-secondary shadow-sm">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </button>
+                        <a th:href="@{/logout}" class="btn btn-outline-danger shadow-sm">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Success/Error Messages -->
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
@@ -218,8 +332,8 @@
         </div>
 
         <div class="row g-4 mb-4">
-            <div class="col-md-6">
-                <div class="card stat-card h-100 border-top border-4 border-warning">
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="card stat-card h-100 border-top border-4 border-warning feature-card">
                     <div class="card-body text-center p-4">
                         <div class="mb-2 text-warning fs-4"><i class="fas fa-tachometer-alt"></i></div>
                         <h5 class="text-secondary small text-uppercase fw-bold">Effort Score</h5>
@@ -233,32 +347,32 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card stat-card h-100 border-top border-4 border-info">
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="card stat-card h-100 border-top border-4 border-info feature-card">
                     <div class="card-body text-center p-4">
                         <div class="mb-2 text-info fs-4"><i class="fas fa-calendar-alt"></i></div>
                         <h5 class="text-secondary small text-uppercase fw-bold mb-3">Leave Balance</h5>
 
-                        <div class="d-flex justify-content-center gap-3 mb-3">
+                        <div class="d-flex justify-content-center gap-3 mb-3 flex-wrap">
                             <div class="text-center px-2">
                                 <h4 class="text-dark fw-bold mb-0"
                                     th:text="${employee.paidLeave != null ? employee.paidLeave : 0}">0</h4>
                                 <small class="text-muted" style="font-size: 0.7rem;">Paid<br>(Monthly)</small>
                             </div>
-                            <div class="vr"></div>
+                            <div class="vr d-none d-md-block"></div>
                             <div class="text-center px-2">
                                 <h4 class="text-dark fw-bold mb-0"
                                     th:text="${employee.sickLeave != null ? employee.sickLeave : 0}">0</h4>
                                 <small class="text-muted" style="font-size: 0.7rem;">Sick<br>(Yearly)</small>
                             </div>
-                            <div class="vr"></div>
+                            <div class="vr d-none d-md-block"></div>
                             <div class="text-center px-2">
                                 <h4 class="text-dark fw-bold mb-0"
                                     th:text="${employee.casualLeave != null ? employee.casualLeave : 0}">0</h4>
                                 <small class="text-muted" style="font-size: 0.7rem;">Casual<br>(Yearly)</small>
                             </div>
                             <th:block th:each="entry : ${employee.customLeaves}">
-                                <div class="vr"></div>
+                                <div class="vr d-none d-md-block"></div>
                                 <div class="text-center px-2">
                                     <h4 class="text-dark fw-bold mb-0" th:text="${entry.value}">0</h4>
                                     <small class="text-muted" style="font-size: 0.7rem;"
@@ -267,11 +381,30 @@
                             </th:block>
                         </div>
                         <div class="mt-3 d-flex gap-2 justify-content-center">
-
                             <a th:href="@{/employee/leave/apply}"
                                 class="btn btn-outline-primary btn-sm flex-fill">Apply</a>
                             <a th:href="@{/employee/leave/history}"
                                 class="btn btn-outline-secondary btn-sm flex-fill">History</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-12 col-sm-12">
+                <div class="card stat-card h-100 border-top border-4 border-success feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-2 text-success fs-4"><i class="fas fa-check-circle"></i></div>
+                        <h5 class="text-secondary small text-uppercase fw-bold mb-3">Quick Actions</h5>
+                        
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/employee/attendance/manual}" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-clock me-1"></i> Manual Attendance
+                            </a>
+                            <a th:href="@{/employee/tasks}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-tasks me-1"></i> My Tasks
+                            </a>
+                            <a th:href="@{/employee/qrcode}" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-qrcode me-1"></i> My QR Code
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -283,9 +416,9 @@
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
                     <h4 class="mb-0 text-primary"><i class="fas fa-calendar-check me-2"></i>My Meetings</h4>
-                    <span class="badge bg-primary rounded-pill"
+                    <span class="badge bg-primary rounded-pill align-self-md-end"
                         th:text="${meetings != null ? meetings.size() : 0}">0</span>
                 </div>
                 <div class="card-body p-0">
@@ -657,102 +790,76 @@
 
 
 
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0 text-dark"><i class="fas fa-trophy me-2 text-warning"></i>My Badges</h4>
-                </div>
-                <div class="card-body">
-                    <div th:if="${myBadges == null || myBadges.isEmpty()}" class="text-center text-secondary py-3">
-                        <p>No badges awarded yet. Keep up the good work!</p>
+        <!-- Badges, Rules, and Suggestion Box Row -->
+        <div class="row g-4 mt-2">
+            <!-- My Badges -->
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm equal-height">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0 text-dark"><i class="fas fa-trophy me-2 text-warning"></i>My Badges</h4>
                     </div>
-                    <div class="d-flex flex-wrap gap-2" th:if="${myBadges != null && !myBadges.isEmpty()}">
-                        <div th:each="badge : ${myBadges}" class="border rounded p-3 text-center bg-light flex-fill">
-                            <div class="fs-1 mb-2">🏅</div>
-                            <h6 class="fw-bold text-dark mb-1" th:text="${badge.badgeName}">Badge</h6>
-                            <p class="small text-secondary mb-0" th:text="${badge.appreciationNote}">Note</p>
-                            <small class="text-muted d-block mt-1"
-                                th:text="${#temporals.format(badge.awardedDate, 'MMM dd')}"></small>
+                    <div class="card-body">
+                        <div th:if="${myBadges == null || myBadges.isEmpty()}" class="text-center text-secondary py-3">
+                            <p>No badges awarded yet. Keep up the good work!</p>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Activity Summary Removed -->
-                <!-- My Badges -->
-                <div class="col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h4 class="mb-0 text-dark"><i class="fas fa-trophy me-2 text-warning"></i>My Badges</h4>
-
-                        </div>
-                        <div class="card-body">
-                            <div th:if="${myBadges == null || myBadges.isEmpty()}"
-                                class="text-center text-secondary py-3">
-                                <p>No badges awarded yet. Keep up the good work!</p>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2" th:if="${myBadges != null && !myBadges.isEmpty()}">
-                                <div th:each="badge : ${myBadges}"
-                                    class="border rounded p-3 text-center bg-light flex-fill">
-                                    <div class="fs-1 mb-2">🏅</div>
-                                    <h6 class="fw-bold text-dark mb-1" th:text="${badge.badgeName}">Badge</h6>
-                                    <p class="small text-secondary mb-0" th:text="${badge.appreciationNote}">Note</p>
-                                    <small class="text-muted d-block mt-1"
-                                        th:text="${#temporals.format(badge.awardedDate, 'MMM dd')}"></small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Team Rules -->
-                <div class="col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h4 class="mb-0 text-dark"><i class="fas fa-gavel me-2 text-info"></i>Team Rules</h4>
-                        </div>
-                        <div class="card-body">
-                            <div th:if="${activeRules == null || activeRules.isEmpty()}"
-                                class="text-center text-secondary py-3">
-                                <p>No active team rules.</p>
-                            </div>
-                            <ul class="list-group list-group-flush"
-                                th:if="${activeRules != null && !activeRules.isEmpty()}">
-                                <li th:each="rule : ${activeRules}"
-                                    class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent">
-                                    <div class="d-flex">
-                                        <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
-                                        <div>
-                                            <strong class="text-dark d-block" th:text="${rule.ruleName}">Rule</strong>
-                                            <small class="text-secondary" th:text="${rule.description}">Desc</small>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Suggestion Box -->
-                <div class="col-md-12">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h4 class="mb-0 text-dark"><i class="fas fa-lightbulb me-2 text-warning"></i>Suggestion Box
-                            </h4>
-                        </div>
-                        <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <p class="text-secondary">Have an idea to improve the workplace? We'd love to hear it!</p>
-                            <div class="d-flex gap-2 justify-content-center">
-                                <a th:href="@{/employee/suggestion/submit}" class="btn btn-warning text-white"><i
-                                        class="fas fa-paper-plane me-1"></i> Submit</a>
-                                <a th:href="@{/employee/suggestion/my-suggestions}"
-                                    class="btn btn-outline-secondary">History</a>
+                        <div class="d-flex flex-wrap gap-2" th:if="${myBadges != null && !myBadges.isEmpty()}">
+                            <div th:each="badge : ${myBadges}" class="border rounded p-3 text-center bg-light flex-fill badge-item">
+                                <div class="fs-1 mb-2">🏅</div>
+                                <h6 class="fw-bold text-dark mb-1" th:text="${badge.badgeName}">Badge</h6>
+                                <p class="small text-secondary mb-0" th:text="${badge.appreciationNote}">Note</p>
+                                <small class="text-muted d-block mt-1"
+                                    th:text="${#temporals.format(badge.awardedDate, 'MMM dd')}"></small>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Team Rules -->
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm equal-height">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0 text-dark"><i class="fas fa-gavel me-2 text-info"></i>Team Rules</h4>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${activeRules == null || activeRules.isEmpty()}"
+                            class="text-center text-secondary py-3">
+                            <p>No active team rules.</p>
+                        </div>
+                        <ul class="list-group list-group-flush"
+                            th:if="${activeRules != null && !activeRules.isEmpty()}">
+                            <li th:each="rule : ${activeRules}"
+                                class="list-group-item px-0 py-2 border-0 border-bottom bg-transparent rule-item">
+                                <div class="d-flex">
+                                    <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
+                                    <div>
+                                        <strong class="text-dark d-block" th:text="${rule.ruleName}">Rule</strong>
+                                        <small class="text-secondary" th:text="${rule.description}">Desc</small>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Suggestion Box -->
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm equal-height">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0 text-dark"><i class="fas fa-lightbulb me-2 text-warning"></i>Suggestion Box</h4>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column justify-content-center">
+                        <p class="text-secondary">Have an idea to improve the workplace? We'd love to hear it!</p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <a th:href="@{/employee/suggestion/submit}" class="btn btn-warning text-white"><i
+                                    class="fas fa-paper-plane me-1"></i> Submit</a>
+                            <a th:href="@{/employee/suggestion/my-suggestions}"
+                                class="btn btn-outline-secondary">History</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Meeting Details Modal -->
