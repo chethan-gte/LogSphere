@@ -65,6 +65,9 @@ public class HRController {
     @Autowired
     private com.example.demo.repository.NotificationRepository notificationRepository;
 
+    @Autowired
+    private com.example.demo.repository.CompanyHolidayRepository companyHolidayRepository;
+
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String showHRLoginForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -416,7 +419,48 @@ public class HRController {
         model.addAttribute("nonProductiveTimeByEmployee", nonProductiveTimeByEmployee);
         model.addAttribute("nonProductiveCount", nonProductiveActivities.size());
 
+        // Company Holidays
+        List<com.example.demo.model.CompanyHoliday> companyHolidays = companyHolidayRepository.findAll();
+        // Sort holidays by date
+        companyHolidays.sort(Comparator.comparing(com.example.demo.model.CompanyHoliday::getDate));
+        model.addAttribute("companyHolidays", companyHolidays);
+
         return "hr-dashboard";
+    }
+
+    @RequestMapping(value = "/holiday/add", method = RequestMethod.POST)
+    public String addHoliday(@RequestParam String date, @RequestParam String name, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+        try {
+            com.example.demo.model.CompanyHoliday holiday = new com.example.demo.model.CompanyHoliday();
+            holiday.setDate(LocalDate.parse(date));
+            holiday.setName(name);
+            companyHolidayRepository.save(holiday);
+            redirectAttributes.addFlashAttribute("success", "Holiday added successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error adding holiday: " + e.getMessage());
+        }
+        redirectAttributes.addAttribute("activeTab", "holiday");
+        return "redirect:/hr/dashboard";
+    }
+
+    @RequestMapping(value = "/holiday/delete/{id}", method = RequestMethod.POST)
+    public String deleteHoliday(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"HR".equals(user.getRole())) {
+            return "redirect:/hr/login";
+        }
+        try {
+            companyHolidayRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("success", "Holiday removed successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error removing holiday: " + e.getMessage());
+        }
+        redirectAttributes.addAttribute("activeTab", "holiday");
+        return "redirect:/hr/dashboard";
     }
 
     @RequestMapping(value = "/leave/approve/{id}", method = RequestMethod.POST)

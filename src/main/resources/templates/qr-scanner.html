@@ -86,15 +86,30 @@
                             </div>
                         </div>
 
-                        <!-- QR Scanner -->
-                        <div id="reader" class="mb-4 bg-light border"></div>
+                        <!-- QR Scanner Container -->
+                        <div class="text-center mb-3">
+                            <button id="startCameraBtn" class="btn btn-primary" onclick="startCameraManual()">
+                                <i class="fas fa-camera me-2"></i>Start Camera
+                            </button>
+                            <button id="stopCameraBtn" class="btn btn-secondary" onclick="stopCameraManual()" style="display: none;">
+                                <i class="fas fa-stop me-2"></i>Stop Camera
+                            </button>
+                        </div>
+                        
+                        <div id="reader-container" class="mb-4 text-center p-4 bg-light border rounded" style="min-height: 250px; display: flex; align-items: center; justify-content: center;">
+                            <div id="reader-placeholder" class="text-muted">
+                                <i class="fas fa-qrcode fs-1 mb-2"></i>
+                                <p class="mb-0">Click 'Start Camera' to scan your QR code.</p>
+                            </div>
+                            <div id="reader" style="display: none; width: 100%;"></div>
+                        </div>
 
                         <!-- Action Buttons -->
                         <div class="text-center mb-4">
                             <button id="clockInBtn" class="btn btn-success btn-lg me-2 px-4 shadow-sm"
-                                onclick="clockIn()">Clock In</button>
+                                onclick="clockIn()" disabled>Clock In</button>
                             <button id="clockOutBtn" class="btn btn-danger btn-lg px-4 shadow-sm"
-                                onclick="clockOut()">Clock Out</button>
+                                onclick="clockOut()" disabled>Clock Out</button>
                         </div>
 
                         <!-- Status Messages -->
@@ -127,13 +142,30 @@
             document.getElementById('statusMessage').className = 'alert alert-info';
             document.getElementById('statusMessage').innerHTML = 'QR Code scanned successfully! Click Clock In or Clock Out.';
 
+            // Enable action buttons
+            document.getElementById('clockInBtn').disabled = false;
+            document.getElementById('clockOutBtn').disabled = false;
+
             // Parse and display employee info
-            const parts = decodedText.split(':');
-            if (parts.length === 3 && parts[0] === 'LOGSPHERE') {
+            let employeeId = null;
+            if (decodedText.startsWith('LOGSPHERE:')) {
+                const parts = decodedText.split(':');
+                if (parts.length === 3) {
+                    employeeId = parts[1];
+                }
+            } else if (decodedText.includes('/attendance/mobile')) {
+                try {
+                    const url = new URL(decodedText);
+                    employeeId = url.searchParams.get('empId');
+                } catch (e) {
+                    console.error("URL parse error", e);
+                }
+            }
+
+            if (employeeId) {
                 document.getElementById('employeeInfo').style.display = 'block';
                 document.getElementById('employeeDetails').innerHTML =
-                    '<strong>Employee ID:</strong> ' + parts[1] + '<br>' +
-                    '<strong>Token:</strong> ' + parts[2].substring(0, 8) + '...';
+                    '<strong>Employee ID:</strong> ' + employeeId;
             }
         }
 
@@ -141,34 +173,77 @@
             // Ignore scan failures
         }
 
-        // Start scanner
-        html5QrcodeScanner = new Html5Qrcode("reader");
-        html5QrcodeScanner.start(
-            { facingMode: "environment" },
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 }
-            },
-            onScanSuccess,
-            onScanFailure
-        );
+        // Setup scanner instance
+        document.addEventListener('DOMContentLoaded', function() {
+            html5QrcodeScanner = new Html5Qrcode("reader");
+        });
+
+        function startCameraManual() {
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5Qrcode("reader");
+            }
+            
+            document.getElementById('reader-placeholder').style.display = 'none';
+            document.getElementById('reader').style.display = 'block';
+            
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, // Prefer back camera on mobile
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                onScanFailure
+            ).then(() => {
+                document.getElementById('startCameraBtn').style.display = 'none';
+                document.getElementById('stopCameraBtn').style.display = 'inline-block';
+                document.getElementById('statusMessage').style.display = 'none';
+            }).catch(err => {
+                console.error("Camera start failed", err);
+                document.getElementById('reader-placeholder').style.display = 'block';
+                document.getElementById('reader').style.display = 'none';
+                document.getElementById('statusMessage').style.display = 'block';
+                document.getElementById('statusMessage').className = 'alert alert-danger';
+                document.getElementById('statusMessage').innerHTML = 
+                    'Error accessing camera: ' + err + '. Please ensure you have granted camera permissions in your browser.';
+            });
+        }
+        
+        function stopCameraManual() {
+            if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+                html5QrcodeScanner.stop().then((ignore) => {
+                    document.getElementById('startCameraBtn').style.display = 'inline-block';
+                    document.getElementById('stopCameraBtn').style.display = 'none';
+                    document.getElementById('reader-placeholder').style.display = 'block';
+                    document.getElementById('reader').style.display = 'none';
+                }).catch((err) => {
+                    console.error("Failed to stop scanning.", err);
+                });
+            }
+        }
 
         function clockIn() {
-            if (!scannedQRData) {
-                alert('Please scan a QR code first!');
-                return;
+            const workMode = document.querySelector('input[name="workMode"]:checked').value;
+            let employeeId = null;
+            let token = null;
+
+            if (scannedQRData.startsWith('LOGSPHERE:')) {
+                const parts = scannedQRData.split(':');
+                if (parts.length === 3) {
+                    employeeId = parts[1];
+                    token = parts[2];
+                }
+            } else if (scannedQRData.includes('/attendance/mobile')) {
+                try {
+                    const url = new URL(scannedQRData);
+                    employeeId = url.searchParams.get('empId');
+                    token = url.searchParams.get('token');
+                } catch (e) {
+                    console.error("URL parse error", e);
+                }
             }
 
-            const workMode = document.querySelector('input[name="workMode"]:checked').value;
-            const parts = scannedQRData.split(':');
-
-            if (parts.length !== 3 || parts[0] !== 'LOGSPHERE') {
+            if (!employeeId || !token) {
                 alert('Invalid QR code format!');
                 return;
             }
-
-            const employeeId = parts[1];
-            const token = parts[2];
 
             fetch(contextPath + '/attendance/qr/clockin', {
                 method: 'POST',
@@ -200,15 +275,29 @@
                 return;
             }
 
-            const parts = scannedQRData.split(':');
+            let employeeId = null;
+            let token = null;
 
-            if (parts.length !== 3 || parts[0] !== 'LOGSPHERE') {
+            if (scannedQRData.startsWith('LOGSPHERE:')) {
+                const parts = scannedQRData.split(':');
+                if (parts.length === 3) {
+                    employeeId = parts[1];
+                    token = parts[2];
+                }
+            } else if (scannedQRData.includes('/attendance/mobile')) {
+                try {
+                    const url = new URL(scannedQRData);
+                    employeeId = url.searchParams.get('empId');
+                    token = url.searchParams.get('token');
+                } catch (e) {
+                    console.error("URL parse error", e);
+                }
+            }
+
+            if (!employeeId || !token) {
                 alert('Invalid QR code format!');
                 return;
             }
-
-            const employeeId = parts[1];
-            const token = parts[2];
 
             fetch(contextPath + '/attendance/qr/clockout', {
                 method: 'POST',

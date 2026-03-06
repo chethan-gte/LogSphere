@@ -27,14 +27,16 @@ public class ManagerController {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Autowired
-    private VisitorRepository visitorRepository;
+
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private TaskRepository taskRepository;
+
+    @Autowired
+    private TaskCommentRepository taskCommentRepository;
 
     @Autowired
     private AttendanceRepository attendanceRepository;
@@ -424,6 +426,50 @@ public class ManagerController {
 
         redirectAttributes.addFlashAttribute("success", "Task assigned to " + employee.getName() + " successfully!");
         return "redirect:/manager/dashboard?tab=planning";
+    }
+
+    @RequestMapping(value = "/tasks/details/{id}", method = RequestMethod.GET)
+    public String taskDetails(@PathVariable Long id, Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return "redirect:/manager/login";
+        }
+
+        Optional<Task> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Task not found!");
+            return "redirect:/manager/dashboard?tab=planning";
+        }
+
+        Task task = taskOpt.get();
+        List<TaskComment> comments = taskCommentRepository.findByTaskOrderByCreatedAtAsc(task);
+        
+        model.addAttribute("task", task);
+        model.addAttribute("comments", comments);
+        model.addAttribute("manager", user);
+        
+        return "manager-task-details";
+    }
+
+    @RequestMapping(value = "/tasks/comment/add", method = RequestMethod.POST)
+    public String addComment(@RequestParam Long taskId, @RequestParam String content, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"MANAGER".equals(user.getRole())) {
+            return "redirect:/manager/login";
+        }
+
+        Optional<Task> taskOpt = taskRepository.findById(taskId);
+        if (taskOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Task not found!");
+            return "redirect:/manager/dashboard?tab=planning";
+        }
+
+        if (content != null && !content.trim().isEmpty()) {
+            TaskComment comment = new TaskComment(taskOpt.get(), user.getName(), "MANAGER", content);
+            taskCommentRepository.save(comment);
+        }
+
+        return "redirect:/manager/tasks/details/" + taskId;
     }
 
     @RequestMapping(value = "/feedback/add", method = RequestMethod.GET)
