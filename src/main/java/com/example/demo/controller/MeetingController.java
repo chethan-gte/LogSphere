@@ -7,7 +7,6 @@ import com.example.demo.repository.EmployeeRepository;
 import com.example.demo.repository.MeetingRepository;
 import com.example.demo.repository.VisitorRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.model.Notification;
 import com.example.demo.service.EmailService;

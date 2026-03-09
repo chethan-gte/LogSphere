@@ -533,9 +533,14 @@
                                             th:text="${#temporals.format(task.dueDate, 'MMM dd')}"></small>
                                     </div>
                                     <strong class="text-dark d-block mb-1" th:text="${task.title}"></strong>
-                                    <small class="text-secondary d-flex align-items-center">
+                                    <small class="text-secondary d-flex align-items-center mb-2">
                                         <span class="me-1">👤</span> <span th:text="${task.employee.name}"></span>
                                     </small>
+                                    <div class="text-end">
+                                        <a th:href="@{/manager/tasks/details/{id}(id=${task.id})}" class="btn btn-sm btn-outline-info" title="Task Details & Chat">
+                                            <i class="fas fa-comment-dots"></i> View
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -554,7 +559,10 @@
                                         <div class="progress-bar bg-primary"
                                             th:style="'width: ' + ${task.progressPercentage} + '%'"></div>
                                     </div>
-                                    <div class="d-flex justify-content-end mt-1">
+                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                        <a th:href="@{/manager/tasks/details/{id}(id=${task.id})}" class="btn btn-sm btn-outline-info p-1 px-2" title="Task Details & Chat">
+                                            <i class="fas fa-comment-dots"></i>
+                                        </a>
                                         <small class="text-muted" th:text="${task.progressPercentage} + '%'"></small>
                                     </div>
                                 </div>
@@ -572,7 +580,10 @@
                                     <strong class="text-dark d-block mb-1 text-decoration-line-through"
                                         th:text="${task.title}"></strong>
                                     <small class="text-muted" th:text="${task.employee.name}"></small>
-                                    <div class="mt-2 text-end">
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <a th:href="@{/manager/tasks/details/{id}(id=${task.id})}" class="btn btn-sm btn-outline-info p-1 px-2" title="Task Details & Chat">
+                                            <i class="fas fa-comment-dots"></i>
+                                        </a>
                                         <span class="badge bg-success bg-opacity-10 text-success">COMPLETED</span>
                                     </div>
                                 </div>

@@ -68,6 +68,9 @@ public class EmployeeController {
     @Autowired
     private com.example.demo.repository.PayrollRepository payrollRepository;
 
+    @Autowired
+    private com.example.demo.repository.CompanyHolidayRepository companyHolidayRepository;
+
     @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
 
     public String employeeDashboard(Model model, HttpSession session) {
@@ -1015,8 +1018,27 @@ public class EmployeeController {
                 return "redirect:/employee/leave/apply";
             }
 
-            // Check leave balance based on type
-            long daysRequested = java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
+            // Calculate requested days excluding weekends and holidays
+            List<com.example.demo.model.CompanyHoliday> holidays = companyHolidayRepository.findAll();
+            java.util.Set<LocalDate> holidayDates = holidays.stream()
+                .map(com.example.demo.model.CompanyHoliday::getDate)
+                .collect(java.util.stream.Collectors.toSet());
+
+            long daysRequested = 0;
+            LocalDate currentDate = start;
+            while (!currentDate.isAfter(end)) {
+                java.time.DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
+                if (dayOfWeek != java.time.DayOfWeek.SATURDAY && dayOfWeek != java.time.DayOfWeek.SUNDAY && !holidayDates.contains(currentDate)) {
+                    daysRequested++;
+                }
+                currentDate = currentDate.plusDays(1);
+            }
+
+            if (daysRequested == 0) {
+                redirectAttributes.addFlashAttribute("error", "Selected date range only contains weekends or holidays!");
+                return "redirect:/employee/leave/apply";
+            }
+
             int availableBalance = 0;
 
             if ("PAID".equals(leaveType)) {
