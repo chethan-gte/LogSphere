@@ -227,6 +227,13 @@
                                             <input type="date" class="form-control" id="closingDate" name="closingDate">
                                         </div>
                                     </div>
+                                    <script>
+                                        // Set minimum date to today for closing date
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            const today = new Date().toISOString().split('T')[0];
+                                            document.getElementById('closingDate').setAttribute('min', today);
+                                        });
+                                    </script>
                                     <div class="mb-3">
                                         <label for="description" class="form-label">Job Description</label>
                                         <textarea class="form-control" id="description" name="description" rows="5"
