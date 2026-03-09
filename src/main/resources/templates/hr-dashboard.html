@@ -209,6 +209,10 @@
                 <button class="nav-link w-100 text-start" id="payroll-tab" data-bs-toggle="pill"
                     data-bs-target="#payroll" type="button">💰 Payroll</button>
             </li>
+            <li class="nav-item mb-1">
+                <button class="nav-link w-100 text-start" id="holiday-tab" data-bs-toggle="pill"
+                    data-bs-target="#holiday" type="button">🌴 Holidays</button>
+            </li>
 
             <li class="nav-item mb-1">
                 <a class="nav-link" data-bs-toggle="collapse" href="#meetingSubmenu" role="button" aria-expanded="false"
@@ -964,10 +968,74 @@
                 </div>
             </div>
 
+            <!-- 9. Holidays -->
+            <div class="tab-pane fade" id="holiday" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Company Holidays</span>
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addHolidayModal">
+                            + Add Holiday
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Holiday Name</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${companyHolidays == null || companyHolidays.isEmpty()}">
+                                    <td colspan="3" class="text-center text-muted">No holidays added</td>
+                                </tr>
+                                <tr th:each="holiday : ${companyHolidays}">
+                                    <td class="fw-medium" th:text="${#temporals.format(holiday.date, 'MMM d, yyyy')}">Date</td>
+                                    <td th:text="${holiday.name}">Name</td>
+                                    <td>
+                                        <form th:action="@{'/hr/holiday/delete/' + ${holiday.id}}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to remove this holiday?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <!-- Modals (Copied and styled for light theme) -->
+    <div class="modal fade" id="addHolidayModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary">Add Company Holiday</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/hr/holiday/add}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Date</label>
+                            <input type="date" class="form-control" name="date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Holiday Name</label>
+                            <input type="text" class="form-control" name="name" placeholder="e.g. Christmas Day" required>
+                        </div>
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Holiday</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="rejectModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -1124,7 +1192,7 @@
 
         function showRejectModal(leaveId) {
             const form = document.getElementById('rejectForm');
-            form.action = '/hr/leave/reject/' + leaveId;
+            form.action = contextPath + 'hr/leave/reject/' + leaveId;
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
         const contextPath = /*[[@{/}]]*/ '/';
@@ -1280,7 +1348,7 @@
             const modal = new bootstrap.Modal(document.getElementById('historyModal'));
             modal.show();
 
-            fetch(`/hr/attendance/history/${employeeId}`)
+            fetch(contextPath + `hr/attendance/history/${employeeId}`)
                 .then(async response => {
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok) {

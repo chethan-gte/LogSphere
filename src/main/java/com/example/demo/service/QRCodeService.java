@@ -34,7 +34,11 @@ public class QRCodeService {
         }
     }
 
-    public String generateQRCodeData(String employeeId, String token) {
-        return "LOGSPHERE:" + employeeId + ":" + token;
+    public String generateQRCodeData(String baseUrl, String employeeId, String token) {
+        // Ensure baseUrl doesn't end with a slash for consistency
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        return baseUrl + "/attendance/mobile?empId=" + employeeId + "&token=" + token;
     }
 }

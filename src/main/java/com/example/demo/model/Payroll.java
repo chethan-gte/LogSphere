@@ -16,10 +16,10 @@ public class Payroll {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    @Column(name = "month", nullable = false)
+    @Column(name = "payroll_month", nullable = false)
     private Integer month;
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "payroll_year", nullable = false)
     private Integer year;
 
     @Column(name = "base_salary")

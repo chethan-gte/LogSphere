@@ -2,8 +2,11 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Employee;
 import com.example.demo.model.Task;
+import com.example.demo.model.TaskComment;
+import com.example.demo.model.User;
 import com.example.demo.repository.EmployeeRepository;
 import com.example.demo.repository.TaskRepository;
+import com.example.demo.repository.TaskCommentRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,6 +28,9 @@ public class TaskController {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private TaskCommentRepository taskCommentRepository;
 
     @RequestMapping(method = RequestMethod.GET)
     public String myTasks(Model model, HttpSession session) {
@@ -128,6 +134,50 @@ public class TaskController {
         }
 
         return "redirect:/employee/tasks";
+    }
+
+    @RequestMapping(value = "/details/{id}", method = RequestMethod.GET)
+    public String taskDetails(@PathVariable Long id, Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        Employee employee = (Employee) session.getAttribute("employee");
+        if (employee == null) {
+            return "redirect:/employee/login";
+        }
+
+        Optional<Task> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isEmpty() || !taskOpt.get().getEmployee().getId().equals(employee.getId())) {
+            redirectAttributes.addFlashAttribute("error", "Task not found!");
+            return "redirect:/employee/tasks";
+        }
+
+        Task task = taskOpt.get();
+        List<TaskComment> comments = taskCommentRepository.findByTaskOrderByCreatedAtAsc(task);
+        
+        model.addAttribute("task", task);
+        model.addAttribute("comments", comments);
+        model.addAttribute("employee", employee);
+        
+        return "employee-task-details";
+    }
+
+    @RequestMapping(value = "/comment/add", method = RequestMethod.POST)
+    public String addComment(@RequestParam Long taskId, @RequestParam String content, HttpSession session, RedirectAttributes redirectAttributes) {
+        Employee employee = (Employee) session.getAttribute("employee");
+        if (employee == null) {
+            return "redirect:/employee/login";
+        }
+
+        Optional<Task> taskOpt = taskRepository.findById(taskId);
+        if (taskOpt.isEmpty() || !taskOpt.get().getEmployee().getId().equals(employee.getId())) {
+            redirectAttributes.addFlashAttribute("error", "Task not found!");
+            return "redirect:/employee/tasks";
+        }
+
+        if (content != null && !content.trim().isEmpty()) {
+            TaskComment comment = new TaskComment(taskOpt.get(), employee.getName(), "EMPLOYEE", content);
+            taskCommentRepository.save(comment);
+        }
+
+        return "redirect:/employee/tasks/details/" + taskId;
     }
 }
 

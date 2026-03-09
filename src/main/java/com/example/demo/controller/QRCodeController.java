@@ -23,7 +23,7 @@ public class QRCodeController {
     private QRCodeService qrCodeService;
 
     @RequestMapping(method = RequestMethod.GET)
-    public String showQRCode(HttpSession session, Model model) {
+    public String showQRCode(HttpSession session, Model model, jakarta.servlet.http.HttpServletRequest request) {
         Employee employee = (Employee) session.getAttribute("employee");
         if (employee == null) {
             return "redirect:/employee/login";
@@ -37,8 +37,9 @@ public class QRCodeController {
             session.setAttribute("employee", employee);
         }
 
-        // Generate QR code data
-        String qrData = qrCodeService.generateQRCodeData(employee.getEmployeeId(), employee.getQrCodeToken());
+        // Generate QR code data (fully qualified URL)
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+        String qrData = qrCodeService.generateQRCodeData(baseUrl, employee.getEmployeeId(), employee.getQrCodeToken());
         String qrCodeImage = qrCodeService.generateQRCodeImage(qrData);
 
         model.addAttribute("employee", employee);
@@ -52,14 +53,38 @@ public class QRCodeController {
     @ResponseBody
     public ResponseEntity<?> scanQRCode(@RequestParam String qrData, @RequestParam String workMode) {
         try {
-            // Parse QR code data: LOGSPHERE:EMPLOYEE_ID:TOKEN
-            String[] parts = qrData.split(":");
-            if (parts.length != 3 || !"LOGSPHERE".equals(parts[0])) {
-                return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"Invalid QR code format\"}");
+            // Support both old format (LOGSPHERE:ID:TOKEN) and new URL format
+            String employeeId = null;
+            String token = null;
+
+            if (qrData.startsWith("LOGSPHERE:")) {
+                String[] parts = qrData.split(":");
+                if (parts.length == 3) {
+                    employeeId = parts[1];
+                    token = parts[2];
+                }
+            } else if (qrData.contains("/attendance/mobile")) {
+                // Parse from URL params
+                try {
+                    java.net.URI uri = new java.net.URI(qrData);
+                    String query = uri.getQuery();
+                    java.util.Map<String, String> params = new java.util.HashMap<>();
+                    for (String param : query.split("&")) {
+                        String[] pair = param.split("=");
+                        if (pair.length > 1) {
+                            params.put(pair[0], pair[1]);
+                        }
+                    }
+                    employeeId = params.get("empId");
+                    token = params.get("token");
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"Invalid QR URL format\"}");
+                }
             }
 
-            String employeeId = parts[1];
-            String token = parts[2];
+            if (employeeId == null || token == null) {
+                return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"Invalid QR code format\"}");
+            }
 
             Optional<Employee> employeeOpt = employeeRepository.findByEmployeeId(employeeId);
             if (employeeOpt.isEmpty()) {
